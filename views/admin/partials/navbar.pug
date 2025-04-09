@@ -1,0 +1,41 @@
+ul.navbar-nav.sidebar.sidebar-light.accordion#accordionSidebar
+    a.sidebar-brand.d-flex.align-items-center.justify-content-center(href="#")
+        .sidebar-brand-text.mx-3 Quản lý thư viện
+    hr.sidebar-divider.my-0
+    li.nav-item.active
+        a.nav-link(href=`${prefixAdmin}/staff`)
+            i.fa-solid.fa-users
+            span Quản lý nhân viên
+    li.nav-item
+        a.nav-link(href=`${prefixAdmin}/book`)
+            i.fa-solid.fa-book
+            span Quản lý đầu sách & sách
+    li.nav-item
+        a.nav-link(href=`${prefixAdmin}/author`)
+            i.fa-solid.fa-user-pen
+            span Danh sách tác giả
+    li.nav-item
+        a.nav-link(href=`${prefixAdmin}/reader`)
+            i.fa-solid.fa-book-open-reader
+            span Danh sách độc giả
+    li.nav-item
+        a.nav-link(href=`${prefixAdmin}/type`)
+            i.fa-solid.fa-font-awesome
+            span Danh sách thể loại
+
+    script.
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-item .nav-link');
+
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+
+                if (href !== '#' && currentPath.includes(href)) {
+                    link.closest('.nav-item').classList.add('active');
+                }
+            });
+        });

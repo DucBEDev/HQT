@@ -1,0 +1,137 @@
+:root {
+	--primary-color: #4a90e2;
+	--secondary-color: #f5f6fa;
+	--text-color: #2c3e50;
+	--error-color: #e74c3c;
+	--success-color: #2ecc71;
+}
+
+body {
+	font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+	background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+	min-height: 100vh;
+	margin: 0;
+	padding: 20px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.wrapper {
+	width: 100%;
+	max-width: 1000px;
+	background: white;
+	border-radius: 20px;
+	box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+	padding: 40px;
+	margin: 20px;
+}
+
+h2 {
+	color: var(--primary-color);
+	text-align: center;
+	margin-bottom: 30px;
+	font-size: 2.2em;
+	font-weight: 600;
+}
+
+.container_register {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 30px;
+	margin-bottom: 30px;
+}
+
+.input-field {
+	position: relative;
+	margin-bottom: 25px;
+}
+
+.input-field input,
+.input-field select {
+	width: 100%;
+	padding: 12px 15px;
+	border: 2px solid #e1e1e1;
+	border-radius: 8px;
+	font-size: 16px;
+	transition: all 0.3s ease;
+	background: var(--secondary-color);
+}
+
+.input-field input:focus,
+.input-field select:focus {
+	border-color: var(--primary-color);
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.input-field label {
+	position: absolute;
+	left: 15px;
+	top: 50%;
+	transform: translateY(-50%);
+	color: #666;
+	pointer-events: none;
+	transition: all 0.3s ease;
+	background: var(--secondary-color);
+	padding: 0 5px;
+}
+
+.input-field input:focus ~ label,
+.input-field input:valid ~ label {
+	top: 0;
+	font-size: 14px;
+	color: var(--primary-color);
+}
+
+.input-field select:focus ~ label,
+.input-field select:valid ~ label {
+	top: 0;
+	font-size: 14px;
+	color: var(--primary-color);
+}
+
+button {
+	width: 100%;
+	padding: 15px;
+	background: var(--primary-color);
+	color: white;
+	border: none;
+	border-radius: 8px;
+	font-size: 16px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: all 0.3s ease;
+}
+
+button:hover {
+	background: #357abd;
+	transform: translateY(-2px);
+	box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+}
+
+#password-message {
+	color: var(--error-color);
+	text-align: center;
+	margin: 10px 0;
+	font-size: 14px;
+}
+
+.message {
+	text-align: center;
+	margin: 10px 0;
+	padding: 10px;
+	border-radius: 5px;
+	background: var(--secondary-color);
+}
+
+@media (max-width: 768px) {
+	.container_register {
+		grid-template-columns: 1fr;
+	}
+	
+	.wrapper {
+		padding: 20px;
+		margin: 10px;
+	}
+}

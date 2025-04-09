@@ -1,0 +1,41 @@
+extends ../../layouts/default.pug
+include ../../mixins/alert.pug
+
+block main 
+    +alert-error(3000)
+    +alert-success(3000)
+
+    .card.mb-4
+        .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+            h6.m-0.font-weight-bold.text-primary Thêm Thể Loại
+        .card-body
+            form#addTypeForm(action=`${prefixAdmin}/type/create` method="post")
+                .row
+                    .col-lg-12
+                        .form-group
+                            label(for="maTL") Mã thể loại
+                            input.form-control(type="text" id="maTL" name="maTL" readonly)
+                        .form-group
+                            label(for="tenTL") Tên thể loại <span class="required-text">*</span>
+                            input.form-control(type="text" id="tenTL" name="tenTL" placeholder="Nhập tên thể loại" required)
+                .d-flex.justify-content-end.mt-3
+                    button.btn.btn-secondary.mr-2(type="button" onclick="window.history.back()") Hủy
+                    button.btn.btn-success.mr-2(type="button" id="btnThem") Thêm
+                    button.btn.btn-primary(type="button" id="btnGhi") Ghi vào database
+
+    .card.mb-4
+        .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+            h6.m-0.font-weight-bold.text-primary Danh Sách Thể Loại Đã Thêm
+        .card-body
+            .table-responsive
+                table.table.table-bordered(width="100%" cellspacing="0")
+                    thead
+                        tr
+                            th Mã thể loại
+                            th Tên thể loại
+                            th Thao tác
+                    tbody#danhSachTheLoai
+
+    script(src="/vendor/jquery/jquery.min.js")
+    script(src="/js/validation.js")
+    script(src="/js/adminjs/type.js")

@@ -1,0 +1,85 @@
+extends ../../layouts/default.pug
+include ../../mixins/alert.pug
+
+block main 
+    +alert-error(3000)
+    +alert-success(3000)
+
+    .col-lg-12
+        .card.mb-4
+            .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+                h6.m-0.font-weight-bold.text-primary Danh Sách Độc Giả
+                a.btn.btn-primary(href=`${prefixAdmin}/reader/create`) + Thêm độc giả
+            
+            //- Search Interface
+            //- .card-search-body
+            //-     form#searchForm.mb-4
+            //-         .row.align-items-end
+            //-             .col-md-3.mb-3
+            //-                 .form-group
+            //-                     label(for="searchCriteria") Tìm kiếm theo
+            //-                     select#searchCriteria.form-control
+            //-                         option(value="maDG") Mã độc giả
+            //-                         option(value="hoTen") Họ tên
+            //-                         option(value="email") Email
+            //-                         option(value="dienThoai") Số điện thoại
+            //-                         option(value="trangThai") Trạng thái
+            //-             .col-md-6.mb-3
+            //-                 .form-group
+            //-                     label(for="searchInput") Từ khóa
+            //-                     input#searchInput.form-control(type="text" placeholder="Nhập từ khóa tìm kiếm...")
+            //-             .col-md-3.mb-3
+            //-                 .form-group
+            //-                     button.btn.btn-primary(type="button" id="searchBtn")
+            //-                         i.fas.fa-search.mr-1
+            //-                         | Tìm kiếm
+            
+            .table-responsive.p-3
+                table#dataTable.table.align-items-center.table-flush
+                    thead.thead-light
+                        tr
+                            th Mã Độc Giả
+                            th Họ Tên
+                            th Email
+                            th Điện Thoại
+                            th Trạng Thái
+                            th Hoạt Động
+                    tbody#readerTableBody
+                        each reader in readerList
+                            tr.product-item
+                                td.align-middle #{reader.maDG}
+                                td.align-middle #{reader.hoDG} #{reader.tenDG}
+                                td.align-middle #{reader.emailDG}
+                                td.align-middle #{reader.dienThoai}
+                                td.align-middle
+                                    if reader.hoatDong === true
+                                        a.change-status-reader(href="javascript:void(0);" data-id=`${reader.maDG}` data-status=`${reader.hoatDong}`)
+                                            span.badge.badge-success Hoạt động
+                                    else
+                                        a.change-status-reader(href="javascript:void(0);" data-id=`${reader.maDG}` data-status=`${reader.hoatDong}`)
+                                            span.badge.badge-danger Ngừng hoạt động
+                                td.align-middle
+                                    a.btn.btn-sm.btn-danger.delete-reader-btn.mr-1(href="javascript:void(0);" data-reader-id=`${reader.maDG}` data-toggle="modal" data-target="#DeleteModal") Xóa
+
+    //- Modal Delete Item
+    #DeleteModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="DeleteModal" aria-hidden="true")
+        .modal-dialog(role="document")
+            .modal-content
+                .modal-header
+                    h5#exampleModalLabelLogout.modal-title Xóa độc giả
+                    button.close(type="button" data-dismiss="modal" aria-label="Close")
+                        span(aria-hidden="true") &times;
+                .modal-body
+                    p Bạn chắc chắn muốn xóa độc giả này không?
+                .modal-footer
+                    button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
+                    button#delete-link.btn.btn-primary(type="button") Xóa
+
+    form(
+        action=""
+        method="POST"
+        id="delete-reader-item"
+    )
+
+    //- script(src="/vendor/jquery/jquery.min.js")
+    //- script(src="/js/adminjs/reader/index.js")

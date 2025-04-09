@@ -1,0 +1,58 @@
+extends ../../layouts/default.pug
+include ../../mixins/alert.pug
+
+block main 
+    +alert-error(3000)
+    +alert-success(3000)
+
+    .col-lg-12
+        .card.mb-4
+            .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+                h6.m-0.font-weight-bold.text-primary Danh Sách Nhân Viên
+                a.btn.btn-primary(href=`${prefixAdmin}/nhanvien/add`) + Thêm nhân viên
+            .table-responsive.p-3
+                table#dataTable.table.align-items-center.table-flush
+                    thead.thead-light
+                        tr
+                            th Mã Nhân Viên
+                            th Họ Tên
+                            th Địa Chỉ
+                            th Điện Thoại
+                            th Hoạt Động
+                    tbody
+                        each staff in staffList
+                            tr.product-item
+                                td.align-middle #{staff.maNV}
+                                td.align-middle #{staff.hoTenNV}
+                                td.align-middle #{staff.diaChi}
+                                td.align-middle #{staff.dienThoai}
+                                    if staff.trangThai === 'Active'
+                                        a.change-status-blog(href="javascript:void(0);" data-id=`${staff.maNV}` data-status=`${staff.trangThai}`)
+                                        span.badge.badge-success Hoạt động
+                                    else
+                                        a.change-status-blog(href="javascript:void(0);" data-id=`${staff.maNV}` data-status=`${staff.trangThai}`)
+                                        span.badge.badge-danger Ngừng hoạt động
+                                td.align-middle
+                                    a.btn.btn-sm.btn-danger.delete-blog-btn.mr-1(href="javascript:void(0);" data-blog-id=`${staff.maNV}` data-toggle="modal" data-target="#DeleteModal") Xóa
+                                    a.btn.btn-sm.btn-dark.mr-1(href=`${prefixAdmin}/nhanvien/edit/${staff.maNV}`) Sửa
+                                    a.btn.btn-sm.btn-dark.mr-1(href=`${prefixAdmin}/nhanvien/detail/${staff.maNV}`) Xem
+
+    //- Modal Delete Item
+    #DeleteModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="DeleteModal" aria-hidden="true")
+        .modal-dialog(role="document")
+            .modal-content
+                .modal-header
+                    h5#exampleModalLabelLogout.modal-title Xóa nhân viên
+                    button.close(type="button" data-dismiss="modal" aria-label="Close")
+                        span(aria-hidden="true") &times;
+                .modal-body
+                    p Bạn chắc chắn muốn xóa nhân viên này không?
+                .modal-footer
+                    button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
+                    button#delete-link.btn.btn-primary(type="button") Xóa
+
+    form(
+        action=""
+        method="POST"
+        id="delete-staff-item"
+    )

@@ -1,0 +1,86 @@
+extends ../../layouts/default.pug
+include ../../mixins/alert.pug
+
+block main 
+    +alert-error(3000)
+    +alert-success(3000)
+
+    .card.mb-4
+        .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+            h6.m-0.font-weight-bold.text-primary Thêm Độc Giả
+        .card-body
+            form#addDocGiaForm(action=`${prefixAdmin}/docgia/create` method="post")
+                .row
+                    .col-lg-6
+                        .form-group
+                            label(for="maDG") Mã độc giả
+                            input.form-control(type="text" id="maDG" name="maDG" readonly)
+                        .form-group
+                            label(for="hoDG") Họ độc giả <span class="required-text">*</span>
+                            input.form-control(type="text" id="hoDG" name="hoDG" placeholder="Nhập họ độc giả" required)
+                        .form-group
+                            label(for="tenDG") Tên độc giả <span class="required-text">*</span>
+                            input.form-control(type="text" id="tenDG" name="tenDG" placeholder="Nhập tên độc giả" required)
+                        .form-group
+                            label(for="emailDG") Email <span class="required-text">*</span>
+                            input.form-control(type="email" id="emailDG" name="emailDG" placeholder="Nhập email" required)
+                        .form-group
+                            label(for="soCMND") Số CCCD <span class="required-text">*</span>
+                            input.form-control(type="text" id="soCMND" name="soCMND" placeholder="Nhập số CCCD" required)
+                        .form-group
+                            label(for="gioiTinh") Giới tính <span class="required-text">*</span>
+                            select.form-control(id="gioiTinh" name="gioiTinh" required)
+                                option(value="") -- Chọn giới tính --
+                                option(value="Nam") Nam
+                                option(value="Nữ") Nữ
+                    .col-lg-6
+                        .form-group
+                            label(for="ngaySinh") Ngày sinh <span class="required-text">*</span>
+                            input.form-control(type="date" id="ngaySinh" name="ngaySinh" required)
+                        .form-group
+                            label(for="diaChiDG") Địa chỉ <span class="required-text">*</span>
+                            input.form-control(type="text" id="diaChiDG" name="diaChiDG" placeholder="Nhập địa chỉ" required)
+                        .form-group
+                            label(for="dienThoai") Số điện thoại <span class="required-text">*</span>
+                            input.form-control(type="tel" id="dienThoai" name="dienThoai" placeholder="Nhập số điện thoại" required)
+                        .form-group
+                            label(for="ngayLamThe") Ngày làm thẻ <span class="required-text">*</span>
+                            input.form-control(type="date" id="ngayLamThe" name="ngayLamThe" required)
+                        .form-group
+                            label(for="ngayHetHan") Ngày hết hạn <span class="required-text">*</span>
+                            input.form-control(type="date" id="ngayHetHan" name="ngayHetHan" required)
+                        .form-group.d-flex
+                            label.mr-4(for="hoatDong") Trạng thái hoạt động <span class="required-text">*</span>
+                            .custom-control.custom-switch.ml-4
+                                input.custom-control-input(type="checkbox" name="hoatDong" id="hoatDong" value="1" checked)
+                                label.custom-control-label(for="hoatDong") Hoạt động
+                .d-flex.justify-content-end.mt-3
+                    button.btn.btn-secondary.mr-2(type="button" onclick="window.history.back()") Hủy
+                    button.btn.btn-success.mr-2(type="button" id="btnThem") Thêm
+                    button.btn.btn-primary(type="button" id="btnGhi") Ghi vào database
+
+    .card.mb-4
+        .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+            h6.m-0.font-weight-bold.text-primary Danh Sách Độc Giả Đã Thêm
+        .card-body
+            .table-responsive
+                table.table.table-bordered(width="100%" cellspacing="0")
+                    thead
+                        tr
+                            th Mã độc giả
+                            th Họ và tên
+                            th Email
+                            th Số CCCD
+                            th Giới tính
+                            th Ngày sinh
+                            th Địa chỉ
+                            th Số điện thoại
+                            th Ngày làm thẻ
+                            th Ngày hết hạn
+                            th Trạng thái
+                            th Thao tác
+                    tbody#danhSachDocGia
+
+    script(src="/vendor/jquery/jquery.min.js")
+    script(src="/js/validation.js")
+    script(src="/js/adminjs/reader/reader.js")
