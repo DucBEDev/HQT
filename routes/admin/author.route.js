@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
 
-const controller = require('../../controller/admin/type.controller');
+const controller = require('../../controller/admin/author.controller');
 
+router.get('/edit/:maTacGia', controller.edit);
 router.get('/', controller.index);
-router.delete('/delete/:maTL', controller.delete);
+router.delete('/delete/:maTacGia', controller.delete);
 router.get('/create', controller.create);
 router.post('/create', controller.createPost);
 router.get('/next-id', controller.getNextId);
-router.get('/edit/:maTL', controller.edit);
-router.post('/edit/:maTL', controller.editPost);
+router.post('/edit/:maTacGia', controller.editPost);
 
 
 module.exports = router;

@@ -24,6 +24,7 @@ block main
                                 td.align-middle #{type.maTL}
                                 td.align-middle #{type.tenTL}
                                 td.align-middle
+                                    a.btn.btn-sm.btn-primary.edit-type-btn.mr-1(href=`${prefixAdmin}/type/edit/${type.maTL}`) Sửa
                                     a.btn.btn-sm.btn-danger.delete-type-btn.mr-1(href="javascript:void(0);" data-type-id=`${type.maTL}` data-toggle="modal" data-target="#DeleteModal") Xóa
 
     //- Modal Delete Item
@@ -45,3 +46,5 @@ block main
         method="POST"
         id="delete-type-item"
     )
+
+    

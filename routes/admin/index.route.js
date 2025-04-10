@@ -5,6 +5,8 @@ const systemConfig = require('../../configs/system');
 const staffRoute = require('./staff.route');
 const readerRoute = require('./reader.route');
 const typeRoute = require('./type.route');
+const authorRoute = require('./author.route');
+
 
 module.exports = (app) => {
     const PATH_ADMIN = systemConfig.prefixAdmin;
@@ -12,4 +14,6 @@ module.exports = (app) => {
     app.use(PATH_ADMIN + '/staff', staffRoute);
     app.use(PATH_ADMIN + '/reader', readerRoute);
     app.use(PATH_ADMIN + '/type', typeRoute);
+    app.use(PATH_ADMIN + '/author', authorRoute);
+
 }

@@ -1,4 +1,4 @@
-const danhSachDocGia = [];
+let danhSachDocGia = [];
 let currentMaDG = 0;
 
 async function getNextMaDG() {
@@ -106,6 +106,7 @@ function xoaDocGia(maDG) {
     if (confirm('Bạn có chắc chắn muốn xóa độc giả này khỏi danh sách?')) {
         danhSachDocGia = danhSachDocGia.filter(dg => dg.maDG !== maDG);
         hienThiDanhSachDocGia();
+        getNextMaDG();
     }
 }
 

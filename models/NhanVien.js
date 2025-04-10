@@ -1,9 +1,12 @@
 class NhanVien {
-    constructor(maNV, hoTenNV, diaChi, dienThoai) {
+    constructor(maNV, hoNV, tenNV, diaChi, dienThoai, gioiTinh, email) {
         this.maNV = maNV;
-        this.hoTenNV = hoTenNV;
+        this.hoNV = hoNV;
+        this.tenNV=tenNV;
         this.diaChi = diaChi;
         this.dienThoai = dienThoai;
+        this.gioiTinh = gioiTinh;
+        this.email=email;
     }
 }
 

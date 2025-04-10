@@ -1,0 +1,51 @@
+extends ../../layouts/default.pug
+include ../../mixins/alert.pug
+
+block main 
+    +alert-error(3000)
+    +alert-success(3000)
+
+    .col-lg-12
+        .card.mb-4
+            .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+                h6.m-0.font-weight-bold.text-primary Danh Sách Tác Giả
+                a.btn.btn-primary(href=`${prefixAdmin}/author/create`) + Thêm tác giả
+            
+            .table-responsive.p-3
+                table#dataTable.table.align-items-center.table-flush
+                    thead.thead-light
+                        tr
+                            th Mã Tác Giả
+                            th Họ Tên
+                            th Địa Chỉ
+                            th Điện Thoại
+                            th Hoạt Động
+                    tbody#authorTableBody
+                        each author in authorList
+                            tr.product-item
+                                td.align-middle #{author.maTacGia}
+                                td.align-middle #{author.hoTenTG}
+                                td.align-middle #{author.diaChiTG}
+                                td.align-middle #{author.dienThoaiTG}
+                                td.align-middle
+                                    a.btn.btn-sm.btn-primary.edit-type-btn.mr-1(href=`${prefixAdmin}/author/edit/${author.maTacGia}`) Sửa
+                                    a.btn.btn-sm.btn-danger.delete-author-btn.mr-1(href="javascript:void(0);" data-author-id=`${author.maTacGia}` data-toggle="modal" data-target="#DeleteModal") Xóa
+
+    #DeleteModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="DeleteModal" aria-hidden="true")
+        .modal-dialog(role="document")
+            .modal-content
+                .modal-header
+                    h5#exampleModalLabelLogout.modal-title Xóa tác giả
+                    button.close(type="button" data-dismiss="modal" aria-label="Close")
+                        span(aria-hidden="true") ×
+                .modal-body
+                    p Bạn chắc chắn muốn xóa tác giả này không?
+                .modal-footer
+                    button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
+                    button#delete-link.btn.btn-primary(type="button") Xóa
+
+    form(
+        action=""
+        method="POST"
+        id="delete-author-item"
+    )

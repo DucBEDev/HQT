@@ -1,4 +1,4 @@
-const danhSachTheLoai = [];
+let danhSachTheLoai = [];
 let currentMaTL = 0;
 
 async function getNextMaTL() {
@@ -89,6 +89,7 @@ function xoaTheLoai(maTL) {
     if (confirm('Bạn có chắc chắn muốn xóa thể loại này khỏi danh sách?')) {
         danhSachTheLoai = danhSachTheLoai.filter(tl => tl.maTL !== maTL);
         hienThiDanhSachTheLoai();
+        getNextMaTL();
     }
 }
 
@@ -130,4 +131,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 // End Validate
-

@@ -59,6 +59,7 @@ block main
                                         a.change-status-reader(href="javascript:void(0);" data-id=`${reader.maDG}` data-status=`${reader.hoatDong}`)
                                             span.badge.badge-danger Ngừng hoạt động
                                 td.align-middle
+                                    a.btn.btn-sm.btn-primary.edit-reader-btn.mr-1(href=`${prefixAdmin}/reader/edit/${reader.maDG}`) Sửa
                                     a.btn.btn-sm.btn-danger.delete-reader-btn.mr-1(href="javascript:void(0);" data-reader-id=`${reader.maDG}` data-toggle="modal" data-target="#DeleteModal") Xóa
 
     //- Modal Delete Item

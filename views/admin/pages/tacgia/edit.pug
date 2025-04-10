@@ -1,0 +1,33 @@
+extends ../../layouts/default.pug
+include ../../mixins/alert.pug
+
+block main 
+    +alert-error(3000)
+    +alert-success(3000)
+
+    .card.mb-4
+        .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+            h6.m-0.font-weight-bold.text-primary Chỉnh Sửa Tác Giả
+        .card-body
+            form#editAuthorForm(action=`${prefixAdmin}/author/edit/${author.maTacGia}` method="post")
+                .row
+                    .col-lg-12
+                        .form-group
+                            label(for="maTacGia") Mã tác giả
+                            input.form-control(type="text" id="maTacGia" name="maTacGia" value=`${author.maTacGia}` readonly)
+                        .form-group
+                            label(for="hoTenTG") Họ tên tác giả <span class="required-text">*</span>
+                            input.form-control(type="text" id="hoTenTG" name="hoTenTG" value=`${author.hoTenTG}` placeholder="Nhập họ tên tác giả" required)
+                        .form-group
+                            label(for="diaChiTG") Địa chỉ <span class="required-text">*</span>
+                            input.form-control(type="text" id="diaChiTG" name="diaChiTG" value=`${author.diaChiTG}` placeholder="Nhập địa chỉ" required)
+                        .form-group
+                            label(for="dienThoaiTG") Điện thoại <span class="required-text">*</span>
+                            input.form-control(type="text" id="dienThoaiTG" name="dienThoaiTG" value=`${author.dienThoaiTG}` placeholder="Nhập số điện thoại" required)
+                .d-flex.justify-content-end.mt-3
+                    a.btn.btn-secondary.mr-2(href=`${prefixAdmin}/author`) Thoát
+                    button.btn.btn-primary(type="submit" id="btnLuu") Lưu
+
+    script(src="/vendor/jquery/jquery.min.js")
+    script(src="/js/validation.js")
+    script(src="/js/adminjs/author/author-edit.js")

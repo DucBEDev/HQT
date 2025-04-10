@@ -1,0 +1,51 @@
+extends ../../layouts/default.pug
+include ../../mixins/alert.pug
+
+block main 
+    +alert-error(3000)
+    +alert-success(3000)
+
+    .card.mb-4
+        .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+            h6.m-0.font-weight-bold.text-primary Chỉnh Sửa Nhân Viên
+        .card-body
+            form#editStaffForm(action=`${prefixAdmin}/staff/edit/${staff.maNV}` method="post")
+                .row
+                    .col-lg-12
+                        .form-group
+                            label(for="maNV") Mã nhân viên
+                            input.form-control(type="text" id="maNV" name="maNV" value=`${staff.maNV}` readonly)
+                        .form-group
+                            label(for="hoNV") Họ nhân viên <span class="required-text">*</span>
+                            input.form-control(type="text" id="hoNV" name="hoNV" value=`${staff.hoNV}` placeholder="Nhập họ nhân viên" required)
+                        .form-group
+                            label(for="tenNV") Tên nhân viên <span class="required-text">*</span>
+                            input.form-control(type="text" id="tenNV" name="tenNV" value=`${staff.tenNV}` placeholder="Nhập tên nhân viên" required)
+                        .form-group
+                            label(for="diaChi") Địa chỉ <span class="required-text">*</span>
+                            input.form-control(type="text" id="diaChi" name="diaChi" value=`${staff.diaChi}` placeholder="Nhập địa chỉ" required)
+                        .form-group
+                            label(for="dienThoai") Điện thoại <span class="required-text">*</span>
+                            input.form-control(type="text" id="dienThoai" name="dienThoai" value=`${staff.dienThoai}` placeholder="Nhập số điện thoại" required)
+                        .form-group
+                                label(for="gioiTinh") Giới tính <span class="required-text">*</span>
+                                select.form-control(id="gioiTinh" name="gioiTinh" required)
+                                    if staff.gioiTinh === 1
+                                        option(value="1" selected) Nam
+                                        option(value="0") Nữ
+                                    else if staff.gioiTinh === 0
+                                        option(value="1") Nam
+                                        option(value="0" selected) Nữ
+                                    else
+                                        option(value="1") Nam
+                                        option(value="0") Nữ
+                        .form-group
+                            label(for="email") Email <span class="required-text">*</span>
+                            input.form-control(type="email" id="email" name="email" value=`${staff.email}` placeholder="Nhập email" required)
+                .d-flex.justify-content-end.mt-3
+                    a.btn.btn-secondary.mr-2(href=`${prefixAdmin}/staff`) Thoát
+                    button.btn.btn-primary(type="submit" id="btnLuu") Lưu
+
+    script(src="/vendor/jquery/jquery.min.js")
+    script(src="/js/validation.js")
+    script(src="/js/adminjs/staff/staff-edit.js")

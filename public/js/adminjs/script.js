@@ -62,3 +62,41 @@ $(document).ready(function () {
     });
     // End Change Status item
 });
+
+
+$(document).ready(function () {
+    // Delete item
+    $('#dataTable').on('click', '.delete-type-btn', function() {
+        const typeId = $(this).data('type-id');
+        $('#delete-link').on('click', function(e) {
+            e.preventDefault(); 
+            $('#delete-type-item').attr('action', `/Library/admin/type/delete/${typeId}?_method=DELETE`);
+            $('#delete-type-item').submit(); 
+        });
+    });
+});
+
+$(document).ready(function () {
+    // Delete item
+    $('#dataTable').on('click', '.delete-staff-btn', function() {
+        const staffId = $(this).data('staff-id');
+        $('#delete-link').on('click', function(e) {
+            e.preventDefault(); 
+            $('#delete-staff-item').attr('action', `/Library/admin/staff/delete/${staffId}?_method=DELETE`);
+            $('#delete-staff-item').submit(); 
+        });
+    });
+});
+
+
+$(document).ready(function () {
+    // Delete item
+    $('#dataTable').on('click', '.delete-author-btn', function() {
+        const authorId = $(this).data('author-id');
+        $('#delete-link').on('click', function(e) {
+            e.preventDefault(); 
+            $('#delete-author-item').attr('action', `/Library/admin/author/delete/${authorId}?_method=DELETE`);
+            $('#delete-author-item').submit(); 
+        });
+    });
+});
