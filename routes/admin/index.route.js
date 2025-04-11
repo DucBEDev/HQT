@@ -6,6 +6,7 @@ const staffRoute = require('./staff.route');
 const readerRoute = require('./reader.route');
 const typeRoute = require('./type.route');
 const authorRoute = require('./author.route');
+const isbn_bookRoute = require('./isbn_book.route');
 
 
 module.exports = (app) => {
@@ -15,5 +16,6 @@ module.exports = (app) => {
     app.use(PATH_ADMIN + '/reader', readerRoute);
     app.use(PATH_ADMIN + '/type', typeRoute);
     app.use(PATH_ADMIN + '/author', authorRoute);
+    app.use(PATH_ADMIN + '/isbn_book', isbn_bookRoute);
 
 }

@@ -1,3 +1,4 @@
+
 // Show alert
 const showAlert = document.querySelector("[show-alert]");
 
@@ -97,6 +98,34 @@ $(document).ready(function () {
             e.preventDefault(); 
             $('#delete-author-item').attr('action', `/Library/admin/author/delete/${authorId}?_method=DELETE`);
             $('#delete-author-item').submit(); 
+        });
+    });
+});
+
+
+// script.js
+$(document).ready(function () {
+    // ... (giữ nguyên các phần khác)
+
+    $('#btnUndo').on('click', function() {
+        fetch(`/Library/admin/type/undo`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Undo thành công!');
+                window.location.reload(); // Cập nhật giao diện
+            } else {
+                alert(data.message || 'Không thể thực hiện undo!');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi thực hiện undo!');
         });
     });
 });
