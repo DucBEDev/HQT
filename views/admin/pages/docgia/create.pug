@@ -18,37 +18,50 @@ block main
                         .form-group
                             label(for="hoDG") Họ độc giả <span class="required-text">*</span>
                             input.form-control(type="text" id="hoDG" name="hoDG" placeholder="Nhập họ độc giả" required)
+                            .invalid-feedback#hoDGError Vui lòng nhập họ hợp lệ (chỉ chứa chữ cái).
                         .form-group
                             label(for="tenDG") Tên độc giả <span class="required-text">*</span>
                             input.form-control(type="text" id="tenDG" name="tenDG" placeholder="Nhập tên độc giả" required)
+                            .invalid-feedback#tenDGError Vui lòng nhập tên hợp lệ (chỉ chứa chữ cái).
                         .form-group
                             label(for="emailDG") Email <span class="required-text">*</span>
-                            input.form-control(type="email" id="emailDG" name="emailDG" placeholder="Nhập email" required)
+                            .input-group.mb-3
+                                input.form-control(type="text" id="emailDG" name="emailDG" placeholder="Nhập email" required)
+                                .input-group-append
+                                    span.input-group-text(id="basic-addon2") @gmail.com
+                                .invalid-feedback#emailDGError Email chỉ được chứa chữ cái và số, không chứa ký tự đặc biệt.
                         .form-group
                             label(for="soCMND") Số CCCD <span class="required-text">*</span>
                             input.form-control(type="text" id="soCMND" name="soCMND" placeholder="Nhập số CCCD" required)
+                            .invalid-feedback#soCMNDError Số CCCD phải đúng 12 chữ số.
                         .form-group
                             label(for="gioiTinh") Giới tính <span class="required-text">*</span>
                             select.form-control(id="gioiTinh" name="gioiTinh" required)
                                 option(value="") -- Chọn giới tính --
                                 option(value="Nam") Nam
                                 option(value="Nữ") Nữ
+                            .invalid-feedback#gioiTinhError Vui lòng chọn giới tính.
                     .col-lg-6
                         .form-group
                             label(for="ngaySinh") Ngày sinh <span class="required-text">*</span>
                             input.form-control(type="date" id="ngaySinh" name="ngaySinh" required)
+                            .invalid-feedback#ngaySinhError Ngày sinh không hợp lệ hoặc lớn hơn ngày hiện tại.
                         .form-group
                             label(for="diaChiDG") Địa chỉ <span class="required-text">*</span>
                             input.form-control(type="text" id="diaChiDG" name="diaChiDG" placeholder="Nhập địa chỉ" required)
+                            .invalid-feedback#diaChiDGError Địa chỉ không được chứa ký tự đặc biệt nguy hiểm.
                         .form-group
                             label(for="dienThoai") Số điện thoại <span class="required-text">*</span>
                             input.form-control(type="tel" id="dienThoai" name="dienThoai" placeholder="Nhập số điện thoại" required)
+                            .invalid-feedback#dienThoaiError Số điện thoại phải đúng 10 chữ số.
                         .form-group
                             label(for="ngayLamThe") Ngày làm thẻ <span class="required-text">*</span>
                             input.form-control(type="date" id="ngayLamThe" name="ngayLamThe" required)
+                            .invalid-feedback#ngayLamTheError Ngày làm thẻ không hợp lệ hoặc nhỏ hơn ngày hiện tại.
                         .form-group
                             label(for="ngayHetHan") Ngày hết hạn <span class="required-text">*</span>
                             input.form-control(type="date" id="ngayHetHan" name="ngayHetHan" required)
+                            .invalid-feedback#ngayHetHanError Ngày hết hạn phải lớn hơn ngày làm thẻ.
                         .form-group.d-flex
                             label.mr-4(for="hoatDong") Trạng thái hoạt động <span class="required-text">*</span>
                             .custom-control.custom-switch.ml-4

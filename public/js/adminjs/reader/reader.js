@@ -139,32 +139,26 @@ function hienThiDanhSachDocGia() {
 }
 
 // Validate
-function restrictEmailInput(input) {
-    input.addEventListener('input', function(e) {
-        const value = this.value;
-        const filteredValue = value.replace(/\s/g, '');
-        if (value !== filteredValue) {
-            this.value = filteredValue;
-        }
-    });
-}
-
 function restrictDateInput(input, isBirthDate = false) {
     input.addEventListener('input', function(e) {
         const value = this.value;
         const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        const errorElementId = input.id + 'Error';
         if (value && !dateRegex.test(value)) {
             this.classList.add('is-invalid');
+            document.getElementById(errorElementId).style.display = 'block';
         } else {
             const date = new Date(value);
             const currentDate = new Date();
             if (isNaN(date.getTime())) {
                 this.classList.add('is-invalid');
+                document.getElementById(errorElementId).style.display = 'block';
             } else if (isBirthDate && date > currentDate) {
                 this.classList.add('is-invalid');
+                document.getElementById(errorElementId).style.display = 'block';
             } else {
                 this.classList.remove('is-invalid');
-                this.classList.add('is-valid');
+                document.getElementById(errorElementId).style.display = 'none';
             }
         }
     });
@@ -186,14 +180,20 @@ function validateCardDates(startInput, endInput) {
             if (isNaN(start.getTime()) || isNaN(end.getTime())) {
                 startInput.classList.add('is-invalid');
                 endInput.classList.add('is-invalid');
+                document.getElementById('ngayLamTheError').style.display = 'block';
+                document.getElementById('ngayHetHanError').style.display = 'block';
             } else if (start < currentDate || end <= start) {
                 startInput.classList.add('is-invalid');
                 endInput.classList.add('is-invalid');
+                document.getElementById('ngayLamTheError').style.display = 'block';
+                document.getElementById('ngayHetHanError').style.display = 'block';
             } else {
                 startInput.classList.remove('is-invalid');
                 startInput.classList.add('is-valid');
                 endInput.classList.remove('is-invalid');
                 endInput.classList.add('is-valid');
+                document.getElementById('ngayLamTheError').style.display = 'none';
+                document.getElementById('ngayHetHanError').style.display = 'none';
             }
         }
     }
@@ -217,16 +217,16 @@ document.addEventListener('DOMContentLoaded', function() {
     window.restrictNameInput(tenDGInput);
 
     // Chặn nhập chữ và ký tự đặc biệt trong ô số điện thoại
-    window.restrictPhoneInput(dienThoaiInput);
+    window.restrictNumberInput(dienThoaiInput, 10);
 
     // Chặn nhập chữ và ký tự đặc biệt trong ô số CCCD
-    window.restrictCitizenIdInput(soCMNDInput);
+    window.restrictNumberInput(soCMNDInput, 12);
 
     // Chặn nhập ký tự đặc biệt nguy hiểm trong ô địa chỉ
     window.restrictSpecialCharInput(diaChiDGInput);
 
     // Chặn nhập khoảng trắng trong ô email
-    restrictEmailInput(emailDGInput);
+    window.restrictEmailInput(emailDGInput);
 
     // Validate ngày sinh (không cho phép lớn hơn ngày hiện tại)
     restrictDateInput(ngaySinhInput, true);

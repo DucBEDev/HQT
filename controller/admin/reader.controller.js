@@ -17,12 +17,8 @@ module.exports.index = async (req, res) => {
 
 // [DELETE] /reader/delete/:maDG
 module.exports.delete = async (req, res) => {
-    console.log("Called");
+    const { maDG } = req.params; 
 
-    const { maDG } = req.params; // Lấy giá trị maTL từ req.params
-    console.log(maDG);
-
-    // Định dạng params thành mảng chứa một đối tượng
     const params = [
         { name: 'MADG', type: sql.Int, value: maDG }
     ];
@@ -61,11 +57,12 @@ module.exports.createPost = async (req, res) => {
         const cleanHoDG = reader.hoDG.trim().replace(/\s+/g, ' ');
         const cleanTenDG = reader.tenDG.trim().replace(/\s+/g, ' ');
         const cleanDiaChiDG = reader.diaChiDG.trim().replace(/\s+/g, ' ');
+        const cleanEmailDG = reader.emailDG.trim().replace(/\s+/g, ' ');
 
         const params = [
             { name: 'HODG', type: sql.NVarChar, value: cleanHoDG },
             { name: 'TENDG', type: sql.NVarChar, value: cleanTenDG },
-            { name: 'EMAILDG', type: sql.NVarChar, value: reader.emailDG },
+            { name: 'EMAILDG', type: sql.NVarChar, value: cleanEmailDG + '@gmail.com' },
             { name: 'SOCMND', type: sql.NVarChar, value: reader.soCMND },
             { name: 'GIOITINH', type: sql.Bit, value: reader.gioiTinh == '1' },
             { name: 'NGAYSINH', type: sql.DateTime, value: reader.ngaySinh },
@@ -85,54 +82,51 @@ module.exports.createPost = async (req, res) => {
 
 module.exports.edit = async (req, res) => {
     const { maDG } = req.params;
-    const docgia = await DocGiaRepository.getById(maDG); // Giả định hàm lấy thông tin độc giả
-    docgia.ngaySinh = docgia.ngaySinh.toISOString().split('T')[0]; // Chuyển đổi ngày sinh về định dạng YYYY-MM-DD
-    docgia.ngayLamThe = docgia.ngayLamThe.toISOString().split('T')[0]; // Chuyển đổi ngày làm thẻ về định dạng YYYY-MM-DD
-    docgia.ngayHetHan = docgia.ngayHetHan.toISOString().split('T')[0]; // Chuyển đổi ngày hết hạn về định dạng YYYY-MM-DD
+    const docGia = await DocGiaRepository.getById(maDG); 
+
+    docGia.ngaySinh = docGia.ngaySinh.toISOString().split('T')[0]; 
+    docGia.ngayLamThe = docGia.ngayLamThe.toISOString().split('T')[0]; 
+    docGia.ngayHetHan = docGia.ngayHetHan.toISOString().split('T')[0]; 
+    docGia.emailDG = docGia.emailDG.split('@')[0];
+
     res.render('admin/pages/docgia/edit', {
-        docgia,
+        docgia: docGia,
         pageTitle: 'Chỉnh sửa độc giả',
     });
 };
 
-// [POST] /docgia/edit/:maDG
-module.exports.editPost = async (req, res) => {
-    console.log("test")
+// [PATCH] /reader/edit/:maDG
+module.exports.editPatch = async (req, res) => {
     const { maDG } = req.params;
     const { hoDG, tenDG, emailDG, soCMND, gioiTinh, ngaySinh, diaChiDG, dienThoai, ngayLamThe, ngayHetHan, hoatDong } = req.body;
-
-    const reader = new DocGia(maDG, hoDG, tenDG, emailDG, soCMND, gioiTinh, ngaySinh, diaChiDG, dienThoai, ngayLamThe, ngayHetHan, hoatDong)
-    console.log(reader);
+    const cleanHoDG = hoDG.trim().replace(/\s+/g, ' ');
+    const cleanTenDG = tenDG.trim().replace(/\s+/g, ' ');
+    const cleanDiaChiDG = diaChiDG.trim().replace(/\s+/g, ' ');
+    const cleanEmailDG = emailDG.trim().replace(/\s+/g, ' ');
 
     const params = [
         { name: 'MADG', type: sql.Int, value: maDG },
-        { name: 'HODG', type: sql.NVarChar, value: hoDG },
-        { name: 'TENDG', type: sql.NVarChar, value: tenDG },
-        { name: 'EMAILDG', type: sql.NVarChar, value: emailDG },
+        { name: 'HODG', type: sql.NVarChar, value: cleanHoDG },
+        { name: 'TENDG', type: sql.NVarChar, value: cleanTenDG },
+        { name: 'EMAILDG', type: sql.NVarChar, value: cleanEmailDG + '@gmail.com' },
         { name: 'SOCMND', type: sql.NVarChar, value: soCMND },
-        { name: 'GIOITINH', type: sql.Bit, value: gioiTinh === 'true' ? 1 : 0},
+        { name: 'GIOITINH', type: sql.Bit, value: gioiTinh == 'true' },
         { name: 'NGAYSINH', type: sql.Date, value: ngaySinh },
-        { name: 'DIACHIDG', type: sql.NVarChar, value: diaChiDG },
+        { name: 'DIACHIDG', type: sql.NVarChar, value: cleanDiaChiDG },
         { name: 'DIENTHOAI', type: sql.NVarChar, value: dienThoai },
         { name: 'NGAYLAMTHE', type: sql.Date, value: ngayLamThe },
         { name: 'NGAYHETHAN', type: sql.Date, value: ngayHetHan },
-        { name: 'HOATDONG', type: sql.Bit, value: hoatDong === 'true' ? 1 : 0 }
+        { name: 'HOATDONG', type: sql.Bit, value: hoatDong == 'true' }
     ];
 
     try {
         await executeStoredProcedureWithTransaction('sp_SuaDocGia', params);
-        res.render('admin/pages/docgia/edit', {
-            docgia: reader,
-            pageTitle: 'Chỉnh sửa độc giả',
-        });
+        res.redirect(`${systemConfig.prefixAdmin}/reader`);
     } catch (error) {
         console.error('Error updating reader:', error);
         res.status(500).send('Có lỗi xảy ra khi cập nhật độc giả!');
     }
 };
-
-
-
 
 // [GET] /reader/next-id
 module.exports.getNextId = async (req, res) => {

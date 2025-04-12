@@ -54,6 +54,39 @@ class SachRepository {
             throw err;
         }
     }
+
+    static async getBooksByISBN(isbn) {
+        try {
+            await pool.connect();
+            const result = await pool.request()
+                .input('isbn', sql.NVarChar, isbn)
+                .query('SELECT * FROM SACH WHERE ISBN = @isbn');    
+            return result.recordset.map(row => new Sach(
+                row.MASACH,
+                row.ISBN,
+                row.TINHTRANG,
+                row.CHOMUON,
+                row.MANGANTU === null ? null : row.MANGANTU
+            ));
+        } catch (err) {
+            console.error('Error in getBooksByISBN Sach:', err);
+            throw err;
+        }
+    }
+
+    static async getNextId() {
+        try {
+            await pool.connect();
+            const result = await pool.request().query('SELECT MAX(MASACH) as maxId FROM SACH');
+            const maxId = parseInt(result.recordset[0].maxId.substring(4));
+
+            const nextId = `SACH${(maxId + 1).toString().padStart(4, '0')}`;
+            return nextId;
+        } catch (err) {
+            console.error('Error in getNextId Sach:', err);
+            throw err;
+        }
+    }   
 }
 
 module.exports = SachRepository;

@@ -7,136 +7,122 @@ block main
 
     .container-fluid
         // Phần trên: Danh sách đầu sách
-        .upper-section
-            .card.mb-4
-                .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
-                    h6.m-0.font-weight-bold.text-primary Danh Sách Đầu Sách
-                    a.btn.btn-primary(href=`${prefixAdmin}/isbn_book/create`) + Thêm đầu sách
-                .table-responsive.p-3
-                    table#dataTable.table.align-items-center.table-flush
-                        thead.thead-light
-                            tr
-                                th ISBN
-                                th Tên Sách
-                                th Kho Sách
-                                th Nhà Xuất Bản
-                                th Giá
-                                th Ngày Xuất Bản
-                                th Hành Động
-                        tbody#dauSachTableBody
-                            each dauSach in dauSachList
-                                tr.dau-sach-item(data-isbn=`${dauSach.isbn}`)
-                                    td.align-middle #{dauSach.isbn}
-                                    td.align-middle #{dauSach.tenSach}
-                                    td.align-middle #{dauSach.khoSach}
-                                    td.align-middle #{dauSach.nhaXB}
-                                    td.align-middle #{dauSach.gia}
-                                    td.align-middle #{dauSach.ngayXuatBan ? new Date(dauSach.ngayXuatBan).toLocaleDateString('vi-VN') : ''}
-                                    td.align-middle
-                                        a.btn.btn-sm.btn-dark.select-dau-sach.mr-1(href=`javascript:void(0);` data-isbn=`${dauSach.isbn}`) Chọn
-                                        a.btn.btn-sm.btn-danger.delete-dau-sach-btn.mr-1(href=`javascript:void(0);` data-isbn=`${dauSach.isbn}` data-toggle="modal" data-target="#DeleteDauSachModal") Xóa
+        .card.mb-4
+            .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+                h6.m-0.font-weight-bold.text-primary Danh Sách Đầu Sách
+            .table-responsive.p-3
+                table#dataTable.table.align-items-center.table-flush
+                    thead.thead-light
+                        tr
+                            th ISBN
+                            th Tên Sách
+                            th Kho Sách
+                            th Nhà Xuất Bản
+                            th Giá
+                            th Ngày Xuất Bản
+                            th Hành Động
+                    tbody#dauSachTableBody
+                        each dauSach in dauSachList
+                            tr.dau-sach-item(data-isbn=`${dauSach.isbn}`)
+                                td.align-middle #{dauSach.isbn}
+                                td.align-middle #{dauSach.tenSach}
+                                td.align-middle #{dauSach.khoSach}
+                                td.align-middle #{dauSach.nhaXB}
+                                td.align-middle #{dauSach.gia}
+                                td.align-middle #{dauSach.ngayXuatBan ? new Date(dauSach.ngayXuatBan).toLocaleDateString('vi-VN') : ''}
+                                td.align-middle
+                                    a.btn.btn-sm.btn-dark.select-dau-sach.mr-1(href=`javascript:void(0);` data-isbn=`${dauSach.isbn}`) Chọn
+                                    a.btn.btn-sm.btn-danger.delete-dau-sach-btn.mr-1(href=`javascript:void(0);` data-isbn=`${dauSach.isbn}` data-toggle="modal" data-target="#DeleteDauSachModal") Xóa
 
-        // Phần dưới: Chia làm 2 phần
-        .lower-section.d-flex
-            // Bên trái: Danh sách sách của đầu sách được chọn
-            .lower-left.flex-1.mr-2
-                .card.mb-4
-                    .card-header.py-3
-                        h6.font-weight-bold.text-primary Danh Sách Sách (Đầu sách: <span id="selectedDauSach">Chưa chọn</span>)
-                    .card-body
-                        form#addSachForm(action=`${prefixAdmin}/isbn_book/sach/write` method="post")
-                            .d-flex.justify-content-end.mb-2
-                                button.btn.btn-primary.btn-small.mr-1(type="button" id="addSachBtn") Thêm
-                                button.btn.btn-success.btn-small(type="submit" id="ghiSachBtn") Ghi
-                            .table-responsive
-                                table.table.align-items-center.table-flush#dataSachTable
-                                    thead.thead-light
-                                        tr
-                                            th Mã Sách
-                                            th Tình Trạng
-                                            th Cho Mượn
-                                            th Mã Ngăn Tủ
-                                            th Hành Động
-                                    tbody#sachList
-                                        each sach in sachList
-                                            tr.sach-item(data-ma-sach=`${sach.maSach}`)
-                                                td.align-middle #{sach.maSach}
-                                                td.align-middle #{sach.tinhTrang ? 'Tốt' : 'Hỏng'}
-                                                td.align-middle #{sach.choMuon ? 'Có' : 'Không'}
-                                                td.align-middle #{sach.maNganTu ? sach.maNganTu : 'Chưa gán'}
-                                                td.align-middle
-                                                    button.btn.btn-sm.btn-dark.btn-small.edit-sach-btn(type="button") Sửa
-                                                    button.btn.btn-sm.btn-danger.btn-small.delete-sach-btn(type="button" data-ma-sach=`${sach.maSach}` data-toggle="modal" data-target="#DeleteSachModal") Xóa
-                            // Input ẩn để gửi danh sách sách
-                            #sachInputs
+        .card.mb-4
+            .card-header.py-3
+                h6.font-weight-bold.text-primary Danh Sách Sách (Đầu sách: <span id="selectedDauSach">Chưa chọn</span>)
+            .card-body
+                form#addSachForm(action=`${prefixAdmin}/isbn_book/sach/write` method="post")
+                    .d-flex.justify-content-end.mb-2
+                        button.btn.btn-primary.btn-small.mr-1(type="button" id="addSachBtn") Thêm
+                        button.btn.btn-success.btn-small(type="submit" id="ghiSachBtn") Ghi
+                    .table-responsive
+                        table.table.align-items-center.table-flush#dataSachTable
+                            thead.thead-light
+                                tr
+                                    th Mã Sách
+                                    th Tình Trạng
+                                    th Cho Mượn
+                                    th Kệ
+                                    th Hành Động
+                            tbody#sachList
+                                
+                    // Remove the hidden inputs container since we're using JavaScript arrays directly
+                    // #sachInputs
+                
 
-            // Bên phải: Form thêm đầu sách mới và danh sách tạm thời
-            .lower-right.flex-1.ml-2
-                .card.mb-4
-                    .card-header.py-3
-                        h6.font-weight-bold.text-primary Thêm Đầu Sách Mới
-                    .card-body
-                        form#addDauSachForm(action=`${prefixAdmin}/isbn_book/dausach/write` method="post")
-                            .row
-                                .col-lg-6
-                                    .form-group
-                                        label(for="isbn") ISBN
-                                        input.form-control(type="text" id="isbn" name="isbn" readonly)
-                                    .form-group
-                                        label(for="tenSach") Tên Sách <span class="required-text">*</span>
-                                        input.form-control(type="text" id="tenSach" name="tenSach" placeholder="Nhập tên sách" required)
-                                    .form-group
-                                        label(for="khoSach") Kho Sách
-                                        input.form-control(type="text" id="khoSach" name="khoSach" placeholder="Nhập kho sách")
-                                    .form-group
-                                        label(for="nhaXB") Nhà Xuất Bản
-                                        input.form-control(type="text" id="nhaXB" name="nhaXB" placeholder="Nhập nhà xuất bản")
-                                    .form-group
-                                        label(for="gia") Giá
-                                        input.form-control(type="number" id="gia" name="gia" placeholder="Nhập giá")
-                                    .form-group
-                                        label(for="noiDung") Nội Dung
-                                        textarea.form-control(id="noiDung" name="noiDung" placeholder="Nhập nội dung")
-                                .col-lg-6
-                                    .form-group
-                                        label(for="hinhAnhPath") Hình Ảnh
-                                        input.form-control(type="file" id="hinhAnhPath" name="hinhAnhPath")
-                                    .form-group
-                                        label(for="ngayXuatBan") Ngày Xuất Bản
-                                        input.form-control(type="date" id="ngayXuatBan" name="ngayXuatBan")
-                                    .form-group
-                                        label(for="lanXuatBan") Lần Xuất Bản
-                                        input.form-control(type="number" id="lanXuatBan" name="lanXuatBan" placeholder="Nhập lần xuất bản")
-                                    .form-group
-                                        label(for="soTrang") Số Trang
-                                        input.form-control(type="number" id="soTrang" name="soTrang" placeholder="Nhập số trang")
-                                    .form-group
-                                        label(for="maNgonNgu") Mã Ngôn Ngữ
-                                        select.form-control(id="maNgonNgu" name="maNgonNgu")
-                                            option(value="") -- Chọn Ngôn Ngữ --
-                                            each ngonNgu in ngonNguList
-                                                option(value=`${ngonNgu.maNgonNgu}`) #{ngonNgu.ngonNgu}
-                                    .form-group
-                                        label(for="maTL") Mã Thể Loại <span class="required-text">*</span>
-                                        select.form-control(id="maTL" name="maTL" required)
-                                            option(value="") -- Chọn Thể Loại --
-                                            each theLoai in theLoaiList
-                                                option(value=`${theLoai.maTL}`) #{theLoai.tenTL}
-                                    .form-group
-                                        label(for="maTacGia") Tác Giả <span class="required-text">*</span>
-                                        select.form-control(id="maTacGia" name="maTacGia" required)
-                                            option(value="") -- Chọn Tác Giả --
-                                            each tacGia in tacGiaList
-                                                option(value=`${tacGia.maTacGia}`) #{tacGia.hoTenTG}
-                            .d-flex.justify-content-end.mt-3
-                                button.btn.btn-primary.mr-2(type="button" id="addDauSachBtn") Thêm
-                                button.btn.btn-success(type="button" id="ghiDauSachBtn") Ghi
-                            hr.separation
-                            h5 Danh Sách Đầu Sách Đã Thêm
-                            .dau-sach-list#dauSachTempList
-                            // Input ẩn để gửi danh sách đầu sách
-                            #dauSachInputs
+        .card.mb-4
+            .card-header.py-3
+                h6.font-weight-bold.text-primary Thêm Đầu Sách Mới
+            .card-body
+                form#addDauSachForm(action=`${prefixAdmin}/isbn_book/dausach/write` method="post")
+                    .row
+                        .col-lg-6
+                            .form-group
+                                label(for="isbn") ISBN
+                                input.form-control(type="text" id="isbn" name="isbn" readonly)
+                            .form-group
+                                label(for="tenSach") Tên Sách <span class="required-text">*</span>
+                                input.form-control(type="text" id="tenSach" name="tenSach" placeholder="Nhập tên sách" required)
+                            .form-group
+                                label(for="khoSach") Kho Sách
+                                input.form-control(type="text" id="khoSach" name="khoSach" placeholder="Nhập kho sách")
+                            .form-group
+                                label(for="nhaXB") Nhà Xuất Bản
+                                input.form-control(type="text" id="nhaXB" name="nhaXB" placeholder="Nhập nhà xuất bản")
+                            .form-group
+                                label(for="gia") Giá
+                                input.form-control(type="number" id="gia" name="gia" placeholder="Nhập giá")
+                            .form-group
+                                label(for="noiDung") Nội Dung
+                                textarea.form-control(id="noiDung" name="noiDung" placeholder="Nhập nội dung")
+                        .col-lg-6
+                            .form-group
+                                label(for="hinhAnhPath") Hình Ảnh
+                                input.form-control(type="file" id="hinhAnhPath" name="hinhAnhPath")
+                            .form-group
+                                label(for="ngayXuatBan") Ngày Xuất Bản
+                                input.form-control(type="date" id="ngayXuatBan" name="ngayXuatBan")
+                            .form-group
+                                label(for="lanXuatBan") Lần Xuất Bản
+                                input.form-control(type="number" id="lanXuatBan" name="lanXuatBan" placeholder="Nhập lần xuất bản")
+                            .form-group
+                                label(for="soTrang") Số Trang
+                                input.form-control(type="number" id="soTrang" name="soTrang" placeholder="Nhập số trang")
+                            .form-group
+                                label(for="maNgonNgu") Mã Ngôn Ngữ
+                                select.form-control(id="maNgonNgu" name="maNgonNgu")
+                                    option(value="") -- Chọn Ngôn Ngữ --
+                                    each ngonNgu in ngonNguList
+                                        option(value=`${ngonNgu.maNgonNgu}`) #{ngonNgu.ngonNgu}
+                            .form-group
+                                label(for="maTL") Mã Thể Loại <span class="required-text">*</span>
+                                select.form-control(id="maTL" name="maTL" required)
+                                    option(value="") -- Chọn Thể Loại --
+                                    each theLoai in theLoaiList
+                                        option(value=`${theLoai.maTL}`) #{theLoai.tenTL}
+                            .form-group
+                                label(for="maTacGia") Tác Giả <span class="required-text">*</span>
+                                select.form-control(id="maTacGia" name="maTacGia" required)
+                                    option(value="") -- Chọn Tác Giả --
+                                    each tacGia in tacGiaList
+                                        option(value=`${tacGia.maTacGia}`) #{tacGia.hoTenTG}
+                    .d-flex.justify-content-end.mt-3
+                        button.btn.btn-primary.mr-2(type="button" id="addDauSachBtn") Thêm
+                        button.btn.btn-success(type="button" id="ghiDauSachBtn") Ghi
+                    hr.separation
+                    h5 Danh Sách Đầu Sách Đã Thêm
+                    .dau-sach-list#dauSachTempList
+                    // Remove the hidden inputs container since we're using JavaScript arrays directly
+                    // #dauSachInputs
 
+                
     // Modal Delete Đầu Sách
     #DeleteDauSachModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="DeleteDauSachModal" aria-hidden="true")
         .modal-dialog(role="document")
@@ -149,7 +135,7 @@ block main
                     p Bạn chắc chắn muốn xóa đầu sách này không?
                 .modal-footer
                     button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
-                    button#delete-dausach-btn.btn.btn-primary(type="button") Xóa
+                    button#delete-dauSach-link.btn.btn-primary(type="button") Xóa
 
     // Modal Delete Sách
     #DeleteSachModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="DeleteSachModal" aria-hidden="true")
@@ -163,10 +149,20 @@ block main
                     p Bạn chắc chắn muốn xóa sách này không?
                 .modal-footer
                     button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
-                    button#delete-sach-btn.btn.btn-primary(type="button") Xóa
+                    button#delete-sach-link.btn.btn-primary(type="button") Xóa
+
+    form(
+        action=""
+        method="post"
+        id="delete-sach-form"
+    )
+
+    form(
+        action=""
+        method="post"
+        id="delete-dauSach-form"
+    )
 
     script(src="/vendor/jquery/jquery.min.js")
-    script(src="/vendor/datatables/jquery.dataTables.min.js")
-    script(src="/vendor/datatables/dataTables.bootstrap4.min.js")
     script(src="/js/validation.js")
     script(src="/js/adminjs/isbn_book.js")
