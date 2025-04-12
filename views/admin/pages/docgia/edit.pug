@@ -1,0 +1,75 @@
+extends ../../layouts/default.pug
+include ../../mixins/alert.pug
+
+block main 
+    +alert-error(3000)
+    +alert-success(3000)
+
+    .card.mb-4
+        .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+            h6.m-0.font-weight-bold.text-primary Chỉnh Sửa Độc Giả
+        .card-body
+            form#editDocGiaForm(action=`${prefixAdmin}/reader/edit/${docgia.maDG}` method="post")
+                .row
+                    .col-lg-6
+                        .form-group
+                            label(for="maDG") Mã độc giả
+                            input.form-control(type="text" id="maDG" name="maDG" value=`${docgia.maDG}` readonly)
+                        .form-group
+                            label(for="hoDG") Họ độc giả <span class="required-text">*</span>
+                            input.form-control(type="text" id="hoDG" name="hoDG" value=`${docgia.hoDG}` placeholder="Nhập họ độc giả" required)
+                        .form-group
+                            label(for="tenDG") Tên độc giả <span class="required-text">*</span>
+                            input.form-control(type="text" id="tenDG" name="tenDG" value=`${docgia.tenDG}` placeholder="Nhập tên độc giả" required)
+                        .form-group
+                            label(for="emailDG") Email <span class="required-text">*</span>
+                            input.form-control(type="email" id="emailDG" name="emailDG" value=`${docgia.emailDG}` placeholder="Nhập email" required)
+                        .form-group
+                            label(for="soCMND") Số CCCD <span class="required-text">*</span>
+                            input.form-control(type="text" id="soCMND" name="soCMND" value=`${docgia.soCMND}` placeholder="Nhập số CCCD" required)
+                        .form-group
+                            label(for="gioiTinh") Giới tính <span class="required-text">*</span>
+                            label #{docgia.gioiTinh} <span class="required-text">*</span>
+                            select.form-control(id="gioiTinh" name="gioiTinh" required)
+                                if docgia.gioiTinh === "true"
+                                    option(value="true" selected) Nam
+                                    option(value="false") Nữ
+                                else if docgia.gioiTinh === 'false'
+                                    option(value="true") Nam
+                                    option(value="false" selected) Nữ
+                                else
+                                    option(value="true") Nam
+                                    option(value="false") Nữ
+                    .col-lg-6
+                        .form-group
+                            label(for="ngaySinh") Ngày sinh <span class="required-text">*</span>
+                            label #{docgia.ngaySinh} <span class="required-text">*</span>
+                            input.form-control(type="date" id="ngaySinh" name="ngaySinh" value=`${docgia.ngaySinh}` required)
+                        .form-group
+                            label(for="diaChiDG") Địa chỉ <span class="required-text">*</span>
+                            input.form-control(type="text" id="diaChiDG" name="diaChiDG" value=`${docgia.diaChiDG}` placeholder="Nhập địa chỉ" required)
+                        .form-group
+                            label(for="dienThoai") Số điện thoại <span class="required-text">*</span>
+                            input.form-control(type="tel" id="dienThoai" name="dienThoai" value=`${docgia.dienThoai}` placeholder="Nhập số điện thoại" required)
+                        .form-group
+                            label(for="ngayLamThe") Ngày làm thẻ <span class="required-text">*</span>
+                            input.form-control(type="date" id="ngayLamThe" name="ngayLamThe" value=`${docgia.ngayLamThe}` required readonly)
+                        .form-group
+                            label(for="ngayHetHan") Ngày hết hạn <span class="required-text">*</span>
+                            input.form-control(type="date" id="ngayHetHan" name="ngayHetHan" value=`${docgia.ngayHetHan}` required)
+                        .form-group.d-flex
+                            label.mr-4(for="hoatDong") Trạng thái hoạt động <span class="required-text">*</span>
+                            label #{docgia.hoatDong} <span class="required-text">*</span>
+                            .custom-control.custom-switch.ml-4
+                                if docgia.hoatDong === "true"
+                                    input.custom-control-input(type="checkbox" name="hoatDong" id="hoatDong" value="true" checked)
+                                else
+                                    input.custom-control-input(type="checkbox" name="hoatDong" id="hoatDong" value="true")
+                                label.custom-control-label(for="hoatDong") Hoạt động
+                .d-flex.justify-content-end.mt-3
+                    a.btn.btn-secondary.mr-2(href=`${prefixAdmin}/docgia`) Thoát
+                    button.btn.btn-primary(type="submit" id="btnLuu") Lưu
+
+    script(src="/vendor/jquery/jquery.min.js")
+    script(src="/js/validation.js")
+    script(src="/js/adminjs/reader/reader-edit.js")

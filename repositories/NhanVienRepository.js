@@ -6,18 +6,36 @@ class NhanVienRepository {
         try {
             await pool.connect(); // Đảm bảo pool đã kết nối
             const request = pool.request();
-            const result = await request.query('SELECT * FROM NHANVIEN');
+            const result = await request.query('SELECT * FROM NHANVIEN WHERE ISDELETED =0');
             return result.recordset.map(row => new NhanVien(
                 row.MANV,
-                row.HOTENNV,
+                row.HONV,
+                row.TENNV,
                 row.DIACHI,
-                row.DIENTHOAI
+                row.DIENTHOAI,
+                row.GIOITINH,
+                row.EMAIL
             ));
         } catch (err) {
             console.error('Error in getAll NhanVien:', err);
             throw err;
         }
     }
+
+
+    static async getById(maNV) {
+        try {
+            await pool.connect(); // Kết nối đến DB
+            const request = pool.request(); // Tạo request
+            request.input('MANV', sql.Int, maNV); // Thêm tham số MATL
+            const result = await request.query('SELECT * FROM NHANVIEN WHERE MANV = @MANV'); // Truy vấn với tham số
+            return new NhanVien(result.recordset[0].MANV, result.recordset[0].HONV, result.recordset[0].TENNV, result.recordset[0].GIOITINH, result.recordset[0].DIACHI, result.recordset[0].DIENTHOAI, result.recordset[0].EMAIL)         
+        } catch (err) {
+            console.error('Error in getById NhanVien:', err);
+            throw err;
+        }
+    }
+
 
     static async add(nhanVien) {
         try {
@@ -59,6 +77,17 @@ class NhanVienRepository {
             return record.rowsAffected[0] > 0;
         } catch (err) {
             console.error('Error in delete NhanVien:', err);
+            throw err;
+        }
+    }
+
+    static async getNextId() {
+        try {
+            await pool.connect();
+            const result = await pool.request().query('SELECT MAX(MANV) as maxId FROM NHANVIEN');
+            return parseInt(result.recordset[0].maxId) + 1;
+        } catch (err) {
+            console.error('Error in getNextId NhanVien:', err);
             throw err;
         }
     }

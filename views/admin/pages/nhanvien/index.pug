@@ -9,33 +9,33 @@ block main
         .card.mb-4
             .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
                 h6.m-0.font-weight-bold.text-primary Danh Sách Nhân Viên
-                a.btn.btn-primary(href=`${prefixAdmin}/nhanvien/add`) + Thêm nhân viên
+                a.btn.btn-primary(href=`${prefixAdmin}/staff/create`) + Thêm nhân viên
+            
             .table-responsive.p-3
                 table#dataTable.table.align-items-center.table-flush
                     thead.thead-light
                         tr
                             th Mã Nhân Viên
                             th Họ Tên
-                            th Địa Chỉ
-                            th Điện Thoại
+                            th Giới Tính
+                            th Email
+                            th Điện Thoại 
                             th Hoạt Động
-                    tbody
+                    tbody#staffTableBody
                         each staff in staffList
                             tr.product-item
                                 td.align-middle #{staff.maNV}
-                                td.align-middle #{staff.hoTenNV}
-                                td.align-middle #{staff.diaChi}
-                                td.align-middle #{staff.dienThoai}
-                                    if staff.trangThai === 'Active'
-                                        a.change-status-blog(href="javascript:void(0);" data-id=`${staff.maNV}` data-status=`${staff.trangThai}`)
-                                        span.badge.badge-success Hoạt động
-                                    else
-                                        a.change-status-blog(href="javascript:void(0);" data-id=`${staff.maNV}` data-status=`${staff.trangThai}`)
-                                        span.badge.badge-danger Ngừng hoạt động
+                                td.align-middle #{staff.hoNV} #{staff.tenNV}
                                 td.align-middle
-                                    a.btn.btn-sm.btn-danger.delete-blog-btn.mr-1(href="javascript:void(0);" data-blog-id=`${staff.maNV}` data-toggle="modal" data-target="#DeleteModal") Xóa
-                                    a.btn.btn-sm.btn-dark.mr-1(href=`${prefixAdmin}/nhanvien/edit/${staff.maNV}`) Sửa
-                                    a.btn.btn-sm.btn-dark.mr-1(href=`${prefixAdmin}/nhanvien/detail/${staff.maNV}`) Xem
+                                    if staff.gioiTinh === true
+                                        | Nam
+                                    else
+                                        | Nữ
+                                td.align-middle #{staff.email}
+                                td.align-middle #{staff.dienThoai}
+                                td.align-middle
+                                    a.btn.btn-sm.btn-primary.edit-type-btn.mr-1(href=`${prefixAdmin}/staff/edit/${staff.maNV}`) Sửa
+                                    a.btn.btn-sm.btn-danger.delete-staff-btn.mr-1(href="javascript:void(0);" data-staff-id=`${staff.maNV}` data-toggle="modal" data-target="#DeleteModal") Xóa
 
     //- Modal Delete Item
     #DeleteModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="DeleteModal" aria-hidden="true")
@@ -44,7 +44,7 @@ block main
                 .modal-header
                     h5#exampleModalLabelLogout.modal-title Xóa nhân viên
                     button.close(type="button" data-dismiss="modal" aria-label="Close")
-                        span(aria-hidden="true") &times;
+                        span(aria-hidden="true") ×
                 .modal-body
                     p Bạn chắc chắn muốn xóa nhân viên này không?
                 .modal-footer

@@ -1,0 +1,28 @@
+extends ../../layouts/default.pug
+include ../../mixins/alert.pug
+
+block main 
+    +alert-error(3000)
+    +alert-success(3000)
+
+    .card.mb-4
+        .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+            h6.m-0.font-weight-bold.text-primary Chỉnh Sửa Thể Loại
+        .card-body
+            form#editTypeForm(action=`${prefixAdmin}/type/edit/${type.maTL}` method="post")
+                .row
+                    .col-lg-12
+                        .form-group
+                            label(for="maTL") Mã thể loại
+                            input.form-control(type="text" id="maTL" name="maTL" value=`${type.maTL}` readonly)
+                        .form-group
+                            label(for="tenTL") Tên thể loại <span class="required-text">*</span>
+                            input.form-control(type="text" id="tenTL" name="tenTL" value=`${type.tenTL}` placeholder="Nhập tên thể loại" required)
+                .d-flex.justify-content-end.mt-3
+                    a.btn.btn-secondary.mr-2(href=`${prefixAdmin}/type`) Thoát
+                    button.btn.btn-primary(type="submit" id="btnLuu") Lưu
+
+    script(src="/vendor/jquery/jquery.min.js")
+    script(src="/js/validation.js")
+    script(src="/js/adminjs/type/type-edit.js")
+    script(src="/js/adminjs//type/type-undo.js")

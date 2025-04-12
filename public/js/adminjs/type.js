@@ -1,4 +1,4 @@
-const danhSachTheLoai = [];
+let danhSachTheLoai = [];
 let currentMaTL = 0;
 
 async function getNextMaTL() {
@@ -73,6 +73,7 @@ document.getElementById('btnGhi').addEventListener('click', function() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
+            pushToUndoStack('create', danhSachTheLoai.slice()); // Sao chép danh sách
             alert('Ghi dữ liệu thành công!');
             window.location.href = `/Library/admin/type`;
         } else {
@@ -83,12 +84,14 @@ document.getElementById('btnGhi').addEventListener('click', function() {
         console.error('Error:', error);
         alert('Có lỗi xảy ra khi ghi dữ liệu!');
     });
+    
 });
 
 function xoaTheLoai(maTL) {
     if (confirm('Bạn có chắc chắn muốn xóa thể loại này khỏi danh sách?')) {
         danhSachTheLoai = danhSachTheLoai.filter(tl => tl.maTL !== maTL);
         hienThiDanhSachTheLoai();
+        getNextMaTL();
     }
 }
 
@@ -130,4 +133,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 // End Validate
-

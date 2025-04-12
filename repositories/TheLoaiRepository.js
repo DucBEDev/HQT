@@ -5,7 +5,7 @@ class TheLoaiRepository {
     static async getAll() {
         try {
             await pool.connect();
-            const result = await pool.request().query('SELECT * FROM THELOAI');
+            const result = await pool.request().query('SELECT * FROM THELOAI WHERE ISDELETED=0');
             return result.recordset.map(row => new TheLoai(
                 row.MATL,
                 row.TENTL
@@ -16,23 +16,25 @@ class TheLoaiRepository {
         }
     }
 
-    static async add(theLoai) {
-        try {
-            await pool.connect();
-            const request = pool.request();
-            request.input('maTL', sql.NVarChar, theLoai.maTL);
-            request.input('tenTL', sql.NVarChar, theLoai.tenTL);
 
-            const result = await request.query(`
-                INSERT INTO THELOAI (MATL, TENTL)
-                VALUES (@maTL, @tenTL)
-            `);
-            return result.rowsAffected[0] > 0;
+    static async getById(maTL) {
+        try {
+            await pool.connect(); // Kết nối đến DB
+            const request = pool.request(); // Tạo request
+            request.input('MATL', sql.NVarChar, maTL); // Thêm tham số MATL
+            const result = await request.query('SELECT * FROM THELOAI WHERE MATL = @MATL'); // Truy vấn với tham số
+            console.log(result.recordset)
+            return new TheLoai(result.recordset[0].MATL, result.recordset[0].TENTL)
+
+            
+            
         } catch (err) {
-            console.error('Error in add TheLoai:', err);
+            console.error('Error in getById TheLoai:', err);
             throw err;
         }
     }
+
+
 
     static async getCurrentId() {
         try {
@@ -45,19 +47,6 @@ class TheLoaiRepository {
             return parseInt(maxId.replace('TL', '').trim());
         } catch (err) {
             console.error('Error in getCurrentId TheLoai:', err);
-            throw err;
-        }
-    }
-
-    static async delete(maTL) {
-        try {
-            await pool.connect();
-            const request = pool.request();
-            request.input('maTL', sql.NVarChar, maTL);
-            const record = await request.query('UPDATE THELOAI SET XOA = 1 WHERE MATL = @maTL');    
-            return record.rowsAffected[0] > 0;
-        } catch (err) {
-            console.error('Error in delete TheLoai:', err);
             throw err;
         }
     }

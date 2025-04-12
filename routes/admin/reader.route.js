@@ -9,5 +9,7 @@ router.patch('/change-status/:newStatus/:maDG', controller.changeStatus);
 router.get('/create', controller.create);
 router.post('/create', controller.createPost);
 router.get('/next-id', controller.getNextId);
+router.get('/edit/:maDG', controller.edit);
+router.post('/edit/:maDG', controller.editPost);
 
 module.exports = router;

@@ -1,0 +1,75 @@
+extends ../../layouts/default.pug
+include ../../mixins/alert.pug
+
+block main 
+    +alert-error(3000)
+    +alert-success(3000)
+
+    .col-lg-12
+        .card.mb-4
+            .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+                h6.m-0.font-weight-bold.text-primary Danh Sách Phiếu Mượn
+                a.btn.btn-primary(href=`${prefixAdmin}/phieumuon/create`) + Thêm phiếu mượn
+            
+            .table-responsive.p-3
+                table#dataTable.table.align-items-center.table-flush
+                    thead.thead-light
+                        tr
+                            th Mã Phiếu
+                            th Mã Độc Giả
+                            th Hình Thức
+                            th Ngày Mượn
+                            th Mã Nhân Viên
+                            th Thao Tác
+                    tbody#phieuMuonTableBody
+                        each phieu in phieuMuonList
+                            tr.product-item
+                                td.align-middle #{phieu.maPhieu}
+                                td.align-middle #{phieu.maDG}
+                                td.align-middle
+                                    if phieu.hinhThuc === true
+                                        | Mang về
+                                    else
+                                        | Tại chỗ
+                                td.align-middle #{phieu.ngayMuon.toLocaleDateString('vi-VN')}
+                                td.align-middle #{phieu.maNV}
+                                td.align-middle
+                                    a.btn.btn-sm.btn-primary.edit-type-btn.mr-1(href=`${prefixAdmin}/phieumuon/edit/${phieu.maPhieu}`) Sửa
+                                    a.btn.btn-sm.btn-danger.delete-phieu-btn.mr-1(href="javascript:void(0);" data-phieu-id=`${phieu.maPhieu}` data-toggle="modal" data-target="#DeleteModal") Xóa
+
+    //- Modal Delete Item
+    #DeleteModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="DeleteModal" aria-hidden="true")
+        .modal-dialog(role="document")
+            .modal-content
+                .modal-header
+                    h5#exampleModalLabelLogout.modal-title Xóa phiếu mượn
+                    button.close(type="button" data-dismiss="modal" aria-label="Close")
+                        span(aria-hidden="true") ×
+                .modal-body
+                    p Bạn chắc chắn muốn xóa phiếu mượn này không?
+                .modal-footer
+                    button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
+                    button#delete-link.btn.btn-primary(type="button") Xóa
+
+    form(
+        action=""
+        method="POST"
+        id="delete-phieu-item"
+    )
+
+    script(src="/vendor/jquery/jquery.min.js")
+    script.
+        $(document).ready(function() {
+            // Xử lý sự kiện click nút Xóa trong modal
+            $('#delete-link').on('click', function() {
+                const phieuId = $('#DeleteModal').find('.delete-phieu-btn').data('phieu-id');
+                $('#delete-phieu-item').attr('action', `${prefixAdmin}/phieumuon/delete/${phieuId}`);
+                $('#delete-phieu-item').submit();
+            });
+
+            // Gán ID phiếu mượn cho modal khi mở
+            $('.delete-phieu-btn').on('click', function() {
+                const phieuId = $(this).data('phieu-id');
+                $('#DeleteModal').find('.delete-phieu-btn').data('phieu-id', phieuId);
+            });
+        });

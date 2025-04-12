@@ -10,6 +10,7 @@ block main
             .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
                 h6.m-0.font-weight-bold.text-primary Danh Sách Thể Loại
                 a.btn.btn-primary(href=`${prefixAdmin}/type/create`) + Thêm thể loại
+                button.btn.btn-warning#btnUndo Khôi phục
             
             .table-responsive.p-3
                 table#dataTable.table.align-items-center.table-flush
@@ -24,6 +25,7 @@ block main
                                 td.align-middle #{type.maTL}
                                 td.align-middle #{type.tenTL}
                                 td.align-middle
+                                    a.btn.btn-sm.btn-primary.edit-type-btn.mr-1(href=`${prefixAdmin}/type/edit/${type.maTL}`) Sửa
                                     a.btn.btn-sm.btn-danger.delete-type-btn.mr-1(href="javascript:void(0);" data-type-id=`${type.maTL}` data-toggle="modal" data-target="#DeleteModal") Xóa
 
     //- Modal Delete Item
@@ -45,3 +47,6 @@ block main
         method="POST"
         id="delete-type-item"
     )
+    
+    script(src="/js/adminjs//type/type-undo.js")
+    

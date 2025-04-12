@@ -1,0 +1,63 @@
+extends ../../layouts/default.pug
+include ../../mixins/alert.pug
+
+block main 
+    +alert-error(3000)
+    +alert-success(3000)
+
+    .card.mb-4
+        .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+            h6.m-0.font-weight-bold.text-primary Thêm Nhân Viên
+        .card-body
+            form#addStaffForm(action=`${prefixAdmin}/staff/create` method="post")
+                .row
+                    .col-lg-12
+                        .form-group
+                            label(for="maNV") Mã nhân viên
+                            input.form-control(type="text" id="maNV" name="maNV" readonly)
+                        .form-group
+                            label(for="hoNV") Họ nhân viên <span class="required-text">*</span>
+                            input.form-control(type="text" id="hoNV" name="hoNV" placeholder="Nhập họ nhân viên" required)
+                        .form-group
+                            label(for="tenNV") Tên nhân viên <span class="required-text">*</span>
+                            input.form-control(type="text" id="tenNV" name="tenNV" placeholder="Nhập tên nhân viên" required)
+                        .form-group
+                            label(for="diaChi") Địa chỉ <span class="required-text">*</span>
+                            input.form-control(type="text" id="diaChi" name="diaChi" placeholder="Nhập địa chỉ" required)
+                        .form-group
+                            label(for="dienThoai") Điện thoại <span class="required-text">*</span>
+                            input.form-control(type="text" id="dienThoai" name="dienThoai" placeholder="Nhập số điện thoại" required)
+                        .form-group
+                            label(for="gioiTinh") Giới tính <span class="required-text">*</span>
+                            select.form-control(id="gioiTinh" name="gioiTinh" required)
+                                option(value="" disabled selected) Chọn giới tính
+                                option(value="1") Nam
+                                option(value="0") Nữ
+                        .form-group
+                            label(for="email") Email <span class="required-text">*</span>
+                            input.form-control(type="email" id="email" name="email" placeholder="Nhập email" required)
+                .d-flex.justify-content-end.mt-3
+                    button.btn.btn-secondary.mr-2(type="button" onclick="window.history.back()") Hủy
+                    button.btn.btn-success.mr-2(type="button" id="btnThem") Thêm
+                    button.btn.btn-primary(type="button" id="btnGhi") Ghi vào database
+
+    .card.mb-4
+        .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+            h6.m-0.font-weight-bold.text-primary Danh Sách Nhân Viên Đã Thêm
+        .card-body
+            .table-responsive
+                table.table.table-bordered(width="100%" cellspacing="0")
+                    thead
+                        tr
+                            th Mã Nhân Viên
+                            th Họ Tên
+                            th Địa Chỉ
+                            th Điện Thoại
+                            th Giới Tính
+                            th Email
+                            th Thao Tác
+                    tbody#danhSachNhanVien
+
+    script(src="/vendor/jquery/jquery.min.js")
+    script(src="/js/validation.js")
+    script(src="/js/adminjs/staff.js")

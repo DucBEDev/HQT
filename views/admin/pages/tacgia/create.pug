@@ -1,0 +1,49 @@
+extends ../../layouts/default.pug
+include ../../mixins/alert.pug
+
+block main 
+    +alert-error(3000)
+    +alert-success(3000)
+
+    .card.mb-4
+        .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+            h6.m-0.font-weight-bold.text-primary Thêm Tác Giả
+        .card-body
+            form#addAuthorForm(action=`${prefixAdmin}/author/create` method="post")
+                .row
+                    .col-lg-12
+                        .form-group
+                            label(for="maTacGia") Mã tác giả
+                            input.form-control(type="text" id="maTacGia" name="maTacGia" readonly)
+                        .form-group
+                            label(for="hoTenTG") Họ tên tác giả <span class="required-text">*</span>
+                            input.form-control(type="text" id="hoTenTG" name="hoTenTG" placeholder="Nhập họ tên tác giả" required)
+                        .form-group
+                            label(for="diaChiTG") Địa chỉ <span class="required-text">*</span>
+                            input.form-control(type="text" id="diaChiTG" name="diaChiTG" placeholder="Nhập địa chỉ" required)
+                        .form-group
+                            label(for="dienThoaiTG") Điện thoại <span class="required-text">*</span>
+                            input.form-control(type="text" id="dienThoaiTG" name="dienThoaiTG" placeholder="Nhập số điện thoại" required)
+                .d-flex.justify-content-end.mt-3
+                    button.btn.btn-secondary.mr-2(type="button" onclick="window.history.back()") Hủy
+                    button.btn.btn-success.mr-2(type="button" id="btnThem") Thêm
+                    button.btn.btn-primary(type="button" id="btnGhi") Ghi vào database
+
+    .card.mb-4
+        .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+            h6.m-0.font-weight-bold.text-primary Danh Sách Tác Giả Đã Thêm
+        .card-body
+            .table-responsive
+                table.table.table-bordered(width="100%" cellspacing="0")
+                    thead
+                        tr
+                            th Mã Tác Giả
+                            th Họ Tên
+                            th Địa Chỉ
+                            th Điện Thoại
+                            th Thao Tác
+                    tbody#danhSachTacGia
+
+    script(src="/vendor/jquery/jquery.min.js")
+    script(src="/js/validation.js")
+    script(src="/js/adminjs/author.js")

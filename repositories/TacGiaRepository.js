@@ -5,7 +5,7 @@ class TacGiaRepository {
     static async getAll() {
         try {
             await pool.connect();
-            const result = await pool.request().query('SELECT * FROM TACGIA');
+            const result = await pool.request().query('SELECT * FROM TACGIA WHERE ISDELETED =0');
             return result.recordset.map(row => new TacGia(
                 row.MATACGIA,
                 row.HOTENTG,
@@ -17,6 +17,21 @@ class TacGiaRepository {
             throw err;
         }
     }
+
+
+    static async getById(maTacGia) {
+        try {
+            await pool.connect(); // Kết nối đến DB
+            const request = pool.request(); // Tạo request
+            request.input('MATACGIA', sql.Int, maTacGia); // Thêm tham số MATL
+            const result = await request.query('SELECT * FROM TACGIA WHERE MATACGIA = @MATACGIA'); // Truy vấn với tham số
+            return new TacGia(result.recordset[0].MATACGIA, result.recordset[0].HOTENTG, result.recordset[0].DIACHITG, result.recordset[0].DIENTHOAITG)         
+        } catch (err) {
+            console.error('Error in getById TacGia:', err);
+            throw err;
+        }
+    }
+
 
     static async add(tacGia) {
         try {
@@ -44,6 +59,17 @@ class TacGiaRepository {
             return result.recordset[0].maxId || 0;
         } catch (err) {
             console.error('Error in getCurrentId TacGia:', err);
+            throw err;
+        }
+    }
+
+    static async getNextId() {
+        try {
+            await pool.connect();
+            const result = await pool.request().query('SELECT MAX(MATACGIA) as maxId FROM TACGIA');
+            return parseInt(result.recordset[0].maxId) + 1;
+        } catch (err) {
+            console.error('Error in getNextId TacGia:', err);
             throw err;
         }
     }

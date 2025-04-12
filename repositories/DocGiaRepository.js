@@ -6,7 +6,7 @@ class DocGiaRepository {
         try {
             await pool.connect();
             // const result = await pool.request().query('SELECT * FROM DOCGIA WHERE XOA = 0');
-            const result = await pool.request().query('SELECT * FROM DOCGIA');
+            const result = await pool.request().query('SELECT * FROM DOCGIA WHERE ISDELETED =0');
             return result.recordset.map(row => new DocGia(
                 row.MADG,
                 row.HODG,
@@ -23,6 +23,37 @@ class DocGiaRepository {
             ));
         } catch (err) {
             console.error('Error in getAll DocGia:', err);
+            throw err;
+        }
+    }
+
+
+    static async getById(maDG) {
+        try {
+            await pool.connect(); // Kết nối đến DB
+            const request = pool.request(); // Tạo request
+            request.input('MADG', sql.Int, maDG); // Thêm tham số MADG
+            const result = await request.query('SELECT * FROM DOCGIA WHERE MADG = @MADG'); // Truy vấn với tham số
+            if (result.recordset.length === 0) {
+                throw new Error('Không tìm thấy độc giả với mã này');
+            }
+            const docgia = result.recordset[0];
+            return new DocGia(
+                docgia.MADG,
+                docgia.HODG,
+                docgia.TENDG,
+                docgia.EMAILDG,
+                docgia.SOCMND,
+                docgia.GIOITINH,
+                docgia.NGAYSINH,
+                docgia.DIACHIDG,
+                docgia.DIENTHOAI,
+                docgia.NGAYLAMTHE,
+                docgia.NGAYHETHAN,
+                docgia.HOATDONG
+            );
+        } catch (err) {
+            console.error('Error in getById DocGia:', err);
             throw err;
         }
     }
