@@ -17,6 +17,7 @@ module.exports = (app) => {
     app.use(PATH_ADMIN + '/reader', readerRoute);
     app.use(PATH_ADMIN + '/type', typeRoute);
     app.use(PATH_ADMIN + '/author', authorRoute);
+    app.use(PATH_ADMIN + '/isbn_book', isbn_bookRoute);
     app.use(PATH_ADMIN + '/phieumuon', phieumuonRoute);
 
 }
