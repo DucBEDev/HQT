@@ -1,0 +1,66 @@
+extends ../../layouts/default.pug
+include ../../mixins/alert.pug
+
+block main 
+    +alert-error(3000)
+    +alert-success(3000)
+
+    .container-fluid
+        .card.mb-4
+            .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+                h6.m-0.font-weight-bold.text-primary Tạo Phiếu Mượn
+            .card-body
+                form#addPhieuMuonForm(action=`${prefixAdmin}/phieumuon/create` method="post")
+                    .row
+                        .col-lg-12
+                            h5 Chọn Sách
+                            .row
+                                .col-lg-6
+                                    .form-group
+                                        label(for="sachSearch") Tìm sách
+                                        input.form-control(type="text" id="sachSearch" placeholder="Nhập mã sách hoặc tên sách")
+                                    .product-list#bookList
+                                        each sach in sachList
+                                            .product-item(data-ma-sach=`${sach.MASACH}` data-ten-sach=`${sach.TENSACH}` data-isbn=`${sach.ISBN}`)
+                                                | #{sach.MASACH} - #{sach.TENSACH} 
+                                .col-lg-6
+                                    .form-group
+                                        label Sách đã chọn
+                                        .selected-products#selectedBooks
+                    hr.separation
+                    .row
+                        .col-lg-12
+                            h5 Thông Tin Phiếu Mượn
+                            .form-group
+                                label(for="maPhieu") Mã phiếu mượn
+                                input.form-control(type="text" id="maPhieu" name="maPhieu" readonly value=`${nextPhieuMuonId}`)
+                            .form-group
+                                label(for="maDG") Mã độc giả <span class="required-text">*</span>
+                                select.form-control(id="maDG" name="maDG" required)
+                                    option(value="") -- Chọn độc giả --
+                                    each docGia in docGiaList
+                                        option(value=`${docGia.maDG}`) #{docGia.maDG} - #{docGia.hoDG} #{docGia.tenDG}
+                            .form-group
+                                label(for="hinhThuc") Hình thức mượn <span class="required-text">*</span>
+                                select.form-control(id="hinhThuc" name="hinhThuc" required)
+                                    option(value="") -- Chọn hình thức --
+                                    option(value="1") Mang về
+                                    option(value="0") Tại chỗ
+                            .form-group
+                                label(for="ngayMuon") Ngày mượn <span class="required-text">*</span>
+                                input.form-control(type="date" id="ngayMuon" name="ngayMuon" required value=`${new Date().toISOString().split('T')[0]}`)
+                            .form-group
+                                label(for="maNV") Mã nhân viên <span class="required-text">*</span>
+                                select.form-control(id="maNV" name="maNV" required)
+                                    option(value="") -- Chọn nhân viên --
+                                    each nhanVien in nhanVienList
+                                        option(value=`${nhanVien.maNV}`) #{nhanVien.maNV} - #{nhanVien.hoNV} #{nhanVien.tenNV}
+                    .row
+                        .col-lg-12
+                            #selectedBooksInputs
+                    .d-flex.justify-content-end.mt-3
+                        button.btn.btn-primary(type="submit") Lưu Phiếu Mượn
+
+    script(src="/vendor/jquery/jquery.min.js")
+    script(src="/js/validation.js")
+    script(src="/js/adminjs/phieumuon.js")
