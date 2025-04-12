@@ -70,6 +70,27 @@ class DauSachRepository {
             throw err;
         }
     }
+
+    static async getAllWithQuantity() {
+        try {
+            await pool.connect();
+            const result = await pool.request().query(`SELECT 
+                                                        ds.ISBN,
+                                                        s.MASACH,
+                                                        ds.TENSACH,
+                                                        s.TINHTRANG,
+                                                        COUNT(s.MASACH) OVER (PARTITION BY ds.ISBN) AS SOLUONG
+                                                    FROM DAUSACH AS ds 
+                                                    LEFT JOIN SACH AS s ON ds.ISBN = s.ISBN
+                                                    WHERE ds.ISDELETED = 0 
+                                                        AND (s.ISDELETED = 0 OR s.ISDELETED IS NULL)
+                                                    ORDER BY ds.ISBN, s.MASACH;`);
+            return result.recordset
+        } catch (err) {
+            console.error('Error in getAll DauSach:', err);
+            throw err;
+        }
+    }
 }
 
 module.exports = DauSachRepository;
