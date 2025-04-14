@@ -78,6 +78,12 @@ module.exports.deleteBook = async (req, res) => {
     }
 };
 
+// [POST] /admin/isbn_book/book/write
+module.exports.write = async (req, res) => {
+    console.log(req.body);
+    res.json({ success: true });
+}
+
 module.exports.createDauSach = async (req, res) => {
     const dauSachList = req.body;
     // Xử lý lưu vào DB

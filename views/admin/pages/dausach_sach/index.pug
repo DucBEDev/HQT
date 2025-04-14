@@ -38,7 +38,7 @@ block main
             .card-header.py-3
                 h6.font-weight-bold.text-primary Danh Sách Sách (Đầu sách: <span id="selectedDauSach">Chưa chọn</span>)
             .card-body
-                form#addSachForm(action=`${prefixAdmin}/isbn_book/sach/write` method="post")
+                form#addSachForm(action=`` method="post")
                     .d-flex.justify-content-end.mb-2
                         button.btn.btn-primary.btn-small.mr-1(type="button" id="addSachBtn") Thêm
                         button.btn.btn-success.btn-small(type="submit" id="ghiSachBtn") Ghi
@@ -61,48 +61,48 @@ block main
             .card-header.py-3
                 h6.font-weight-bold.text-primary Thêm Đầu Sách Mới
             .card-body
-                form#addDauSachForm(action=`${prefixAdmin}/isbn_book/dausach/write` method="post")
+                form#addDauSachForm(action='' method="post")
                     .row
                         .col-lg-6
                             .form-group
-                                label(for="isbn") ISBN
-                                input.form-control(type="text" id="isbn" name="isbn" readonly)
+                                label(for="isbn") ISBN <span class="required-text">*</span>
+                                input.form-control(type="text" id="isbn" name="isbn" placeholder="Nhập ISBN")
                             .form-group
                                 label(for="tenSach") Tên Sách <span class="required-text">*</span>
                                 input.form-control(type="text" id="tenSach" name="tenSach" placeholder="Nhập tên sách" required)
                             .form-group
-                                label(for="khoSach") Kho Sách
-                                input.form-control(type="text" id="khoSach" name="khoSach" placeholder="Nhập kho sách")
+                                label(for="khoSach") Khổ Sách <span class="required-text">*</span>
+                                input.form-control(type="text" id="khoSach" name="khoSach" placeholder="Nhập khổ sách")
                             .form-group
-                                label(for="nhaXB") Nhà Xuất Bản
+                                label(for="nhaXB") Nhà Xuất Bản <span class="required-text">*</span>
                                 input.form-control(type="text" id="nhaXB" name="nhaXB" placeholder="Nhập nhà xuất bản")
                             .form-group
-                                label(for="gia") Giá
+                                label(for="gia") Giá <span class="required-text">*</span>
                                 input.form-control(type="number" id="gia" name="gia" placeholder="Nhập giá")
                             .form-group
-                                label(for="noiDung") Nội Dung
+                                label(for="noiDung") Nội Dung <span class="required-text">*</span>
                                 textarea.form-control(id="noiDung" name="noiDung" placeholder="Nhập nội dung")
                         .col-lg-6
                             .form-group
-                                label(for="hinhAnhPath") Hình Ảnh
+                                label(for="hinhAnhPath") Hình Ảnh <span class="required-text">*</span>
                                 input.form-control(type="file" id="hinhAnhPath" name="hinhAnhPath")
                             .form-group
-                                label(for="ngayXuatBan") Ngày Xuất Bản
+                                label(for="ngayXuatBan") Ngày Xuất Bản <span class="required-text">*</span>
                                 input.form-control(type="date" id="ngayXuatBan" name="ngayXuatBan")
                             .form-group
-                                label(for="lanXuatBan") Lần Xuất Bản
+                                label(for="lanXuatBan") Lần Xuất Bản <span class="required-text">*</span>
                                 input.form-control(type="number" id="lanXuatBan" name="lanXuatBan" placeholder="Nhập lần xuất bản")
                             .form-group
-                                label(for="soTrang") Số Trang
+                                label(for="soTrang") Số Trang <span class="required-text">*</span>
                                 input.form-control(type="number" id="soTrang" name="soTrang" placeholder="Nhập số trang")
                             .form-group
-                                label(for="maNgonNgu") Mã Ngôn Ngữ
+                                label(for="maNgonNgu") Ngôn Ngữ <span class="required-text">*</span>
                                 select.form-control(id="maNgonNgu" name="maNgonNgu")
                                     option(value="") -- Chọn Ngôn Ngữ --
                                     each ngonNgu in ngonNguList
                                         option(value=`${ngonNgu.maNgonNgu}`) #{ngonNgu.ngonNgu}
                             .form-group
-                                label(for="maTL") Mã Thể Loại <span class="required-text">*</span>
+                                label(for="maTL") Thể Loại <span class="required-text">*</span>
                                 select.form-control(id="maTL" name="maTL" required)
                                     option(value="") -- Chọn Thể Loại --
                                     each theLoai in theLoaiList
@@ -116,11 +116,30 @@ block main
                     .d-flex.justify-content-end.mt-3
                         button.btn.btn-primary.mr-2(type="button" id="addDauSachBtn") Thêm
                         button.btn.btn-success(type="button" id="ghiDauSachBtn") Ghi
-                    hr.separation
-                    h5 Danh Sách Đầu Sách Đã Thêm
-                    .dau-sach-list#dauSachTempList
-                    // Remove the hidden inputs container since we're using JavaScript arrays directly
-                    // #dauSachInputs
+
+        .card.mb-4
+            .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+                h6.m-0.font-weight-bold.text-primary Danh Sách Đầu Sách Đã Thêm
+            .card-body
+                .table-responsive
+                    table.table.table-bordered(width="100%" cellspacing="0")
+                        thead
+                            tr
+                                th Hình Ảnh
+                                th ISBN 
+                                th Tên Sách 
+                                th Khổ Sách 
+                                th Nhà Xuất Bản
+                                th Giá
+                                th Nội Dung
+                                th Ngày Xuất Bản
+                                th Lần Xuất Bản
+                                th Số Trang
+                                th Ngôn Ngữ
+                                th Thể Loại
+                                th Tác Giả 
+
+                        tbody#danhSachDocGia
 
                 
     // Modal Delete Đầu Sách
@@ -166,3 +185,16 @@ block main
     script(src="/vendor/jquery/jquery.min.js")
     script(src="/js/validation.js")
     script(src="/js/adminjs/isbn_book.js")
+    script(src="https://cdn.jsdelivr.net/npm/flatpickr")
+
+    script.
+        flatpickr('#ngayXuatBan', {
+            dateFormat: 'd/m/Y', // Định dạng hiển thị: dd/mm/yyyy
+            allowInput: true, // Cho phép người dùng nhập tay
+            onClose: function(selectedDates, dateStr, instance) {
+                if (!dateStr) { 
+                    alert('Vui lòng chọn ngày');
+                }
+            }
+        });
+    
