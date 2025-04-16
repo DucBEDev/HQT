@@ -7,9 +7,13 @@ ul.navbar-nav.sidebar.sidebar-light.accordion#accordionSidebar
             i.fa-solid.fa-users
             span Quản lý nhân viên
     li.nav-item
-        a.nav-link(href=`${prefixAdmin}/isbn_book`)
+        a.nav-link.collapsed(href="#" data-toggle="collapse" data-target="#collapsePage" aria-expanded="true" aria-controls="collapsePage")
             i.fa-solid.fa-book
-            span Quản lý đầu sách & sách
+            span Quản lý đầu sách/sách 
+        #collapsePage.collapse(aria-labelledby="headingPage" data-parent="#accordionSidebar")
+            .bg-white.py-2.collapse-inner.rounded
+                a.collapse-item(href=`${prefixAdmin}/isbn_book`) Quản lý
+                a.collapse-item(href=`${prefixAdmin}/isbn_book/report`) Báo cáo
     li.nav-item
         a.nav-link(href=`${prefixAdmin}/author`)
             i.fa-solid.fa-user-pen

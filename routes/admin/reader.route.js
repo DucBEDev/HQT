@@ -11,5 +11,7 @@ router.post('/create', controller.createPost);
 router.get('/next-id', controller.getNextId);
 router.get('/edit/:maDG', controller.edit);
 router.patch('/edit/:maDG', controller.editPatch);
+router.get('/report', controller.report);
+router.post('/download-report', controller.downloadReport);
 
 module.exports = router;

@@ -9,7 +9,6 @@ const authorRoute = require('./author.route');
 const isbn_bookRoute = require('./isbn_book.route');
 const phieumuonRoute = require('./phieumuon.route');
 
-
 module.exports = (app) => {
     const PATH_ADMIN = systemConfig.prefixAdmin;
 

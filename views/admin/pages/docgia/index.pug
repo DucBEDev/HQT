@@ -10,29 +10,7 @@ block main
             .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
                 h6.m-0.font-weight-bold.text-primary Danh Sách Độc Giả
                 a.btn.btn-primary(href=`${prefixAdmin}/reader/create`) + Thêm độc giả
-            
-            //- Search Interface
-            //- .card-search-body
-            //-     form#searchForm.mb-4
-            //-         .row.align-items-end
-            //-             .col-md-3.mb-3
-            //-                 .form-group
-            //-                     label(for="searchCriteria") Tìm kiếm theo
-            //-                     select#searchCriteria.form-control
-            //-                         option(value="maDG") Mã độc giả
-            //-                         option(value="hoTen") Họ tên
-            //-                         option(value="email") Email
-            //-                         option(value="dienThoai") Số điện thoại
-            //-                         option(value="trangThai") Trạng thái
-            //-             .col-md-6.mb-3
-            //-                 .form-group
-            //-                     label(for="searchInput") Từ khóa
-            //-                     input#searchInput.form-control(type="text" placeholder="Nhập từ khóa tìm kiếm...")
-            //-             .col-md-3.mb-3
-            //-                 .form-group
-            //-                     button.btn.btn-primary(type="button" id="searchBtn")
-            //-                         i.fas.fa-search.mr-1
-            //-                         | Tìm kiếm
+                a.btn.btn-primary(href=`${prefixAdmin}/reader/report`) + Báo cáo
             
             .table-responsive.p-3
                 table#dataTable.table.align-items-center.table-flush

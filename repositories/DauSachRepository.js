@@ -18,8 +18,7 @@ class DauSachRepository {
                 row.GIA === null ? null : row.GIA,
                 row.NHAXB,
                 row.MANGONNGU === null ? null : row.MANGONNGU,
-                row.MATL,
-                row.MATACGIA
+                row.MATL
             ));
         } catch (err) {
             console.error('Error in getAll DauSach:', err);
@@ -43,11 +42,10 @@ class DauSachRepository {
             request.input('nhaXB', sql.NVarChar, dauSach.nhaXB);
             request.input('maNgonNgu', sql.Int, dauSach.maNgonNgu);
             request.input('maTL', sql.NVarChar, dauSach.maTL);
-            request.input('maTacGia', sql.Int, dauSach.maTacGia);
 
             const result = await request.query(`
-                INSERT INTO DAUSACH (ISBN, TENSACH, KHOSACH, NOIDUNG, HINHANHPATH, NGAYXUATBAN, LANXUATBAN, SOTRANG, GIA, NHAXB, MANGONNGU, MATL, MATACGIA)
-                VALUES (@isbn, @tenSach, @khoSach, @noiDung, @hinhAnhPath, @ngayXuatBan, @lanXuatBan, @soTrang, @gia, @nhaXB, @maNgonNgu, @maTL, @maTacGia)
+                INSERT INTO DAUSACH (ISBN, TENSACH, KHOSACH, NOIDUNG, HINHANHPATH, NGAYXUATBAN, LANXUATBAN, SOTRANG, GIA, NHAXB, MANGONNGU, MATL)
+                VALUES (@isbn, @tenSach, @khoSach, @noiDung, @hinhAnhPath, @ngayXuatBan, @lanXuatBan, @soTrang, @gia, @nhaXB, @maNgonNgu, @maTL)
             `);
             return result.rowsAffected[0] > 0;
         } catch (err) {
@@ -71,20 +69,27 @@ class DauSachRepository {
         }
     }
 
-    static async getAllWithQuantity() {
+    static async getAllBaseOnType(type) {
         try {
             await pool.connect();
-            const result = await pool.request().query(`SELECT 
-                                                        ds.ISBN,
-                                                        s.MASACH,
-                                                        ds.TENSACH,
-                                                        s.TINHTRANG,
-                                                        COUNT(s.MASACH) OVER (PARTITION BY ds.ISBN) AS SOLUONG
-                                                    FROM DAUSACH AS ds 
-                                                    LEFT JOIN SACH AS s ON ds.ISBN = s.ISBN
-                                                    WHERE ds.ISDELETED = 0 
-                                                        AND (s.ISDELETED = 0 OR s.ISDELETED IS NULL)
-                                                    ORDER BY ds.ISBN, s.MASACH;`);
+            const result = await pool.request()
+                .input('type', sql.NVarChar, type)
+                .query(`SELECT 
+                        ds.ISBN AS isbn,
+                        ds.TENSACH AS tenSach,
+                        ds.NGAYXUATBAN AS ngayXuatBan,
+                        ds.SOTRANG AS soTrang,
+                        STRING_AGG(tg.HOTENTG, ', ') WITHIN GROUP (ORDER BY tg.HOTENTG) AS tacGia,
+                        nn.NGONNGU AS ngonNgu,
+                        COUNT(s.MASACH) AS soCuon
+                    FROM DAUSACH AS ds 
+                    LEFT JOIN SACH AS s ON ds.ISBN = s.ISBN AND s.ISDELETED = 0
+                    LEFT JOIN TACGIA_SACH AS ts ON ds.ISBN = ts.ISBN
+                    LEFT JOIN TACGIA AS tg ON ts.MATACGIA = tg.MATACGIA
+                    LEFT JOIN NGONNGU AS nn ON ds.MANGONNGU = nn.MANGONNGU
+                    WHERE ds.ISDELETED = 0 AND ds.MATL = @type
+                    GROUP BY ds.ISBN, ds.TENSACH, ds.NGAYXUATBAN, ds.SOTRANG, nn.NGONNGU
+                    ORDER BY ds.ISBN;`);
             return result.recordset
         } catch (err) {
             console.error('Error in getAll DauSach:', err);

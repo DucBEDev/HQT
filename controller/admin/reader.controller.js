@@ -1,11 +1,13 @@
 const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction } = require('../../configs/database');
+const puppeteer = require('puppeteer');
+const moment = require('moment');
 
 const DocGiaRepository = require('../../repositories/DocGiaRepository');
 
 const systemConfig = require('../../configs/system');
 const DocGia = require('../../models/DocGia');
 
-// [GET] /reader
+// [GET] /admin/reader
 module.exports.index = async (req, res) => {
     const list = await DocGiaRepository.getAll();
  
@@ -15,7 +17,7 @@ module.exports.index = async (req, res) => {
     });
 }
 
-// [DELETE] /reader/delete/:maDG
+// [DELETE] /admin/reader/delete/:maDG
 module.exports.delete = async (req, res) => {
     const { maDG } = req.params; 
 
@@ -32,7 +34,7 @@ module.exports.delete = async (req, res) => {
     }
 };
 
-// [PATCH] /reader/change-status/:newStatus/:maDG
+// [PATCH] /admin/reader/change-status/:newStatus/:maDG
 module.exports.changeStatus = async (req, res) => {
     const { newStatus, maDG } = req.params;
     const newStatusBool = newStatus === 'true' ? true : false;
@@ -42,14 +44,14 @@ module.exports.changeStatus = async (req, res) => {
     res.redirect(`${systemConfig.prefixAdmin}/reader`);
 }
 
-// [GET] /reader/create
+// [GET] /admin/reader/create
 module.exports.create = async (req, res) => {
     res.render('admin/pages/docgia/create', {
         pageTitle: 'Thêm độc giả',
     });
 }
 
-// [POST] /reader/create
+// [POST] /admin/reader/create
 module.exports.createPost = async (req, res) => {
     const readerList = req.body;
 
@@ -77,8 +79,6 @@ module.exports.createPost = async (req, res) => {
 
     res.json({ success: true });
 }
-
-
 
 module.exports.edit = async (req, res) => {
     const { maDG } = req.params;
@@ -128,8 +128,110 @@ module.exports.editPatch = async (req, res) => {
     }
 };
 
-// [GET] /reader/next-id
+// [GET] /admin/reader/next-id
 module.exports.getNextId = async (req, res) => {
     const nextId = await DocGiaRepository.getNextId();
     res.json({ success: true, nextId });
 }
+
+// [GET] /admin/reader/report
+module.exports.report = async (req, res) => {
+    const readerList = await DocGiaRepository.getAll();
+    const updatedReaderList = readerList.map(dt => {
+        hoTen = dt.hoDG + ' ' + dt.tenDG;
+        cmnd = dt.soCMND;
+        phai = dt.gioiTinh == 1 ? 'Nam' : 'Nữ';
+        dienThoai = dt.dienThoai;
+        diaChi = dt.diaChiDG;
+        ngayLamThe = moment(dt.ngayLamThe).format('DD/MM/YYYY');
+        trangThai = dt.hoatDong == 1 ? 'Đang hoạt động' : 'Bị khóa';
+
+        return {
+            hoTen,
+            cmnd,
+            phai,
+            dienThoai,
+            diaChi,
+            ngayLamThe,
+            trangThai
+        }
+    }).sort((a, b) => a.hoTen.localeCompare(b.hoTen, 'vi'))
+
+    res.render('admin/pages/docgia/report', {
+        readerList: updatedReaderList,
+        printDate: moment().format('DD/MM/YYYY')
+    });
+}
+
+// [POST] /admin/reader/download-report
+module.exports.downloadReport = async (req, res) => {
+    try {
+        const { readerList, printDate } = req.body;
+        const parsedReaderList = JSON.parse(readerList);
+
+        // Khởi tạo Puppeteer với các options cần thiết
+        const browser = await puppeteer.launch({
+            headless: 'new',  
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
+        const page = await browser.newPage();
+
+        // Render template với dữ liệu từ form
+        const html = await new Promise((resolve, reject) => {
+            res.render('admin/pages/docgia/report', {
+                readerList: parsedReaderList,
+                printDate: printDate
+            }, (err, html) => {
+                if (err) reject(err);
+                resolve(html);
+            });
+        });
+
+        // Đặt nội dung HTML và đợi tất cả resources load xong
+        await page.setContent(html, { 
+            waitUntil: ['networkidle0', 'load', 'domcontentloaded']
+        });
+
+        // Ẩn các nút không cần thiết
+        await page.evaluate(() => {
+            const buttonContainer = document.querySelector('.button-container');
+            if (buttonContainer) {
+                buttonContainer.style.display = 'none';
+            }
+        });
+
+        // Đợi một chút để đảm bảo tất cả styles đã được áp dụng
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Tạo PDF với các options chi tiết
+        const pdfBuffer = await page.pdf({
+            format: 'A4',
+            printBackground: true,
+            margin: { 
+                top: '50px', 
+                right: '50px', 
+                bottom: '50px', 
+                left: '50px' 
+            },
+            displayHeaderFooter: true,
+            headerTemplate: '<div></div>',
+            footerTemplate: '<div style="font-size: 10px; text-align: center; width: 100%;">Trang <span class="pageNumber"></span> / <span class="totalPages"></span></div>',
+            preferCSSPageSize: true
+        });
+
+        // Đóng trình duyệt
+        await browser.close();
+
+        // Thiết lập headers cho response
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Length', pdfBuffer.length);
+        res.setHeader('Content-Disposition', 'attachment; filename="bao_cao_doc_gia.pdf"');
+
+        // Gửi PDF buffer về client
+        res.end(pdfBuffer);
+    } catch (err) {
+        console.error('Lỗi khi tạo PDF:', err);
+        res.status(500).send('Lỗi khi tạo PDF: ' + err.message);
+    }
+};
+    

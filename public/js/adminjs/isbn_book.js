@@ -6,30 +6,14 @@ let selectedISBN = null;
 let currentISBN = '';
 let currentSach = '';
 
+let ngonNguList = [];
+let theLoaiList = [];
+let tacGiaList = [];
+
 // Arrays for submission data (controller)
 let dauSachSubmitList = [];
 let sachSubmitList = [];
 
-async function getNextISBN() {
-    try {
-        if (dauSachDisplayList.length === 0) {
-            const response = await fetch(`/Library/admin/isbn_book/next-id`);
-            const data = await response.json();
-            if (data.success) {
-                currentISBN = data.nextId;
-                document.getElementById('isbn').value = currentISBN;
-            }
-        } else {
-            currentISBN = `ISBN${(parseInt(dauSachDisplayList[dauSachDisplayList.length - 1].isbn.replace('ISBN', '')) + 1).toString().padStart(6, '0')}`;
-            document.getElementById('isbn').value = currentISBN;
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Không thể lấy ISBN tiếp theo!');
-    }
-}
-
-getNextISBN();
 
 $(document).ready(function () {
     $('#dataSachTable').DataTable({
@@ -45,6 +29,14 @@ $(document).ready(function () {
         }
     }); 
 
+    fetch('/Library/admin/isbn_book/getData')
+        .then(response => response.json())
+        .then(data => {
+            ngonNguList = data.ngonNguList;
+            theLoaiList = data.theLoaiList;
+            tacGiaList = data.tacGiaList;
+        });
+
     // Xử lý chọn đầu sách
     $('#dauSachTableBody').on('click', '.select-dau-sach', function() {
         selectedISBN = $(this).data('isbn');
@@ -54,7 +46,12 @@ $(document).ready(function () {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    sachDisplayList = data.sachList;
+                    const updatedList = data.sachList.map(dt => {
+                        dt.maSach = dt.maSach.trim();
+                        dt.isbn = dt.isbn.trim();
+                        return dt;
+                    });
+                    sachDisplayList = updatedList;
                     nganTuList = data.nganTuList;
                     currentSach = '';
                     updateSachTable();
@@ -73,10 +70,29 @@ $(document).ready(function () {
             alert('Vui lòng thêm ít nhất một đầu sách trước khi ghi!');
             return;
         }
-        fetch(`/Library/admin/isbn_book/dausach/write`, {
+    
+        const formData = new FormData();
+        dauSachSubmitList.forEach((ds, index) => {
+            formData.append(`dauSach[${index}][isbn]`, ds.isbn);
+            formData.append(`dauSach[${index}][tenSach]`, ds.tenSach);
+            formData.append(`dauSach[${index}][khoSach]`, ds.khoSach);
+            formData.append(`dauSach[${index}][nhaXB]`, ds.nhaXB);
+            formData.append(`dauSach[${index}][gia]`, ds.gia);
+            formData.append(`dauSach[${index}][noiDung]`, ds.noiDung);
+            formData.append(`dauSach[${index}][ngayXuatBan]`, ds.ngayXuatBan);
+            formData.append(`dauSach[${index}][lanXuatBan]`, ds.lanXuatBan);
+            formData.append(`dauSach[${index}][soTrang]`, ds.soTrang);
+            formData.append(`dauSach[${index}][maNgonNgu]`, ds.maNgonNgu);
+            formData.append(`dauSach[${index}][maTL]`, ds.maTL);
+            formData.append(`dauSach[${index}][maTacGia]`, ds.maTacGia);
+            if (ds.hinhAnhFile) {
+                formData.append('hinhAnhPath', ds.hinhAnhFile, ds.hinhAnhFile.name); 
+            }
+        });
+    
+        fetch(`/Library/admin/isbn_book/write`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json; charset=UTF-8' },
-            body: JSON.stringify(dauSachSubmitList)
+            body: formData
         })
         .then(response => response.json())
         .then(data => {
@@ -99,7 +115,6 @@ $(document).ready(function () {
             alert('Vui lòng chọn một đầu sách trước khi thêm sách!');
             return;
         }
-        console.log("bam nut them sach: ", sachSubmitList);
         addSach();
     });
 
@@ -139,16 +154,6 @@ $(document).ready(function () {
         const choMuon = currentRow.find('td:eq(2) select[name="choMuon"]').val() === 'true'; 
         const maNganTu = currentRow.find('td:eq(3) select[name="maNganTu"]').val();
 
-        // Update display list
-        const sach = sachDisplayList.find(s => s.maSach === maSach);
-        if (sach) {
-            Object.assign(sach, {
-                tinhTrang,
-                choMuon,
-                maNganTu
-            });
-        }
-
         // Update submit list
         const submitSach = sachSubmitList.find(s => s.maSach === maSach);
         if (submitSach) {
@@ -176,43 +181,42 @@ $(document).ready(function () {
     // Xử lý hủy/sửa sách tạm thời
     $('#sachList').on('click', '.remove-sach-btn', function() {
         const maSach = $(this).data('ma-sach');
-        const sach = sachDisplayList.find(s => s.maSach === maSach);
-        
-        if (sach && sach.isTemp) {
-            // console.log("sachDisplayList before remove: ", sachDisplayList);
-            // console.log("maSach: ", maSach);
-            // console.log("sachDisplayList[sachDisplayList.length - 1].maSach: ", sachDisplayList[sachDisplayList.length - 1].maSach);
-            if (maSach == sachDisplayList[sachDisplayList.length - 1].maSach) {
-                console.log("ABC: ", maSach);
-                currentSach = (sachDisplayList.length > 0) ? sachDisplayList[sachDisplayList.length - 1].maSach : '';
-            }
-            sachDisplayList = sachDisplayList.filter(s => s.maSach !== maSach);
-            getNextId();
-            console.log("Sach display list after remove:", sachDisplayList);
-            
+        const sach = sachSubmitList.find(s => s.maSach === maSach);
+        const currentRow = $('#sachList tr[data-ma-sach="' + maSach + '"]');
+        const currentIndex = currentRow.index(); // Lưu vị trí của row hiện tại
+        currentRow.remove();
+
+        if (sach && sach.type == 'add') {
             sachSubmitList = sachSubmitList.filter(s => s.maSach !== maSach);
-            
-            $(this).closest('tr').remove();
-            console.log("Sach submit list after remove:", sachSubmitList);
-        } 
-        else if (sach && sach.maSach) {
-            const row = $(this).closest('tr');
-            
-            row.html(`
-                <td class="align-middle">${sach.maSach}</td>
-                <td class="align-middle">${sach.tinhTrang ? 'Tốt' : 'Hỏng'}</td>
-                <td class="align-middle">${sach.choMuon ? 'Có' : 'Không'}</td>
-                <td class="align-middle">${sach.maNganTu ? sach.ke : 'Chưa gán'}</td>
+            sachDisplayList = sachDisplayList.filter(s => s.maSach !== maSach);
+        }
+        else if (sach && sach.type == 'edit') {
+            sachSubmitList = sachSubmitList.filter(s => s.maSach !== maSach);
+            const oldData = sachDisplayList.find(s => s.maSach === maSach);
+
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-ma-sach', sach.maSach);
+
+            tr.innerHTML = `
+                <td class="align-middle" name="maSach">${oldData.maSach}</td>
+                <td class="align-middle" name="tinhTrang">${oldData.tinhTrang ? 'Tốt' : 'Hỏng'}</td>
+                <td class="align-middle" name="choMuon">${oldData.choMuon ? 'Có' : 'Không'}</td>
+                <td class="align-middle" name="maNganTu">${oldData.maNganTu ? nganTuList.find(nt => nt.maNganTu == oldData.maNganTu).ke : 'Chưa gán'}</td>
                 <td class="align-middle">
                     <button type="button" class="btn btn-sm btn-dark btn-small edit-sach-btn">Sửa</button>
-                    <button type="button" class="btn btn-sm btn-danger btn-small delete-sach-btn" data-ma-sach="${sach.maSach}" data-toggle="modal" data-target="#DeleteSachModal">Xóa</button>
-                </td>`);
-        }
-        else {
-            sachDisplayList = sachDisplayList.filter(s => s.maSach !== maSach);
-            sachSubmitList = sachSubmitList.filter(s => s.maSach !== maSach);
-            console.log("Sach display list after remove:", sachDisplayList);
-            $(this).closest('tr').remove();
+                    <button type="button" class="btn btn-sm btn-danger btn-small delete-sach-btn" data-ma-sach="${oldData.maSach}" data-toggle="modal" data-target="#DeleteSachModal">Xóa</button>
+                </td>`;
+
+            // Chèn tr mới vào đúng vị trí cũ
+            const tbody = $('#sachList');
+            const rows = tbody.children();
+            if (currentIndex === 0) {
+                tbody.prepend(tr);
+            } else if (currentIndex >= rows.length) {
+                tbody.append(tr);
+            } else {
+                $(rows[currentIndex]).before(tr);
+            }
         }
     });
 });
@@ -220,21 +224,26 @@ $(document).ready(function () {
 function addDauSach() {
     const form = document.getElementById('addDauSachForm');
     if (!form.checkValidity()) {
+        form.classList.add('was-validated');
         form.reportValidity();
         return;
     }
+
+    const hinhAnhInput = document.getElementById('hinhAnhPath');
+    const hinhAnhFile = hinhAnhInput.files[0]; // Lấy file từ input
+    const hinhAnhURL = hinhAnhFile ? URL.createObjectURL(hinhAnhFile) : ''; // Tạo URL tạm thời
 
     const dauSach = {
         isbn: document.getElementById('isbn').value,
         tenSach: document.getElementById('tenSach').value,
         khoSach: document.getElementById('khoSach').value,
         nhaXB: document.getElementById('nhaXB').value,
-        gia: document.getElementById('gia').value,
+        gia: parseFloat(document.getElementById('gia').value),
         noiDung: document.getElementById('noiDung').value,
-        hinhAnhPath: document.getElementById('hinhAnhPath').value,
+        hinhAnhPath: hinhAnhURL, // Lưu URL tạm thời thay vì C:\fakepath\...
         ngayXuatBan: document.getElementById('ngayXuatBan').value,
-        lanXuatBan: document.getElementById('lanXuatBan').value,
-        soTrang: document.getElementById('soTrang').value,
+        lanXuatBan: parseInt(document.getElementById('lanXuatBan').value),
+        soTrang: parseInt(document.getElementById('soTrang').value),
         maNgonNgu: document.getElementById('maNgonNgu').value,
         maTL: document.getElementById('maTL').value,
         maTacGia: document.getElementById('maTacGia').value
@@ -248,60 +257,85 @@ function addDauSach() {
     // Add to display list
     dauSachDisplayList.push(dauSach);
     
-    // Add to submit list
-    dauSachSubmitList.push({...dauSach});
+    dauSachSubmitList.push({
+        ...dauSach,
+        hinhAnhFile: hinhAnhFile 
+    });
     
     updateDauSachTempList();
     form.reset();
-    getNextISBN();
+    form.classList.remove('was-validated');
 }
 
 function updateDauSachTempList() {
-    const tempList = document.getElementById('dauSachTempList');
-    let html = '';
-    dauSachDisplayList.forEach(ds => {
-        html += `
-            <div class="dau-sach-item">
-                <span>${ds.isbn} - ${ds.tenSach}${ds.nhaXB ? ' - ' + ds.nhaXB : ''}${ds.gia ? ' - ' + ds.gia : ''}</span>
-                <button type="button" class="btn btn-danger btn-sm remove-dau-sach-btn" data-isbn="${ds.isbn}">Xóa</button>
-            </div>`;
-    });
-    tempList.innerHTML = html;
+    const tbody = document.getElementById('dauSachTempList');
+    tbody.innerHTML = '';
 
-    // Xử lý xóa đầu sách tạm thời
-    $('.remove-dau-sach-btn').off('click').on('click', function() {
-        const isbn = $(this).data('isbn');
-        // Remove from display list
-        dauSachDisplayList = dauSachDisplayList.filter(ds => ds.isbn !== isbn);
-        // Remove from submit list
-        dauSachSubmitList = dauSachSubmitList.filter(ds => ds.isbn !== isbn);
-        updateDauSachTempList();
+    dauSachDisplayList.forEach(ds => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>
+                ${ds.hinhAnhPath ? 
+                    `<img src="${ds.hinhAnhPath}" alt="Hình ảnh" style="width: 50px; height: 75px; object-fit: cover;">` : 
+                    'Chưa có ảnh'}
+            </td>
+            <td>${ds.isbn}</td>
+            <td>${ds.tenSach}</td>
+            <td>${ds.khoSach}</td>
+            <td>${ds.nhaXB}</td>
+            <td>${ds.gia}</td>
+            <td>${ds.noiDung}</td>
+            <td>${ds.ngayXuatBan}</td>
+            <td>${ds.lanXuatBan}</td>
+            <td>${ds.soTrang}</td>
+            <td>${ngonNguList.find(ng => ng.maNgonNgu === ds.maNgonNgu)?.ngonNgu || ds.maNgonNgu}</td>
+            <td>${theLoaiList.find(tl => tl.maTL === ds.maTL)?.tenTL || ds.maTL}</td>
+            <td>${tacGiaList.find(tg => tg.maTacGia === ds.maTacGia)?.hoTenTG || ds.maTacGia}</td>
+            <td>
+                <button class="btn btn-danger btn-sm" onclick="xoaDauSach('${ds.isbn}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
     });
 }
 
-async function addSach() {
-    let maSach = '';
-    if (currentSach == '') {
-        const response = await fetch(`/Library/admin/isbn_book/book/next-id`);
-        const data = await response.json();
-        if (data.success) {
-            maSach = data.nextId;
-            currentSach = maSach;
-            nganTuList = data.nganTuList;
+function xoaDauSach(isbn) {
+    if (confirm('Bạn có chắc chắn muốn xóa đầu sách này khỏi danh sách?')) {
+        const ds = dauSachDisplayList.find(ds => ds.isbn === isbn);
+        if (ds && ds.hinhAnhPath) {
+            URL.revokeObjectURL(ds.hinhAnhPath); 
         }
+        dauSachDisplayList = dauSachDisplayList.filter(ds => ds.isbn !== isbn);
+        dauSachSubmitList = dauSachSubmitList.filter(ds => ds.isbn !== isbn);
+        updateDauSachTempList();
     }
-    else {
-        maSach = `SACH${(parseInt(currentSach.replace('SACH', '')) + 1).toString().padStart(4, '0')}`;
+}
 
-        const currentRow = $('#sachList tr[data-ma-sach="' + currentSach + '"]');
-        const tinhTrang = currentRow.find('td:eq(1) select[name="tinhTrang"]').val() === 'true';
-        const choMuon = currentRow.find('td:eq(2) select[name="choMuon"]').val() === 'true';
-        const maNganTu = currentRow.find('td:eq(3) select[name="maNganTu"]').val();
+async function addSach() {
+    const lastRow = $('#sachList tr:last');
 
-        currentRow.find('input, select').prop('disabled', true);
-        
+    let maSach = (lastRow.find('td:eq(0) input[name="maSach"]').val()), tinhTrang, choMuon, maNganTu;
+    if (maSach !== undefined) {
+        if (maSach == "") {
+            alert("Vui lòng nhập mã sách!");
+            return;
+        }
+        if (sachDisplayList.some(s => s.maSach == maSach)) {
+            alert('Mã sách đã tồn tại!');
+            return;
+        }
+
+        lastRow.attr('data-ma-sach', maSach);
+        lastRow.find('.remove-sach-btn').attr('data-ma-sach', maSach);
+
+        tinhTrang = lastRow.find('td:eq(1) select[name="tinhTrang"]').val() === 'true';
+        choMuon = lastRow.find('td:eq(2) select[name="choMuon"]').val() === 'true';
+        maNganTu = lastRow.find('td:eq(3) select[name="maNganTu"]').val();
+
         sachDisplayList.push({ 
-            maSach: currentSach, 
+            maSach: maSach, 
             isbn: selectedISBN, 
             tinhTrang: tinhTrang, 
             choMuon: choMuon, 
@@ -310,7 +344,7 @@ async function addSach() {
         });
         
         sachSubmitList.push({ 
-            maSach: currentSach, 
+            maSach: maSach, 
             isbn: selectedISBN, 
             tinhTrang: tinhTrang, 
             choMuon: choMuon, 
@@ -318,15 +352,19 @@ async function addSach() {
             isTemp: true,
             type: 'add'
         });
-
-        console.log("sachDisplayList after add: ", sachDisplayList);
-
-        currentSach = maSach;
+    }
+    else {
+        maSach = sachDisplayList[sachDisplayList.length - 1].maSach;
+        tinhTrang = sachDisplayList[sachDisplayList.length - 1].tinhTrang;
+        choMuon = sachDisplayList[sachDisplayList.length - 1].choMuon;
+        maNganTu = sachDisplayList[sachDisplayList.length - 1].maNganTu;
     }
 
+    lastRow.find('input, select').prop('disabled', true);
+
     const newRow = `
-        <tr class="sach-item" data-ma-sach="${maSach}">
-            <td><input type="text" class="form-control" name="maSach" value="${maSach}" readonly></td>
+        <tr class="sach-item">
+            <td><input type="text" class="form-control" name="maSach" placeholder="Nhập mã sách"></td>
             <td><select class="form-control" name="tinhTrang">
                 <option value="true">Tốt</option>
                 <option value="false">Hỏng</option>
@@ -338,7 +376,7 @@ async function addSach() {
             <td><select class="form-control" name="maNganTu">
                 ${nganTuList.map(nt => `<option value="${nt.maNganTu}">${nt.ke}</option>`).join('')}
             </select></td>
-            <td><button type="button" class="btn btn-sm btn-danger btn-small remove-sach-btn" data-ma-sach="${maSach}">Hủy</button></td>
+            <td><button type="button" class="btn btn-sm btn-danger btn-small remove-sach-btn">Hủy</button></td>
         </tr>`;
 
     $('#sachList').append(newRow);
@@ -351,12 +389,12 @@ function updateSachTable() {
     sachDisplayList.forEach(sach => {
         const tr = document.createElement('tr');
         tr.setAttribute('data-ma-sach', sach.maSach);
-        tr.setAttribute('default', "");
+
         tr.innerHTML = `
-            <td class="align-middle">${sach.maSach}</td>
-            <td class="align-middle">${sach.tinhTrang ? 'Tốt' : 'Hỏng'}</td>
-            <td class="align-middle">${sach.choMuon ? 'Có' : 'Không'}</td>
-            <td class="align-middle">${sach.maNganTu ? sach.ke : 'Chưa gán'}</td>
+            <td class="align-middle" name="maSach">${sach.maSach}</td>
+            <td class="align-middle" name="tinhTrang">${sach.tinhTrang ? 'Tốt' : 'Hỏng'}</td>
+            <td class="align-middle" name="choMuon">${sach.choMuon ? 'Có' : 'Không'}</td>
+            <td class="align-middle" name="maNganTu">${sach.maNganTu ? nganTuList.find(nt => nt.maNganTu == sach.maNganTu).ke : 'Chưa gán'}</td>
             <td class="align-middle">
                 <button type="button" class="btn btn-sm btn-dark btn-small edit-sach-btn">Sửa</button>
                 <button type="button" class="btn btn-sm btn-danger btn-small delete-sach-btn" data-ma-sach="${sach.maSach}" data-toggle="modal" data-target="#DeleteSachModal">Xóa</button>
@@ -368,51 +406,21 @@ function updateSachTable() {
 // Modify the form submission for sach
 $('#addSachForm').on('submit', function(e) {
     e.preventDefault();
-    console.log("bam nut ghi: ", sachSubmitList);
     
-    // if (!selectedISBN) {
-    //     alert('Vui lòng chọn một đầu sách trước khi thêm sách!');
-    //     return;
-    // }
-    
-    // if (sachSubmitList.length === 0) {
-    //     alert('Vui lòng thêm ít nhất một sách trước khi ghi!');
-    //     return;
-    // }
-    
-    // fetch(`/Library/admin/isbn_book/sach/write`, {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json; charset=UTF-8' },
-    //     body: JSON.stringify(sachSubmitList)
-    // })
-    // .then(response => response.json())
-    // .then(data => {
-    //     if (data.success) {
-    //         alert('Ghi dữ liệu thành công!');
-    //         window.location.href = `/Library/admin/isbn_book`;
-    //     } else {
-    //         alert('Có lỗi xảy ra: ' + data.message);
-    //     }
-    // })
-    // .catch(error => {
-    //     console.error('Error:', error);
-    //     alert('Có lỗi xảy ra khi ghi dữ liệu!');
-    // });
-});
-
-// Add form submission handler for addDauSachForm
-$('#addDauSachForm').on('submit', function(e) {
-    e.preventDefault();
-    
-    if (dauSachSubmitList.length === 0) {
-        alert('Vui lòng thêm ít nhất một đầu sách trước khi ghi!');
+    if (!selectedISBN) {
+        alert('Vui lòng chọn một đầu sách trước khi thêm sách!');
         return;
     }
     
-    fetch(`/Library/admin/isbn_book/dausach/write`, {
+    if (sachSubmitList.length === 0) {
+        alert('Vui lòng thêm ít nhất một sách trước khi ghi!');
+        return;
+    }
+    
+    fetch(`/Library/admin/isbn_book/book/write`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json; charset=UTF-8' },
-        body: JSON.stringify(dauSachSubmitList)
+        body: JSON.stringify(sachSubmitList)
     })
     .then(response => response.json())
     .then(data => {
@@ -428,3 +436,49 @@ $('#addDauSachForm').on('submit', function(e) {
         alert('Có lỗi xảy ra khi ghi dữ liệu!');
     });
 });
+
+// Validate
+restrictKhoSachInput = function (input) {
+    input.addEventListener('input', function(e) {
+        const value = this.value;
+        const filteredValue = value.replace(/[^0-9x]/g, '');
+        const errorElementId = input.id + 'Error';
+
+        if (value !== filteredValue) {
+            this.value = filteredValue;
+            this.classList.add('is-invalid');
+            document.getElementById(errorElementId).style.display = 'block';
+        } else {
+            this.classList.remove('is-invalid');
+            document.getElementById(errorElementId).style.display = 'none';
+        }
+    });
+}   
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('addDauSachForm');
+    const isbnInput = document.getElementById('isbn');
+    const tenSachInput = document.getElementById('tenSach');
+    const khoSachInput = document.getElementById('khoSach');
+    const nhaXBInput = document.getElementById('nhaXB');
+    const giaInput = document.getElementById('gia');
+    const lanXuatBanInput = document.getElementById('lanXuatBan');
+    const soTrangInput = document.getElementById('soTrang');
+
+    window.restrictNumberInput(isbnInput, 15);
+    window.restrictNameInput(tenSachInput);
+    window.restrictNameInput(nhaXBInput);
+    restrictKhoSachInput(khoSachInput);
+    window.restrictNumberInput(lanXuatBanInput);
+    window.restrictNumberInput(soTrangInput);    
+    window.restrictNumberInput(giaInput);
+    
+    form.addEventListener('submit', function(event) {
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        form.classList.add('was-validated');
+    });
+})
+// End Validate
