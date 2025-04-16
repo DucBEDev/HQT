@@ -1,10 +1,8 @@
-include ../../mixins/moment.pug
-
 doctype html
 html(lang="vi")
     head
         meta(charset="UTF-8")
-        title DANH MỤC ĐẦU SÁCH
+        title Báo Cáo Độc Giả
         style.
             body {
                 font-family: Arial, sans-serif;
@@ -26,6 +24,7 @@ html(lang="vi")
             .category-title {
                 font-size: 16px;
                 font-weight: bold;
+                display: inline-block;
                 padding-bottom: 5px;
             }
             table {
@@ -101,58 +100,41 @@ html(lang="vi")
                 margin: 0;
                 padding: 0;
             }
-            .summary {
-                text-align: left;
-                font-weight: bold;
-            }
     body
         .button-container
             button(onclick="window.history.back()") Quay lại
             button(onclick="printReport()") In Báo Cáo
-            form(action=`${prefixAdmin}/isbn_book/download-report` method="POST" style="display: inline;")
-                input(type="hidden" name="dauSachList" value=JSON.stringify(dauSachList))
+            form(action=`${prefixAdmin}/reader/download-report?type=list` method="POST" style="display: inline;")
+                input(type="hidden" name="readerList" value=JSON.stringify(readerList))
                 input(type="hidden" name="printDate" value=printDate)
                 button(type="submit") Xuất File PDF
 
-        h1 DANH MỤC ĐẦU SÁCH
+        h1 DANH SÁCH ĐỘC GIẢ
         
         .category
             table
                 thead
                     tr
                         th STT
-                        th ISBN
-                        th Tên sách
-                        th Ngày XB
-                        th Số trang
-                        th Tác giả
-                        th Ngôn ngữ
-                        th Số cuốn
+                        th Họ tên
+                        th Số CMND
+                        th Phái
+                        th Địa chỉ
+                        th Số ĐT
+                        th Ngày lập thẻ
+                        th Trạng thái
                 tbody
-                    each dauSach in dauSachList
-                        tr 
-                            td(colspan="8" class="category-title") Thể loại: #{dauSach.tenTL}
-                        each sach, index in dauSach.books
-                            tr
-                                td #{index + 1} 
-                                td #{sach.isbn}
-                                td #{sach.tenSach}
-                                td 
-                                    +formatDate(sach.ngayXuatBan)
-                                td #{sach.soTrang}
-                                td #{sach.tacGia}
-                                td #{sach.ngonNgu}
-                                td #{sach.soCuon}
-                            
+                    each reader, index in readerList
                         tr
-                            td(colspan="8" class="summary") Số đầu sách: 
-                                - const previousTotal = dauSach.books.reduce((sum, book) => sum + book.soCuon, 0)
-                                | #{previousTotal}
-                    tr 
-                        td(colspan="8" class="summary") Số đầu sách thư viện: 
-                            - const total = dauSachList.reduce((sum, category) => sum + category.books.reduce((bookSum, book) => bookSum + book.soCuon, 0), 0)
-                            | #{total}
-                                    
+                            td #{index + 1}
+                            td #{reader.hoTen}
+                            td #{reader.cmnd}
+                            td #{reader.phai}
+                            td #{reader.diaChi}
+                            td #{reader.dienThoai}
+                            td #{reader.ngayLamThe}
+                            td #{reader.trangThai}
+
         .signature-container
             .staff-signature
                 p Nhân viên lập báo cáo: __________________

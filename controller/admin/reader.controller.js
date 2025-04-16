@@ -134,58 +134,109 @@ module.exports.getNextId = async (req, res) => {
     res.json({ success: true, nextId });
 }
 
-// [GET] /admin/reader/report
+// [GET] /admin/reader/report?type=list/overdue
 module.exports.report = async (req, res) => {
-    const readerList = await DocGiaRepository.getAll();
-    const updatedReaderList = readerList.map(dt => {
-        hoTen = dt.hoDG + ' ' + dt.tenDG;
-        cmnd = dt.soCMND;
-        phai = dt.gioiTinh == 1 ? 'Nam' : 'Nữ';
-        dienThoai = dt.dienThoai;
-        diaChi = dt.diaChiDG;
-        ngayLamThe = moment(dt.ngayLamThe).format('DD/MM/YYYY');
-        trangThai = dt.hoatDong == 1 ? 'Đang hoạt động' : 'Bị khóa';
+    const type = req.query.type;
 
-        return {
-            hoTen,
-            cmnd,
-            phai,
-            dienThoai,
-            diaChi,
-            ngayLamThe,
-            trangThai
-        }
-    }).sort((a, b) => a.hoTen.localeCompare(b.hoTen, 'vi'))
+    if (type == 'list') {
+        const readerList = await DocGiaRepository.getAll();
+        const updatedReaderList = readerList.map(dt => {
+            hoTen = dt.hoDG + ' ' + dt.tenDG;
+            cmnd = dt.soCMND;
+            phai = dt.gioiTinh == 1 ? 'Nam' : 'Nữ';
+            dienThoai = dt.dienThoai;
+            diaChi = dt.diaChiDG;
+            ngayLamThe = moment(dt.ngayLamThe).format('DD/MM/YYYY');
+            trangThai = dt.hoatDong == 1 ? 'Đang hoạt động' : 'Bị khóa';
 
-    res.render('admin/pages/docgia/report', {
-        readerList: updatedReaderList,
-        printDate: moment().format('DD/MM/YYYY')
-    });
+            return {
+                hoTen,
+                cmnd,
+                phai,
+                dienThoai,
+                diaChi,
+                ngayLamThe,
+                trangThai
+            }
+        }).sort((a, b) => a.hoTen.localeCompare(b.hoTen, 'vi'))
+
+        res.render('admin/pages/docgia/reportList', {
+            readerList: updatedReaderList,
+            printDate: moment().format('DD/MM/YYYY')
+        });
+    }
+    else if (type == 'overdue') {
+        const readerList = await DocGiaRepository.getOverdueReader();
+        const updatedReaderList = readerList.map(dt => {
+            cmnd = dt.soCMND;
+            hoTen = dt.hoTen;
+            dienThoai = dt.soDT;
+            email = dt.email;
+            maSach = dt.maSach;
+            tenSach = dt.tenSach;
+            ngayMuon = moment(dt.ngayMuon).format('DD/MM/YYYY');
+            soNgayQuaHan = dt.soNgayQuaHan;
+
+            return {
+                cmnd,
+                hoTen,
+                dienThoai,
+                email,
+                maSach,
+                tenSach,
+                ngayMuon,
+                soNgayQuaHan
+            }
+        }).sort((a, b) => b.soNgayQuaHan - a.soNgayQuaHan)
+
+        res.render('admin/pages/docgia/reportOverdue', {
+            readerList: updatedReaderList,
+            printDate: moment().format('DD/MM/YYYY')
+        });
+    }
+
+    
 }
 
-// [POST] /admin/reader/download-report
+// [POST] /admin/reader/download-report?type=list/overdue
 module.exports.downloadReport = async (req, res) => {
     try {
+        const type = req.query.type;
+
         const { readerList, printDate } = req.body;
         const parsedReaderList = JSON.parse(readerList);
-
+        
         // Khởi tạo Puppeteer với các options cần thiết
         const browser = await puppeteer.launch({
             headless: 'new',  
             args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
         const page = await browser.newPage();
-
-        // Render template với dữ liệu từ form
-        const html = await new Promise((resolve, reject) => {
-            res.render('admin/pages/docgia/report', {
-                readerList: parsedReaderList,
-                printDate: printDate
-            }, (err, html) => {
-                if (err) reject(err);
-                resolve(html);
+        
+        let html = "";
+        if (type == 'list') {
+            // Render template với dữ liệu từ form
+            html = await new Promise((resolve, reject) => {
+                res.render('admin/pages/docgia/reportList', {
+                    readerList: parsedReaderList,
+                    printDate: printDate
+                }, (err, html) => {
+                    if (err) reject(err);
+                    resolve(html);
+                });
             });
-        });
+        } 
+        else {
+            html = await new Promise((resolve, reject) => {
+                res.render('admin/pages/docgia/reportOverdue', {
+                    readerList: parsedReaderList,
+                    printDate: printDate
+                }, (err, html) => {
+                    if (err) reject(err);
+                    resolve(html);
+                });
+            });
+        }
 
         // Đặt nội dung HTML và đợi tất cả resources load xong
         await page.setContent(html, { 
@@ -225,7 +276,12 @@ module.exports.downloadReport = async (req, res) => {
         // Thiết lập headers cho response
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Length', pdfBuffer.length);
-        res.setHeader('Content-Disposition', 'attachment; filename="bao_cao_doc_gia.pdf"');
+        if (type == 'list') {
+            res.setHeader('Content-Disposition', 'attachment; filename="bao_cao_doc_gia.pdf"');
+        }
+        else {
+            res.setHeader('Content-Disposition', 'attachment; filename="bao_cao_doc_gia_qua_han.pdf"');
+        }
 
         // Gửi PDF buffer về client
         res.end(pdfBuffer);

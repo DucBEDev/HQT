@@ -2,7 +2,7 @@ doctype html
 html(lang="vi")
     head
         meta(charset="UTF-8")
-        title Báo Cáo Độc Giả
+        title Mượn Sách Quá Hạn
         style.
             body {
                 font-family: Arial, sans-serif;
@@ -104,36 +104,41 @@ html(lang="vi")
         .button-container
             button(onclick="window.history.back()") Quay lại
             button(onclick="printReport()") In Báo Cáo
-            form(action=`${prefixAdmin}/reader/download-report` method="POST" style="display: inline;")
+            form(action=`${prefixAdmin}/reader/download-report?type=overdue` method="POST" style="display: inline;")
                 input(type="hidden" name="readerList" value=JSON.stringify(readerList))
                 input(type="hidden" name="printDate" value=printDate)
                 button(type="submit") Xuất File PDF
 
-        h1 DANH SÁCH ĐỘC GIẢ
+        h1 DANH SÁCH ĐỘC GIẢ MƯỢN SÁCH QUÁ HẠN
         
         .category
             table
                 thead
                     tr
                         th STT
-                        th Họ tên
                         th Số CMND
-                        th Phái
-                        th Địa chỉ
+                        th Họ tên
                         th Số ĐT
-                        th Ngày lập thẻ
-                        th Trạng thái
+                        th Email
+                        th Mã sách
+                        th Tên sách
+                        th Ngày mượn
+                        th Số ngày mượn quá hạn
                 tbody
                     each reader, index in readerList
                         tr
                             td #{index + 1}
-                            td #{reader.hoTen}
                             td #{reader.cmnd}
-                            td #{reader.phai}
-                            td #{reader.diaChi}
+                            td #{reader.hoTen}
                             td #{reader.dienThoai}
-                            td #{reader.ngayLamThe}
-                            td #{reader.trangThai}
+                            td #{reader.email}
+                            td #{reader.maSach}
+                            td #{reader.tenSach}
+                            td #{reader.ngayMuon}
+                            td #{reader.soNgayQuaHan}
+                tfoot
+                    tr
+                        td(colspan="9") Tổng số độc giả: #{readerList.length}
 
         .signature-container
             .staff-signature

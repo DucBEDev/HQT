@@ -133,6 +133,8 @@ module.exports.getReport = async (req, res) => {
 
     for (const type of typeList) {
         const dauSach = await DauSachRepository.getAllBaseOnType(type.maTL);
+        dauSach.sort((a, b) => a.tenSach.localeCompare(b.tenSach));
+        
         const categoryData = {
             tenTL: type.tenTL,
             books: dauSach

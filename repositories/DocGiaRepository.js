@@ -133,6 +133,34 @@ class DocGiaRepository {
             throw err;
         }
     }
+
+    static async getOverdueReader() {
+        try {
+            await pool.connect();
+            const result = await pool.request()
+                .query(`SELECT 
+                        dg.SOCMND AS soCMND,
+                        CONCAT(dg.HODG, ' ', dg.TENDG) AS hoTen,
+                        dg.DIENTHOAI AS soDT,
+                        dg.EMAILDG AS email,
+                        ctpm.MASACH AS maSach,
+                        ds.TENSACH as tenSach,
+                        pm.NGAYMUON AS ngayMuon,
+                        DATEDIFF(day, ctpm.NGAYTRA, GETDATE()) AS soNgayQuaHan
+                        FROM DOCGIA dg
+                        LEFT JOIN PHIEUMUON pm ON dg.MADG = pm.MADG
+                        LEFT JOIN CT_PHIEUMUON ctpm ON ctpm.MAPHIEU = pm.MAPHIEU 
+                            AND ctpm.NGAYTRA < GETDATE()
+                            AND ctpm.TRA = 0
+                        LEFT JOIN SACH s ON s.MASACH = ctpm.MASACH
+                        LEFT JOIN DAUSACH ds ON ds.ISBN = s.ISBN
+                        WHERE dg.HOATDONG = 1 AND DATEDIFF(day, ctpm.NGAYTRA, GETDATE()) > 0`);
+            return result.recordset
+        } catch (err) {
+            console.error('Error in getOverdueReader DocGia:', err);
+            throw err;
+        }
+    }
 }
 
 module.exports = DocGiaRepository;

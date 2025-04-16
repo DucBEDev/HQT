@@ -127,7 +127,7 @@ $(document).ready(function () {
         const ke = row.find('td:eq(3)').text() === 'Chưa gán' ? '' : row.find('td:eq(3)').text();
 
         row.html(`
-            <td><input type="text" class="form-control" name="maSach" value="${maSach}" readonly></td>
+            <td><input type="text" class="form-control" name="maSach" value="${maSach}"></td>
             <td><select class="form-control" name="tinhTrang">
                 <option value="true" ${tinhTrang ? 'selected' : ''}>Tốt</option>
                 <option value="false" ${!tinhTrang ? 'selected' : ''}>Hỏng</option>
@@ -150,6 +150,13 @@ $(document).ready(function () {
     $('#sachList').on('click', '.confirm-change-sach-btn', function() {
         const maSach = $(this).data('ma-sach');
         const currentRow = $('#sachList tr[data-ma-sach="' + maSach + '"]');
+        const updatedMaSach = currentRow.find('td:eq(0) input[name="maSach"]').val();
+        const isExist = sachSubmitList.find(s => s.maSach == updatedMaSach);
+        if (isExist) {
+            alert('Mã sách đã tồn tại!');
+            return;
+        }
+
         const tinhTrang = currentRow.find('td:eq(1) select[name="tinhTrang"]').val() === 'true';
         const choMuon = currentRow.find('td:eq(2) select[name="choMuon"]').val() === 'true'; 
         const maNganTu = currentRow.find('td:eq(3) select[name="maNganTu"]').val();
@@ -158,15 +165,16 @@ $(document).ready(function () {
         const submitSach = sachSubmitList.find(s => s.maSach === maSach);
         if (submitSach) {
             Object.assign(submitSach, {
+                maSach: updatedMaSach, 
                 tinhTrang,
-                choMuon,
+                choMuon, 
                 maNganTu,
                 type: 'edit'
             });
         }
         else {
             sachSubmitList.push({
-                maSach,
+                maSach: updatedMaSach,
                 isbn: selectedISBN,
                 tinhTrang,
                 choMuon,
@@ -322,7 +330,7 @@ async function addSach() {
             alert("Vui lòng nhập mã sách!");
             return;
         }
-        if (sachDisplayList.some(s => s.maSach == maSach)) {
+        if (sachDisplayList.some(s => s.maSach == maSach) || sachSubmitList.some(s => s.maSach == maSach)) {
             alert('Mã sách đã tồn tại!');
             return;
         }
