@@ -2,6 +2,7 @@ extends ../../layouts/default.pug
 include ../../mixins/alert.pug
 
 block main 
+    link(rel="stylesheet", href="/css/admincss/dausach_sach.css")
     +alert-error(3000)
     +alert-success(3000)
 
@@ -61,56 +62,63 @@ block main
             .card-header.py-3
                 h6.font-weight-bold.text-primary Thêm Đầu Sách Mới
             .card-body
-                form#addDauSachForm(action='' method="post")
+                form#addDauSachForm(action='' method="post" enctype="multipart/form-data")
                     .row
                         .col-lg-6
                             .form-group
                                 label(for="isbn") ISBN <span class="required-text">*</span>
-                                input.form-control(type="text" id="isbn" name="isbn" placeholder="Nhập ISBN")
+                                input.form-control(type="text" id="isbn" name="isbn" placeholder="Nhập ISBN" required)
+                                .invalid-feedback#isbnError Vui lòng nhập ISBN hợp lệ (15 chữ số)
                             .form-group
                                 label(for="tenSach") Tên Sách <span class="required-text">*</span>
                                 input.form-control(type="text" id="tenSach" name="tenSach" placeholder="Nhập tên sách" required)
+                                .invalid-feedback#tenSachError Tên sách không được chứa ký tự đặc biệt
                             .form-group
                                 label(for="khoSach") Khổ Sách <span class="required-text">*</span>
-                                input.form-control(type="text" id="khoSach" name="khoSach" placeholder="Nhập khổ sách")
+                                input.form-control(type="text" id="khoSach" name="khoSach" placeholder="Nhập khổ sách (VD: 16 x 24)" required)
+                                .invalid-feedback#khoSachError Khổ sách phải theo định dạng: số x số
                             .form-group
                                 label(for="nhaXB") Nhà Xuất Bản <span class="required-text">*</span>
-                                input.form-control(type="text" id="nhaXB" name="nhaXB" placeholder="Nhập nhà xuất bản")
+                                input.form-control(type="text" id="nhaXB" name="nhaXB" placeholder="Nhập nhà xuất bản" required)
+                                .invalid-feedback#nhaXBError Vui lòng nhập tên nhà xuất bản
                             .form-group
                                 label(for="gia") Giá <span class="required-text">*</span>
-                                input.form-control(type="number" id="gia" name="gia" placeholder="Nhập giá")
+                                input.form-control(type="number" id="gia" name="gia" placeholder="Nhập giá" min="0" required)
+                                .invalid-feedback#giaError Giá phải là số dương
                             .form-group
                                 label(for="noiDung") Nội Dung <span class="required-text">*</span>
-                                textarea.form-control(id="noiDung" name="noiDung" placeholder="Nhập nội dung")
+                                textarea.form-control(id="noiDung" name="noiDung" placeholder="Nhập nội dung" required)
+                                .invalid-feedback#noiDungError Vui lòng nhập nội dung sách
                         .col-lg-6
                             .form-group
                                 label(for="hinhAnhPath") Hình Ảnh <span class="required-text">*</span>
-                                input.form-control(type="file" id="hinhAnhPath" name="hinhAnhPath")
+                                input.form-control(type="file" id="hinhAnhPath" name="hinhAnhPath" accept="image/*" required)
+                                .invalid-feedback#hinhAnhError Vui lòng chọn file hình ảnh hợp lệ (jpg, jpeg, png, gif)
                             .form-group
                                 label(for="ngayXuatBan") Ngày Xuất Bản <span class="required-text">*</span>
-                                input.form-control(type="date" id="ngayXuatBan" name="ngayXuatBan")
+                                input.form-control(type="date" id="ngayXuatBan" name="ngayXuatBan" required)
+                                .invalid-feedback#ngayXuatBanError Ngày xuất bản không được lớn hơn ngày hiện tại
                             .form-group
                                 label(for="lanXuatBan") Lần Xuất Bản <span class="required-text">*</span>
-                                input.form-control(type="number" id="lanXuatBan" name="lanXuatBan" placeholder="Nhập lần xuất bản")
+                                input.form-control(type="text" id="lanXuatBan" name="lanXuatBan" placeholder="Nhập lần xuất bản" required)
+                                .invalid-feedback#lanXuatBanError Lần xuất bản phải là số dương
                             .form-group
                                 label(for="soTrang") Số Trang <span class="required-text">*</span>
-                                input.form-control(type="number" id="soTrang" name="soTrang" placeholder="Nhập số trang")
+                                input.form-control(type="text" id="soTrang" name="soTrang" placeholder="Nhập số trang" required)
+                                .invalid-feedback#soTrangError Số trang phải là số dương
                             .form-group
                                 label(for="maNgonNgu") Ngôn Ngữ <span class="required-text">*</span>
-                                select.form-control(id="maNgonNgu" name="maNgonNgu")
-                                    option(value="") -- Chọn Ngôn Ngữ --
+                                select.form-control(id="maNgonNgu" name="maNgonNgu" required)
                                     each ngonNgu in ngonNguList
                                         option(value=`${ngonNgu.maNgonNgu}`) #{ngonNgu.ngonNgu}
                             .form-group
                                 label(for="maTL") Thể Loại <span class="required-text">*</span>
                                 select.form-control(id="maTL" name="maTL" required)
-                                    option(value="") -- Chọn Thể Loại --
                                     each theLoai in theLoaiList
                                         option(value=`${theLoai.maTL}`) #{theLoai.tenTL}
                             .form-group
                                 label(for="maTacGia") Tác Giả <span class="required-text">*</span>
                                 select.form-control(id="maTacGia" name="maTacGia" required)
-                                    option(value="") -- Chọn Tác Giả --
                                     each tacGia in tacGiaList
                                         option(value=`${tacGia.maTacGia}`) #{tacGia.hoTenTG}
                     .d-flex.justify-content-end.mt-3
@@ -138,8 +146,9 @@ block main
                                 th Ngôn Ngữ
                                 th Thể Loại
                                 th Tác Giả 
+                                th Thao tác
 
-                        tbody#danhSachDocGia
+                        tbody#dauSachTempList
 
                 
     // Modal Delete Đầu Sách
@@ -189,8 +198,9 @@ block main
 
     script.
         flatpickr('#ngayXuatBan', {
-            dateFormat: 'd/m/Y', // Định dạng hiển thị: dd/mm/yyyy
-            allowInput: true, // Cho phép người dùng nhập tay
+            dateFormat: 'd/m/Y',
+            allowInput: false,
+            maxDate: "today",
             onClose: function(selectedDates, dateStr, instance) {
                 if (!dateStr) { 
                     alert('Vui lòng chọn ngày');

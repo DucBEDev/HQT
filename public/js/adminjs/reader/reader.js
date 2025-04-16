@@ -139,66 +139,6 @@ function hienThiDanhSachDocGia() {
 }
 
 // Validate
-function restrictDateInput(input, isBirthDate = false) {
-    input.addEventListener('input', function(e) {
-        const value = this.value;
-        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        const errorElementId = input.id + 'Error';
-        if (value && !dateRegex.test(value)) {
-            this.classList.add('is-invalid');
-            document.getElementById(errorElementId).style.display = 'block';
-        } else {
-            const date = new Date(value);
-            const currentDate = new Date();
-            if (isNaN(date.getTime())) {
-                this.classList.add('is-invalid');
-                document.getElementById(errorElementId).style.display = 'block';
-            } else if (isBirthDate && date > currentDate) {
-                this.classList.add('is-invalid');
-                document.getElementById(errorElementId).style.display = 'block';
-            } else {
-                this.classList.remove('is-invalid');
-                document.getElementById(errorElementId).style.display = 'none';
-            }
-        }
-    });
-}
-
-function validateCardDates(startInput, endInput) {
-    startInput.addEventListener('input', validateCardDateFields);
-    endInput.addEventListener('input', validateCardDateFields);
-
-    function validateCardDateFields() {
-        const startDate = startInput.value;
-        const endDate = endInput.value;
-
-        if (startDate && endDate) {
-            const start = new Date(startDate);
-            const end = new Date(endDate);
-            const currentDate = new Date();
-
-            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-                startInput.classList.add('is-invalid');
-                endInput.classList.add('is-invalid');
-                document.getElementById('ngayLamTheError').style.display = 'block';
-                document.getElementById('ngayHetHanError').style.display = 'block';
-            } else if (start < currentDate || end <= start) {
-                startInput.classList.add('is-invalid');
-                endInput.classList.add('is-invalid');
-                document.getElementById('ngayLamTheError').style.display = 'block';
-                document.getElementById('ngayHetHanError').style.display = 'block';
-            } else {
-                startInput.classList.remove('is-invalid');
-                startInput.classList.add('is-valid');
-                endInput.classList.remove('is-invalid');
-                endInput.classList.add('is-valid');
-                document.getElementById('ngayLamTheError').style.display = 'none';
-                document.getElementById('ngayHetHanError').style.display = 'none';
-            }
-        }
-    }
-}
-
 // Áp dụng các hàm chặn nhập vào các input
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('addDocGiaForm');
@@ -227,12 +167,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Chặn nhập khoảng trắng trong ô email
     window.restrictEmailInput(emailDGInput);
-
-    // Validate ngày sinh (không cho phép lớn hơn ngày hiện tại)
-    restrictDateInput(ngaySinhInput, true);
-
-    // Validate ngày làm thẻ và ngày hết hạn
-    validateCardDates(ngayLamTheInput, ngayHetHanInput);
 
     // Form submission validation
     form.addEventListener('submit', function(event) {
