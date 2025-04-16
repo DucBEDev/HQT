@@ -187,6 +187,7 @@ $(document).ready(function () {
                 currentSach = (sachDisplayList.length > 0) ? sachDisplayList[sachDisplayList.length - 1].maSach : '';
             }
             sachDisplayList = sachDisplayList.filter(s => s.maSach !== maSach);
+            getNextId();
             console.log("Sach display list after remove:", sachDisplayList);
             
             sachSubmitList = sachSubmitList.filter(s => s.maSach !== maSach);
@@ -210,6 +211,7 @@ $(document).ready(function () {
         else {
             sachDisplayList = sachDisplayList.filter(s => s.maSach !== maSach);
             sachSubmitList = sachSubmitList.filter(s => s.maSach !== maSach);
+            console.log("Sach display list after remove:", sachDisplayList);
             $(this).closest('tr').remove();
         }
     });
