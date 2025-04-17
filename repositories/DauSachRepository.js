@@ -89,7 +89,38 @@ class DauSachRepository {
                     LEFT JOIN NGONNGU AS nn ON ds.MANGONNGU = nn.MANGONNGU
                     WHERE ds.ISDELETED = 0 AND ds.MATL = @type
                     GROUP BY ds.ISBN, ds.TENSACH, ds.NGAYXUATBAN, ds.SOTRANG, nn.NGONNGU
-                    ORDER BY ds.ISBN;`);
+                    ORDER BY ds.TENSACH ASC;`);
+            return result.recordset
+        } catch (err) {
+            console.error('Error in getAll DauSach:', err);
+            throw err;
+        }
+    }
+
+    static async getAllBaseOnDate(startDate, endDate, quantity) {
+        try {
+            await pool.connect();
+            const result = await pool.request()
+                .input('startDate', sql.DateTime, startDate)
+                .input('endDate', sql.DateTime, endDate)
+                .input('quantity', sql.Int, quantity)
+                .query(`SELECT 
+                        ds.ISBN AS isbn,
+                        ds.TENSACH AS tenSach,
+                        tg.HOTENTG AS hoTenTG,
+                        tl.TENTL AS tenTL,
+                        COUNT(pm.MAPHIEU) AS soLuongMuon
+                        FROM PHIEUMUON pm
+                        LEFT JOIN CT_PHIEUMUON ctpm ON pm.MAPHIEU = ctpm.MAPHIEU
+                        LEFT JOIN SACH s ON s.MASACH = ctpm.MASACH
+                        LEFT JOIN DAUSACH ds ON ds.ISBN = s.ISBN
+                        LEFT JOIN TACGIA_SACH ts ON ts.ISBN = ds.ISBN
+                        LEFT JOIN TACGIA tg ON tg.MATACGIA = ts.MATACGIA
+                        LEFT JOIN THELOAI tl ON tl.MATL = ds.MATL
+                        WHERE pm.NGAYMUON BETWEEN @startDate AND @endDate
+                        GROUP BY ds.ISBN, ds.TENSACH, tg.HOTENTG, tl.TENTL
+                        ORDER BY COUNT(pm.MAPHIEU) DESC
+                        OFFSET 0 ROWS FETCH NEXT @quantity ROWS ONLY;`);
             return result.recordset
         } catch (err) {
             console.error('Error in getAll DauSach:', err);

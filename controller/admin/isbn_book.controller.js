@@ -126,32 +126,75 @@ module.exports.getNextISBN = async (req, res) => {
     res.json({ success: true, nextId });
 };
 
-// [GET] /admin/isbn_book/report
+// [GET] /admin/isbn_book/report?type=list/most-borrow
 module.exports.getReport = async (req, res) => {
-    const typeList = await TheLoaiRepository.getAll();
-    const dauSachList = [];
+    const type = req.query.type;
 
-    for (const type of typeList) {
-        const dauSach = await DauSachRepository.getAllBaseOnType(type.maTL);
-        dauSach.sort((a, b) => a.tenSach.localeCompare(b.tenSach));
-        
-        const categoryData = {
-            tenTL: type.tenTL,
-            books: dauSach
-        };
-        dauSachList.push(categoryData);
+    if (type == 'list') {
+        const typeList = await TheLoaiRepository.getAll();
+        const dauSachList = [];
+
+        for (const type of typeList) {
+            const dauSach = await DauSachRepository.getAllBaseOnType(type.maTL);
+            
+            const categoryData = {
+                tenTL: type.tenTL,
+                books: dauSach
+            };
+            dauSachList.push(categoryData);
+        }
+
+        res.render('admin/pages/dausach_sach/reportList', { 
+            dauSachList: dauSachList,
+            printDate: moment().format('DD/MM/YYYY')
+        });
     }
+    else if (type == 'most-borrow') {
+        let { startDate, endDate, quantity } = req.query;
 
-    res.render('admin/pages/dausach_sach/report', { 
-        dauSachList: dauSachList,
-        printDate: moment().format('DD/MM/YYYY')
-    });
+        if (startDate && endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            const updatedQuantity = parseInt(quantity);
+
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+                return res.status(400).send('Ngày không hợp lệ');
+            }
+
+            if (isNaN(updatedQuantity) || updatedQuantity <= 0) {
+                return res.status(400).send('Số lượng sách không hợp lệ');
+            }
+
+            if (start > end) {
+                return res.status(400).send('Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu');
+            }
+
+            const dauSachList = await DauSachRepository.getAllBaseOnDate(start, end, updatedQuantity);
+
+            res.render('admin/pages/dausach_sach/reportMostBorrow', { 
+                printDate: moment().format('DD/MM/YYYY'),
+                startDate: moment(start).format('DD/MM/YYYY'),
+                endDate: moment(end).format('DD/MM/YYYY'),
+                dauSachList: dauSachList,
+                quantity: updatedQuantity,
+                hasData: dauSachList.length > 0
+            });
+        } else {
+            res.render('admin/pages/dausach_sach/reportMostBorrow', { 
+                printDate: moment().format('DD/MM/YYYY'),
+                dauSachList: [],
+                hasData: false
+            });
+        }
+    }
 };
 
-// [POST] /admin/isbn_book/download-report
+// [POST] /admin/isbn_book/download-report?type=list/most-borrow
 module.exports.downloadReport = async (req, res) => {
     try {
-        const { dauSachList, printDate } = req.body;
+        const type = req.query.type;
+
+        const { dauSachList, printDate, quantity, startDate, endDate } = req.body;
         const parsedDauSachList = JSON.parse(dauSachList);
 
         // Khởi tạo Puppeteer với các options cần thiết
@@ -160,17 +203,34 @@ module.exports.downloadReport = async (req, res) => {
             args: ['--no-sandbox', '--disable-setuid-sandbox']
         });
         const page = await browser.newPage();
-
-        // Render template với dữ liệu từ form
-        const html = await new Promise((resolve, reject) => {
-            res.render('admin/pages/dausach_sach/report', {
-                dauSachList: parsedDauSachList,
-                printDate: printDate
-            }, (err, html) => {
-                if (err) reject(err);
-                resolve(html);
+        let html = "";
+        
+        if (type == 'list') {
+            // Render template với dữ liệu từ form
+            html = await new Promise((resolve, reject) => {
+                res.render('admin/pages/dausach_sach/reportList', {
+                    dauSachList: parsedDauSachList,
+                    printDate: printDate
+                }, (err, html) => {
+                    if (err) reject(err);
+                    resolve(html);
+                });
             });
-        });
+        }
+        else if (type == 'most-borrow') {
+            html = await new Promise((resolve, reject) => {
+                res.render('admin/pages/dausach_sach/reportMostBorrow', {
+                    printDate: printDate,
+                    dauSachList: parsedDauSachList,
+                    quantity: quantity,
+                    startDate: startDate,
+                    endDate: endDate
+                }, (err, html) => {
+                    if (err) reject(err);
+                    resolve(html);
+                });
+            });
+        }
 
         // Đặt nội dung HTML và đợi tất cả resources load xong
         await page.setContent(html, { 
@@ -210,7 +270,12 @@ module.exports.downloadReport = async (req, res) => {
         // Thiết lập headers cho response
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Length', pdfBuffer.length);
-        res.setHeader('Content-Disposition', 'attachment; filename="bao_cao_dau_sach.pdf"');
+        if (type == 'list') {
+            res.setHeader('Content-Disposition', 'attachment; filename="bao_cao_danh_muc_dau_sach.pdf"');
+        }
+        else if (type == 'most-borrow') {
+            res.setHeader('Content-Disposition', 'attachment; filename="bao_cao_sach_muon_nhieu_nhat.pdf"');
+        }
 
         // Gửi PDF buffer về client
         res.end(pdfBuffer);

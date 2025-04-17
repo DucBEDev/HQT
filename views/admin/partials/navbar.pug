@@ -13,7 +13,8 @@ ul.navbar-nav.sidebar.sidebar-light.accordion#accordionSidebar
         #collapsePage.collapse(aria-labelledby="headingPage" data-parent="#accordionSidebar")
             .bg-white.py-2.collapse-inner.rounded
                 a.collapse-item(href=`${prefixAdmin}/isbn_book`) Quản lý
-                a.collapse-item(href=`${prefixAdmin}/isbn_book/report`) Báo cáo danh mục
+                a.collapse-item(href=`${prefixAdmin}/isbn_book/report?type=list`) Báo cáo danh mục
+                a.collapse-item(href=`${prefixAdmin}/isbn_book/report?type=most-borrow`) Sách mượn nhiều nhất
     li.nav-item
         a.nav-link(href=`${prefixAdmin}/author`)
             i.fa-solid.fa-user-pen

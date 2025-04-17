@@ -109,7 +109,7 @@ html(lang="vi")
         .button-container
             button(onclick="window.history.back()") Quay lại
             button(onclick="printReport()") In Báo Cáo
-            form(action=`${prefixAdmin}/isbn_book/download-report` method="POST" style="display: inline;")
+            form(action=`${prefixAdmin}/isbn_book/download-report?type=list` method="POST" style="display: inline;")
                 input(type="hidden" name="dauSachList" value=JSON.stringify(dauSachList))
                 input(type="hidden" name="printDate" value=printDate)
                 button(type="submit") Xuất File PDF
