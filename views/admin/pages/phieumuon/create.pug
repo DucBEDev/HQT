@@ -21,7 +21,7 @@ block main
                                         input.form-control(type="text" id="sachSearch" placeholder="Nhập mã sách hoặc tên sách")
                                     .product-list#bookList
                                         each sach in sachList
-                                            .product-item(data-ma-sach=`${sach.MASACH}` data-ten-sach=`${sach.TENSACH}` data-isbn=`${sach.ISBN}`)
+                                            .product-detail-item(data-ma-sach=`${sach.MASACH}` data-ten-sach=`${sach.TENSACH}` data-isbn=`${sach.ISBN}`)
                                                 | #{sach.MASACH} - #{sach.TENSACH} 
                                 .col-lg-6
                                     .form-group

@@ -8,6 +8,7 @@ const typeRoute = require('./type.route');
 const authorRoute = require('./author.route');
 const isbn_bookRoute = require('./isbn_book.route');
 const phieumuonRoute = require('./phieumuon.route');
+const authRoute = require('./auth.route');
 
 module.exports = (app) => {
     const PATH_ADMIN = systemConfig.prefixAdmin;
@@ -18,5 +19,5 @@ module.exports = (app) => {
     app.use(PATH_ADMIN + '/author', authorRoute);
     app.use(PATH_ADMIN + '/isbn_book', isbn_bookRoute);
     app.use(PATH_ADMIN + '/phieumuon', phieumuonRoute);
-
+    app.use(PATH_ADMIN + '/auth', authRoute);
 }

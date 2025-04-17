@@ -74,8 +74,12 @@ html
                 #password-message()
                     .message #{message}
 
-                button(type="submit")
-                    i.fas.fa-user-plus
-                    |  Đăng ký
+                .button-container(style="display: flex; gap: 10px; justify-content: center;")
+                    a(class="btn-login-back" href=`${prefixUrl}/auth/login`)
+                        i.fas.fa-sign-in-alt
+                        |  Quay về trang đăng nhập
+                    button(type="submit")
+                        i.fas.fa-user-plus
+                        |  Đăng ký
 
     script(src="/js/script.js")
