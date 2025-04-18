@@ -34,8 +34,9 @@ block main
                                 td.align-middle #{phieu.ngayMuon.toLocaleDateString('vi-VN')}
                                 td.align-middle #{phieu.maNV}
                                 td.align-middle
-                                    a.btn.btn-sm.btn-primary.edit-type-btn.mr-1(href=`${prefixAdmin}/phieumuon/edit/${phieu.maPhieu}`) Sửa
+                                    a.btn.btn-sm.btn-danger.edit-type-btn.mr-1(href=`${prefixAdmin}/phieumuon/edit/${phieu.maPhieu}`) Sửa
                                     a.btn.btn-sm.btn-danger.delete-phieu-btn.mr-1(href="javascript:void(0);" data-phieu-id=`${phieu.maPhieu}` data-toggle="modal" data-target="#DeleteModal") Xóa
+                                    a.btn.btn-sm.btn-primary.tra-sach-btn.mr-1(href="javascript:void(0);" data-phieu-id=`${phieu.maPhieu}` data-toggle="modal" data-target="#TraSachModal") Trả sách
 
     //- Modal Delete Item
     #DeleteModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="DeleteModal" aria-hidden="true")
@@ -51,10 +52,30 @@ block main
                     button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
                     button#delete-link.btn.btn-primary(type="button") Xóa
 
+    //- Modal Tra Sach
+    #TraSachModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="TraSachModal" aria-hidden="true")
+        .modal-dialog(role="document")
+            .modal-content
+                .modal-header
+                    h5#exampleModalLabelLogout.modal-title Trả sách
+                    button.close(type="button" data-dismiss="modal" aria-label="Close")
+                        span(aria-hidden="true") ×
+                .modal-body
+                    p Xác nhận trả sách?
+                .modal-footer
+                    button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
+                    button#tra-sach-link.btn.btn-primary(type="button") Xác nhận
+
     form(
         action=""
         method="POST"
         id="delete-phieu-item"
+    )
+
+    form(
+        action=""
+        method="POST"
+        id="tra-sach-item"
     )
 
     script(src="/vendor/jquery/jquery.min.js")
@@ -71,5 +92,15 @@ block main
             $('.delete-phieu-btn').on('click', function() {
                 const phieuId = $(this).data('phieu-id');
                 $('#DeleteModal').find('.delete-phieu-btn').data('phieu-id', phieuId);
+            });
+
+            $('#phieuMuonTableBody').on('click', '.tra-sach-btn', function() {
+                const phieuId = $(this).data('phieu-id');
+
+                $('#tra-sach-link').on('click', function(e) {
+                    e.preventDefault();
+                    $('#tra-sach-item').attr('action', `/Library/admin/phieumuon/tra-sach/${phieuId}`);
+                    $('#tra-sach-item').submit();
+                });
             });
         });
