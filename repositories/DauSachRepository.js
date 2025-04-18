@@ -136,6 +136,7 @@ class DauSachRepository {
                                                         s.MASACH,
                                                         ds.TENSACH,
                                                         s.TINHTRANG,
+                                                        s.CHOMUON,
                                                         COUNT(s.MASACH) OVER (PARTITION BY ds.ISBN) AS SOLUONG
                                                     FROM DAUSACH AS ds 
                                                     LEFT JOIN SACH AS s ON ds.ISBN = s.ISBN

@@ -9,7 +9,7 @@ const DauSach = require('../../models/DauSach');
 const Sach = require('../../models/Sach');
 
 
-// [GET] /author
+// [GET] /phieumuon
 module.exports.index = async (req, res) => {
     try {
         const list = await PhieuMuonRepository.getAll();
@@ -23,9 +23,9 @@ module.exports.index = async (req, res) => {
     }
 };
 
+// [GET] /phieumuon/create
 module.exports.create = async (req, res) => {
-    const sachList = await DauSachRepository.getAllWithQuantity(); // Giả định hàm lấy danh sách sách
-    console.log(sachList)
+    const sachList = await DauSachRepository.getAllWithQuantity(); 
     const docGiaList = await DocGiaRepository.getAll();
     const nhanVienList = await NhanVienRepository.getAll();
     // const nextPhieuMuonId = await getNextPhieuMuonId(); // Giả định hàm tạo mã phiếu
@@ -35,9 +35,9 @@ module.exports.create = async (req, res) => {
     });
 };
 
+// [POST] /phieumuon/create
 module.exports.createPost = async (req, res) => {
     const { maDG, hinhThuc, maNV } = req.body;
-    console.log(req.body)
 
     const ctPhieuMuonList = [];
     let i = 0;
@@ -102,6 +102,7 @@ module.exports.createPost = async (req, res) => {
     }
 };
 
+// [GET] /phieumuon/next-id
 module.exports.getNextId = async (req, res) => {
     try {
         const nextId = await PhieuMuonRepository.getNextId();

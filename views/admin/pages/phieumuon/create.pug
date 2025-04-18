@@ -21,8 +21,14 @@ block main
                                         input.form-control(type="text" id="sachSearch" placeholder="Nhập mã sách hoặc tên sách")
                                     .product-list#bookList
                                         each sach in sachList
-                                            .product-detail-item(data-ma-sach=`${sach.MASACH}` data-ten-sach=`${sach.TENSACH}` data-isbn=`${sach.ISBN}`)
-                                                | #{sach.MASACH} - #{sach.TENSACH} 
+                                            .product-detail-item(
+                                                class=(sach.CHOMUON ? 'disabled' : '')
+                                                data-ma-sach=`${sach.MASACH}` 
+                                                data-ten-sach=`${sach.TENSACH}` 
+                                                data-isbn=`${sach.ISBN}`
+                                                data-tinh-trang=`${sach.TINHTRANG}`
+                                                style=(sach.CHOMUON ? 'pointer-events: none; opacity: 0.6;' : ''))
+                                                    | #{sach.MASACH} - #{sach.TENSACH} #{sach.CHOMUON ? '(Đã được mượn)' : ''}
                                 .col-lg-6
                                     .form-group
                                         label Sách đã chọn
@@ -48,7 +54,10 @@ block main
                                     option(value="0") Tại chỗ
                             .form-group
                                 label(for="ngayMuon") Ngày mượn <span class="required-text">*</span>
-                                input.form-control(type="date" id="ngayMuon" name="ngayMuon" required value=`${new Date().toISOString().split('T')[0]}`)
+                                input.form-control(type="date" id="ngayMuon" name="ngayMuon" required)
+                            .form-group
+                                label(for="ngayTra") Ngày trả <span class="required-text">*</span>
+                                input.form-control(type="date" id="ngayTra" name="ngayTra" required)  
                             .form-group
                                 label(for="maNV") Mã nhân viên <span class="required-text">*</span>
                                 select.form-control(id="maNV" name="maNV" required)
@@ -64,3 +73,34 @@ block main
     script(src="/vendor/jquery/jquery.min.js")
     script(src="/js/validation.js")
     script(src="/js/adminjs/phieumuon.js")
+    script(src="https://cdn.jsdelivr.net/npm/flatpickr")
+
+    script.
+        flatpickr('#ngayMuon', {
+            dateFormat: 'd/m/Y', 
+            defaultDate: "today",
+            allowInput: false,
+            clickOpens: false
+        });
+
+        flatpickr('#ngayTra', {
+            dateFormat: 'd/m/Y',
+            allowInput: false,
+            minDate: "today",
+            onClose: function(selectedDates, dateStr, instance) {
+                if (!dateStr) {
+                    alert('Vui lòng chọn ngày trả');
+                    return;
+                }
+                
+                const ngayMuon = document.querySelector("#ngayMuon")._flatpickr.selectedDates[0];
+                const ngayTra = selectedDates[0];
+                const maxNgayTra = new Date(ngayMuon);
+                maxNgayTra.setDate(maxNgayTra.getDate() + 15);
+
+                if (ngayTra > maxNgayTra) {
+                    alert('Ngày trả không được quá 15 ngày so với ngày mượn');
+                    instance.clear();
+                }
+            }
+        });
