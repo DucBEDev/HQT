@@ -26,18 +26,27 @@ class PhieuMuonRepository {
             await pool.connect();
             const request = pool.request();
             request.input('MAPHIEU', sql.BigInt, maPhieu);
-            const result = await request.query('SELECT * FROM PHIEUMUON WHERE MAPHIEU = @MAPHIEU AND ISDELETED = 0');
-            if (result.recordset.length === 0) {
+            
+            const resultPM = await request.query('SELECT * FROM PHIEUMUON WHERE MAPHIEU = @MAPHIEU AND ISDELETED = 0');
+            if (resultPM.recordset.length === 0) {
                 throw new Error('Không tìm thấy phiếu mượn với mã này');
             }
-            const phieuMuon = result.recordset[0];
-            return new PhieuMuon(
-                phieuMuon.MAPHIEU,
-                phieuMuon.MADG,
-                phieuMuon.HINHTHUC,
-                phieuMuon.NGAYMUON,
-                phieuMuon.MANV
+            const phieuMuon = resultPM.recordset[0];
+            const returnPM = new PhieuMuon(phieuMuon.MAPHIEU, phieuMuon.MADG, phieuMuon.HINHTHUC, phieuMuon.NGAYMUON, phieuMuon.MANV);
+
+            const resultCTPM = await request.query(
+                                                `SELECT ctpm.MAPHIEU AS maPhieu,
+                                                        ctpm.MASACH AS maSach,
+                                                        ctpm.TINHTRANGMUON AS tinhTrangMuon,
+                                                        ctpm.NGAYTRA AS ngayTra,
+                                                        ds.TENSACH AS tenSach
+                                                FROM CT_PHIEUMUON ctpm
+                                                LEFT JOIN SACH s ON s.MASACH = ctpm.MASACH
+                                                LEFT JOIN DAUSACH ds ON ds.ISBN = s.ISBN
+                                                WHERE ctpm.MAPHIEU = @MAPHIEU`
             );
+            
+            return { phieuMuon: returnPM, ctpmList: resultCTPM.recordset };
         } catch (err) {
             console.error('Error in getById PhieuMuon:', err);
             throw err;

@@ -1,12 +1,11 @@
 const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction } = require('../../configs/database');
-const PhieuMuonRepository = require('../../repositories/PhieuMuonRepository'); // Giả định bạn sẽ tạo repository tương ứng
-const DauSachRepository = require('../../repositories/DauSachRepository'); // Giả định bạn sẽ tạo repository tương ứng
-const SachRepository = require('../../repositories/SachRepository'); // Giả định bạn sẽ tạo repository tương ứng
-const NhanVienRepository = require('../../repositories/NhanVienRepository'); // Giả định bạn sẽ tạo repository tương ứng
-const DocGiaRepository = require('../../repositories/DocGiaRepository'); // Giả định bạn sẽ tạo repository tương ứng
+
+const PhieuMuonRepository = require('../../repositories/PhieuMuonRepository'); 
+const DauSachRepository = require('../../repositories/DauSachRepository'); 
+const NhanVienRepository = require('../../repositories/NhanVienRepository'); 
+const DocGiaRepository = require('../../repositories/DocGiaRepository');
+
 const systemConfig = require('../../configs/system');
-const DauSach = require('../../models/DauSach');
-const Sach = require('../../models/Sach');
 
 
 // [GET] /phieumuon
@@ -66,9 +65,7 @@ module.exports.createPost = async (req, res) => {
         ];
         await executeStoredProcedureWithTransaction('sp_LapPhieuMuon', paramsPhieu);
 
-    
-  
-        res.json({ success: true });
+        res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
     } 
     catch (error) {
         // Lấy thông điệp lỗi từ SQL Server
@@ -111,3 +108,42 @@ module.exports.getNextId = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
+
+// [GET] /phieumuon/detail/:maPhieu
+module.exports.detail = async (req, res) => {
+    const { maPhieu } = req.params;
+    const { phieuMuon, ctpmList } = await PhieuMuonRepository.getById(maPhieu);
+    const sachList = await DauSachRepository.getAllWithQuantity();
+    
+    res.render('admin/pages/phieumuon/detail', { 
+        phieuMuon,
+        pageTitle: 'Chi tiết phiếu mượn',
+        sachList,
+        ctpmList
+    });
+};
+
+// [PATCH] /phieumuon/edit/:maPhieu
+module.exports.edit = async (req, res) => {
+    console.log(req.body)
+    res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+};
+
+// [PATCH] /phieumuon/lostBook/:maPhieu
+module.exports.lostBook = async (req, res) => {
+    console.log(req.params.maPhieu)
+    res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+};
+
+// [POST] /phieumuon/returnBook/:maPhieu
+module.exports.returnBook = async (req, res) => {
+    console.log(req.params.maPhieu)
+    res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+};
+
+// [DELETE] /phieumuon/delete/:maPhieu
+module.exports.delete = async (req, res) => {
+    console.log(req.params.maPhieu)
+    res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+};
+

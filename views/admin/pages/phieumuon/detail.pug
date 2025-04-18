@@ -1,0 +1,285 @@
+extends ../../layouts/default.pug
+include ../../mixins/alert.pug
+
+block main 
+    +alert-error(3000)
+    +alert-success(3000)
+
+    .container-fluid
+        .card.mb-4#phieuMuonDetailCard
+            .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+                h6.m-0.font-weight-bold.text-primary Chi Tiết Phiếu Mượn
+                .d-flex
+                    button#editButton.btn.btn-primary.mr-2(type="button") Chỉnh sửa
+                    a.btn.btn-sm.btn-danger.lost-book-btn.mr-1.d-flex.align-items-center(href=`javascript:void(0);` data-ma-phieu=`${phieuMuon.maPhieu}` data-toggle="modal" data-target="#lostBookModal") Xác nhận mất sách
+            .card-body
+                form#phieuMuonDetailForm(action=`${prefixAdmin}/phieumuon/edit/${phieuMuon.maPhieu}?_method=PATCH` method="post")
+                    .row
+                        .col-lg-12
+                            h5 Danh Sách Sách Mượn
+                            .row
+                                .col-lg-6#bookSelectionArea(style="display: none;")
+                                    .form-group
+                                        label(for="sachSearch") Tìm sách
+                                        input.form-control(type="text" id="sachSearch" placeholder="Nhập mã sách hoặc tên sách")
+                                    .product-list#bookList
+                                        each sach in sachList
+                                            .product-detail-item(
+                                                class=(sach.CHOMUON ? 'disabled' : '')
+                                                data-ma-sach=`${sach.MASACH}` 
+                                                data-ten-sach=`${sach.TENSACH}` 
+                                                data-isbn=`${sach.ISBN}`
+                                                data-tinh-trang=`${sach.TINHTRANG}`
+                                                style=(sach.CHOMUON ? 'pointer-events: none; opacity: 0.6;' : ''))
+                                                    | #{sach.MASACH} - #{sach.TENSACH} #{sach.CHOMUON ? '(Đã được mượn)' : ''}
+                                .col-lg-6
+                                    #selectedBooksReadOnly
+                                        each sach in ctpmList
+                                            .product-detail-item(
+                                                data-ma-sach=`${sach.maSach}` 
+                                                data-ten-sach=`${sach.tenSach}` 
+                                                data-tinh-trang=`${sach.tinhTrangMuon}`)
+                                                    | #{sach.maSach} - #{sach.tenSach}
+                                    .selected-products#selectedBooks(style="display: none;")
+                    hr.separation
+                    .row
+                        .col-lg-12
+                            h5 Thông Tin Phiếu Mượn
+                            .form-group
+                                label(for="maPhieu") Mã phiếu mượn
+                                input.form-control(type="text" id="maPhieu" name="maPhieu" readonly value=`${phieuMuon.maPhieu}`)
+                            .form-group
+                                label(for="maDG") Mã độc giả
+                                input.form-control(type="text" id="maDG" name="maDG" readonly value=phieuMuon.maDG)
+                            .form-group
+                                label(for="hinhThuc") Hình thức mượn
+                                select.form-control(id="hinhThuc" name="hinhThuc" required disabled)
+                                    option(value="1" selected=(phieuMuon.hinhThuc === 1)) Mang về
+                                    option(value="0" selected=(phieuMuon.hinhThuc === 0)) Tại chỗ
+                            .form-group
+                                label(for="ngayMuon") Ngày mượn
+                                .ngayMuon
+                                    span(id="ngayMuon" value=`${phieuMuon.ngayMuon}`) #{moment(phieuMuon.ngayMuon).format("DD/MM/YYYY")}
+                            .form-group
+                                label(for="ngayTra") Ngày trả
+                                input.form-control(type="date" id="ngayTra" name="ngayTra" required disabled)
+                            .form-group
+                                label(for="maNV") Mã nhân viên tạo phiếu
+                                input.form-control(type="text" id="maNV" name="maNV" readonly value=phieuMuon.maNV)
+                            .form-group
+                                label(for="trangThai") Trạng thái
+                                span 
+                                    if (phieuMuon.TRA == true)
+                                        | Đã trả sách
+                                    else
+                                        | Chưa trả sách
+                    #selectedBooksInputs
+                    .d-flex.justify-content-end.mt-3
+                        button#saveButton.btn.btn-primary(type="submit" style="display: none;") Lưu thay đổi
+
+    // Modal lost book
+    #lostBookModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="lostBookModal" aria-hidden="true")
+        .modal-dialog(role="document")
+            .modal-content
+                .modal-header
+                    h5#exampleModalLabelLostBook.modal-title Xác nhận mất sách
+                    button.close(type="button" data-dismiss="modal" aria-label="Close")
+                        span(aria-hidden="true") ×
+                .modal-body
+                    p Bạn chắc chắn muốn xác nhận sách bị mất không?
+                .modal-footer
+                    button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
+                    button#confirmLossButton.btn.btn-primary(type="button") Xác nhận
+
+    form(
+        action=""
+        id="lostBookForm"
+        method="POST"
+    )
+
+    script(src="/vendor/jquery/jquery.min.js")
+    script(src="https://cdn.jsdelivr.net/npm/flatpickr")
+    script.
+        let selectedBooks = [];
+        const originalBooks = [];
+
+        // Initialize existing books
+        document.querySelectorAll('#selectedBooksReadOnly .product-detail-item').forEach(item => {
+            const book = {
+                maSach: item.dataset.maSach,
+                tenSach: item.dataset.tenSach,
+                tinhTrangMuon: item.dataset.tinhTrang === 'true'
+            };
+            originalBooks.push({...book});
+            selectedBooks.push({...book});
+        });
+
+        // Initialize flatpickr
+        flatpickr('#ngayMuon', {
+            dateFormat: 'd/m/Y',
+            allowInput: false
+        });
+
+        flatpickr('#ngayTra', {
+            dateFormat: 'd/m/Y',
+            allowInput: false,
+            onClose: function(selectedDates, dateStr, instance) {
+                if (!dateStr) {
+                    alert('Vui lòng chọn ngày trả');
+                    return;
+                }
+                
+                const ngayMuon = document.querySelector("#ngayMuon").getAttribute("value");
+                const ngayTra = selectedDates[0];
+                const maxNgayTra = new Date(ngayMuon);
+                maxNgayTra.setDate(maxNgayTra.getDate() + 15);
+
+                if (ngayTra > maxNgayTra) {
+                    alert('Ngày trả không được quá 15 ngày so với ngày mượn');
+                    instance.clear();
+                }
+            }
+        });
+
+        // Handle edit mode
+        const editButton = document.getElementById('editButton');
+        const saveButton = document.getElementById('saveButton');
+        const form = document.getElementById('phieuMuonDetailForm');
+        const formInputs = form.querySelectorAll('select, input:not([readonly])');
+        const bookSelectionArea = document.getElementById('bookSelectionArea');
+        const selectedBooksArea = document.getElementById('selectedBooks');
+        const selectedBooksReadOnly = document.getElementById('selectedBooksReadOnly');
+
+        editButton.addEventListener('click', function() {
+            if (editButton.textContent === 'Chỉnh sửa') {
+                // Enable edit mode
+                formInputs.forEach(input => input.disabled = false);
+                $('#ngayTra').attr('disabled', false);
+                editButton.textContent = 'Hủy';
+                saveButton.style.display = 'block';
+                bookSelectionArea.style.display = 'block';
+                selectedBooksArea.style.display = 'block';
+                selectedBooksReadOnly.style.display = 'none';
+                updateSelectedBooks(); // Convert static list to editable list
+            } else {
+                // Disable edit mode
+                formInputs.forEach(input => input.disabled = true);
+                $('#ngayTra').attr('disabled', true);
+                editButton.textContent = 'Chỉnh sửa';
+                saveButton.style.display = 'none';
+                bookSelectionArea.style.display = 'none';
+                selectedBooksArea.style.display = 'none';
+                selectedBooksReadOnly.style.display = 'block';
+                form.reset();
+                
+                // Reset selected books to original state
+                selectedBooks = originalBooks.map(book => ({...book}));
+            }
+        });
+
+        // Book search functionality
+        $('#sachSearch').on('input', function() {
+            const searchTerm = $(this).val().toLowerCase();
+            $('.product-list .product-detail-item').each(function() {
+                const maSach = $(this).data('ma-sach').toString().toLowerCase();
+                const tenSach = $(this).data('ten-sach').toLowerCase();
+                if (maSach.includes(searchTerm) || tenSach.includes(searchTerm)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        });
+
+        // Book selection functionality
+        $(document).on('click', '#bookList .product-detail-item', function() {
+            if (!$(this).hasClass('disabled')) {
+                const sach = {
+                    maSach: $(this).data('ma-sach'),
+                    tenSach: $(this).data('ten-sach'),
+                    tinhTrangMuon: true
+                };
+                addBook(sach);
+            }
+        });
+
+        function addBook(sach) {
+            if (selectedBooks.length >= 3) {
+                alert('Bạn chỉ có thể chọn tối đa 3 cuốn sách!');
+                return;
+            }
+
+            if (!selectedBooks.some(b => b.maSach === sach.maSach)) {
+                selectedBooks.push(sach);
+                updateSelectedBooks();
+            } else {
+                alert('Sách này đã được chọn!');
+            }
+        }
+
+        function removeBook(maSach) {
+            selectedBooks = selectedBooks.filter(b => b.maSach !== maSach);
+            updateSelectedBooks();
+        }
+
+        function updateSelectedBooks() {
+            let html = '';
+            selectedBooks.forEach(book => {
+                html += `
+                    <div class="selected-item">
+                        <span>${book.maSach} - ${book.tenSach}</span>
+                        <div class="d-flex align-items-center">
+                            <label class="mr-2">Tình trạng mượn:</label>
+                            <input type="checkbox" class="tinh-trang-muon" data-ma-sach="${book.maSach}" 
+                                ${book.tinhTrangMuon ? 'checked' : ''} 
+                                onchange="updateTinhTrangMuon('${book.maSach}', this.checked)">
+                            <span class="ml-2">${book.tinhTrangMuon ? 'Mới' : 'Cũ'}</span>
+                            <button type="button" class="btn btn-danger btn-sm ml-2" onclick="removeBook('${book.maSach}')">Xóa</button>
+                        </div>
+                    </div>`;
+            });
+            $('#selectedBooks').html(html);
+            updateSelectedBooksInputs();
+        }
+
+        function updateTinhTrangMuon(maSach, isNew) {
+            selectedBooks = selectedBooks.map(b => {
+                if (b.maSach === maSach) {
+                    b.tinhTrangMuon = isNew;
+                }
+                return b;
+            });
+            updateSelectedBooks();
+        }
+
+        function updateSelectedBooksInputs() {
+            let inputsHtml = '';
+            selectedBooks.forEach((book, index) => {
+                inputsHtml += `<input type="hidden" name="ctPhieuMuonList[${index}].maSach" value="${book.maSach}"/>` +
+                          `<input type="hidden" name="ctPhieuMuonList[${index}].tinhTrangMuon" value="${book.tinhTrangMuon}"/>`;
+            });
+            $('#selectedBooksInputs').html(inputsHtml);
+        }
+
+        // Handle book loss confirmation
+        $('#phieuMuonDetailCard').on('click', '.lost-book-btn', function() {
+            let maPhieu = $(this).data('ma-phieu');
+            if (typeof maPhieu === 'string') {
+                maPhieu = maPhieu.trim();
+            }
+            
+            $('#confirmLossButton').on('click', function(e) {
+                e.preventDefault();
+                $('#lostBookForm').attr('action', `/Library/admin/phieumuon/lostBook/${maPhieu}?_method=PATCH`);
+                $('#lostBookForm').submit();
+            });
+        });
+
+        // Form submission validation
+        form.addEventListener('submit', function(e) {
+            if (selectedBooks.length === 0) {
+                e.preventDefault();
+                alert('Vui lòng chọn ít nhất một cuốn sách trước khi lưu phiếu mượn!');
+                return false;
+            }
+        });
