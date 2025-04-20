@@ -68,6 +68,48 @@ const executeStoredProcedureWithTransaction = async (procedureName, params = [])
     }
 };
 
+
+// Hàm helper để gọi Stored Procedure với transaction
+const executeStoredProcedureWithTransactionAndReturnCode = async (procedureName, params = []) => {
+    const transaction = new sql.Transaction(pool);
+    try {
+        await transaction.begin();
+        await poolConnect;
+        const request = transaction.request();
+        
+        params.forEach(param => {
+            // console.log(`Adding param: ${param.name} = ${param.value} (type: ${param.type})`);
+            request.input(param.name, param.type, param.value);
+        });
+
+        const result = await request.execute(procedureName);
+        let id;
+        
+        if(procedureName === 'sp_ThemTacGia')
+        {
+            id=result.recordset.length > 0 ? result.recordset[0].MATACGIA : null;
+        }
+        else if(procedureName === 'sp_ThemNhanVien')
+        {
+            id=result.recordset.length > 0 ? result.recordset[0].MANV : null;
+        }
+        else if(procedureName === 'sp_ThemDocGia')
+        {
+            id=result.recordset.length > 0 ? result.recordset[0].MADG : null;
+        }     
+        // console.log('Stored procedure executed successfully:', result);
+        await transaction.commit();
+        return id;
+    } catch (err) {
+        // console.error(`Error executing stored procedure ${procedureName} with transaction:`, err);
+        // console.error('Params:', params);
+        await transaction.rollback();
+        throw err;
+    }
+};
+
+
+
 // Test connection
 pool.on('error', err => {
     console.error('SQL Server Connection Error:', err);
@@ -78,5 +120,6 @@ module.exports = {
     sql,
     pool,
     executeStoredProcedure,
+    executeStoredProcedureWithTransactionAndReturnCode,
     executeStoredProcedureWithTransaction
 };

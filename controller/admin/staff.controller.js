@@ -1,7 +1,8 @@
-const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction } = require('../../configs/database');
+const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, executeStoredProcedureWithTransactionAndReturnCode } = require('../../configs/database');
 const NhanVienRepository = require('../../repositories/NhanVienRepository'); // Giả định bạn sẽ tạo repository tương ứng
 const systemConfig = require('../../configs/system');
 const NhanVien = require('../../models/NhanVien');
+const { pushToUndoStack, popUndoStack } = require('../../public/js/adminjs/staff/staff-undo');
 
 // [GET] /staff
 module.exports.index = async (req, res) => {
@@ -19,6 +20,7 @@ module.exports.delete = async (req, res) => {
 
     const { maNV } = req.params; // Lấy giá trị maNV từ req.params
     console.log(maNV);
+    const staff = await NhanVienRepository.getById(maNV);
 
     // Định dạng params thành mảng chứa một đối tượng
     const params = [
@@ -27,6 +29,7 @@ module.exports.delete = async (req, res) => {
 
     try {
         await executeStoredProcedureWithTransaction('sp_XoaNhanVien', params);
+        pushToUndoStack('delete', staff);
         res.redirect(`${systemConfig.prefixAdmin}/staff`);
     } catch (error) {
         console.error('Error deleting staff:', error);
@@ -45,6 +48,7 @@ module.exports.create = async (req, res) => {
 module.exports.createPost = async (req, res) => {
     const staffList = req.body;
 
+    const savedStaff = [];
     for (const staff of staffList) {
         const cleanHoNV = staff.hoNV.trim().replace(/\s+/g, ' ');
         const cleanTenNV = staff.tenNV.trim().replace(/\s+/g, ' ');
@@ -58,8 +62,20 @@ module.exports.createPost = async (req, res) => {
             { name: 'DIENTHOAI', type: sql.NVarChar, value: staff.dienThoai },
             { name: 'EMAIL', type: sql.NVarChar, value: staff.email }
         ];
-        await executeStoredProcedureWithTransaction('sp_ThemNhanVien', params);
+        const maNV=await executeStoredProcedureWithTransactionAndReturnCode('sp_ThemNhanVien', params);
+        savedStaff.push({
+            maNV: maNV,
+            hoNV: cleanHoNV,
+            tenNV: cleanTenNV,
+            gioiTinh: staff.gioiTinh == '1',
+            diaChi: cleanDiaChi,
+            dienThoai: staff.dienThoai,
+            email: staff.email
+        });
     }
+
+    console.log(savedStaff)
+    pushToUndoStack('create', savedStaff);
 
     res.json({ success: true });
 };
@@ -82,6 +98,7 @@ module.exports.editPost = async (req, res) => {
     const { maNV } = req.params;
     const { hoNV, tenNV, diaChi, dienThoai, gioiTinh, email } = req.body;
 
+    const oldStaff = await NhanVienRepository.getById(maNV);
     const staff = new NhanVien(maNV, hoNV, tenNV, diaChi, dienThoai, gioiTinh, email)
 
     const params = [
@@ -96,6 +113,7 @@ module.exports.editPost = async (req, res) => {
 
     try {
         await executeStoredProcedureWithTransaction('sp_SuaNhanVien', params);
+        pushToUndoStack('edit', oldStaff);
         res.render('admin/pages/nhanvien/edit', {
             staff: staff,
             pageTitle: 'Chỉnh sửa nhân viên',
@@ -103,6 +121,57 @@ module.exports.editPost = async (req, res) => {
     } catch (error) {
         console.error('Error updating staff:', error);
         res.status(500).send('Có lỗi xảy ra khi cập nhật nhân viên!');
+    }
+};
+
+
+// [POST] /staff/undo
+module.exports.undo = async (req, res) => {
+    const lastAction = popUndoStack();
+
+    if (!lastAction) {
+        return res.json({ success: false, message: 'Không có thao tác để undo!' });
+    }
+
+    const { action, data } = lastAction;
+
+    try {
+        if (action === 'create') {
+            // Undo create: Xóa từng nhân viên đã thêm
+            for (const staff of data) {
+                const params = [
+                    { name: 'MANV', type: sql.Int, value: staff.maNV }
+                ];
+                await executeStoredProcedureWithTransaction('sp_XoaNhanVien', params);
+            }
+        } else if (action === 'delete') {
+            // Undo delete: Thêm lại nhân viên đã xóa
+            const params = [
+                { name: 'HONV', type: sql.NVarChar, value: data.hoNV },
+                { name: 'TENNV', type: sql.NVarChar, value: data.tenNV },
+                { name: 'GIOITINH', type: sql.Bit, value: data.gioiTinh },
+                { name: 'DIACHI', type: sql.NVarChar, value: data.diaChi },
+                { name: 'DIENTHOAI', type: sql.NVarChar, value: data.dienThoai },
+                { name: 'EMAIL', type: sql.NVarChar, value: data.email }
+            ];
+            await executeStoredProcedureWithTransaction('sp_ThemNhanVien', params);
+        } else if (action === 'edit') {
+            // Undo edit: Khôi phục thông tin cũ
+            const params = [
+                { name: 'MANV', type: sql.Int, value: data.maNV },
+                { name: 'HONV', type: sql.NVarChar, value: data.hoNV },
+                { name: 'TENNV', type: sql.NVarChar, value: data.tenNV },
+                { name: 'DIACHI', type: sql.NVarChar, value: data.diaChi },
+                { name: 'DIENTHOAI', type: sql.NVarChar, value: data.dienThoai },
+                { name: 'GIOITINH', type: sql.Bit, value: data.gioiTinh },
+                { name: 'EMAIL', type: sql.NVarChar, value: data.email }
+            ];
+            await executeStoredProcedureWithTransaction('sp_SuaNhanVien', params);
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error in undo:', error);
+        res.json({ success: false, message: 'Không thể thực hiện undo!' });
     }
 };
 

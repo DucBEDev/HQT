@@ -113,12 +113,98 @@ $(document).ready(function () {
     // End Change Status item
 });
 
-// script.js
+// undo THELOAI
 $(document).ready(function () {
     // ... (giữ nguyên các phần khác)
 
-    $('#btnUndo').on('click', function() {
+    $('#btnUndoType').on('click', function() {
         fetch(`/Library/admin/type/undo`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Undo thành công!');
+                window.location.reload(); // Cập nhật giao diện
+            } else {
+                alert(data.message || 'Không thể thực hiện undo!');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi thực hiện undo!');
+        });
+    });
+});
+
+
+//undo TACGIA
+$(document).ready(function () {
+    // ... (giữ nguyên các phần khác)
+
+    $('#btnUndoAuthor').on('click', function() {
+        fetch(`/Library/admin/author/undo`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Undo thành công!');
+                window.location.reload(); // Cập nhật giao diện
+            } else {
+                alert(data.message || 'Không thể thực hiện undo!');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi thực hiện undo!');
+        });
+    });
+});
+
+
+
+//undo NHANVIEN
+$(document).ready(function () {
+    // ... (giữ nguyên các phần khác)
+
+    $('#btnUndoStaff').on('click', function() {
+        fetch(`/Library/admin/staff/undo`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Undo thành công!');
+                window.location.reload(); // Cập nhật giao diện
+            } else {
+                alert(data.message || 'Không thể thực hiện undo!');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi thực hiện undo!');
+        });
+    });
+});
+
+
+
+//undo DOCGIA
+$(document).ready(function () {
+    // ... (giữ nguyên các phần khác)
+
+    $('#btnUndoReader').on('click', function() {
+        fetch(`/Library/admin/reader/undo`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json; charset=UTF-8',

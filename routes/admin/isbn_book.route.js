@@ -15,8 +15,7 @@ router.get('/book', controller.getBooks);
 router.delete('/book/delete/:maSach', controller.deleteBook);
 router.post('/book/write', controller.write);
 
-router.post('/write', upload.array('hinhAnhPath'), uploadCloud.upload, controller.createDauSach);
-router.post('/sach/write', controller.createSach);
+router.post('/create', upload.array('hinhAnhPath'), uploadCloud.upload, controller.createDauSach);
 router.delete('/delete/:isbn', controller.deleteTitle);
 router.get('/next-id', controller.getNextISBN);
 router.get('/report', controller.getReport);

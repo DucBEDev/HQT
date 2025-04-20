@@ -4,7 +4,7 @@ const TheLoaiRepository = require('../../repositories/TheLoaiRepository');
 
 const systemConfig = require('../../configs/system');
 const TheLoai = require('../../models/TheLoai');
-const { pushToUndoStack, popUndoStack} = require('../../public/js/adminjs/type/type-undo');
+const { pushToUndoStack, popUndoStack, clearUndoStack} = require('../../public/js/adminjs/type/type-undo');
 
 // [GET] /type
 module.exports.index = async (req, res) => {
@@ -137,6 +137,18 @@ module.exports.undo = async (req, res) => {
     } catch (error) {
         console.error('Error in undo:', error);
         res.json({ success: false, message: 'Không thể thực hiện undo!' });
+    }
+};
+
+
+// [POST] /type/clear-undo
+module.exports.clearUndo = async (req, res) => {
+    try {
+        clearUndoStack();
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error clearing undo stack:', error);
+        res.json({ success: false, message: 'Không thể xóa stack undo!' });
     }
 };
 

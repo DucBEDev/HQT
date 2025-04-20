@@ -90,7 +90,7 @@ $(document).ready(function () {
             }
         });
     
-        fetch(`/Library/admin/isbn_book/write`, {
+        fetch(`/Library/admin/isbn_book/create`, {
             method: 'POST',
             body: formData
         })

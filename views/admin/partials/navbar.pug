@@ -3,7 +3,7 @@ ul.navbar-nav.sidebar.sidebar-light.accordion#accordionSidebar
         .sidebar-brand-text.mx-3 Quản lý thư viện
     hr.sidebar-divider.my-0
     li.nav-item.active
-        a.nav-link(href=`${prefixAdmin}/staff`)
+        a.nav-link(href=`${prefixAdmin}/staff` type =`staff`)
             i.fa-solid.fa-users
             span Quản lý nhân viên
     li.nav-item
@@ -15,21 +15,23 @@ ul.navbar-nav.sidebar.sidebar-light.accordion#accordionSidebar
                 a.collapse-item(href=`${prefixAdmin}/isbn_book`) Quản lý
                 a.collapse-item(href=`${prefixAdmin}/isbn_book/report`) Báo cáo
     li.nav-item
-        a.nav-link(href=`${prefixAdmin}/author`)
+        a.nav-link(href=`${prefixAdmin}/author` type =`author`)
             i.fa-solid.fa-user-pen
             span Danh sách tác giả
     li.nav-item
-        a.nav-link(href=`${prefixAdmin}/reader`)
+        a.nav-link(href=`${prefixAdmin}/reader` type =`reader`)
             i.fa-solid.fa-book-open-reader
             span Danh sách độc giả
     li.nav-item
-        a.nav-link(href=`${prefixAdmin}/type`)
+        a.nav-link(href=`${prefixAdmin}/type` type =`type`)
             i.fa-solid.fa-font-awesome
             span Danh sách thể loại
     li.nav-item
         a.nav-link(href=`${prefixAdmin}/phieumuon`)
             i.fa-solid.fa-font-awesome
             span Danh sách phiếu mượn
+
+    script(src="/vendor/jquery/jquery.min.js")
 
     script.
         document.addEventListener('DOMContentLoaded', function() {
@@ -47,3 +49,33 @@ ul.navbar-nav.sidebar.sidebar-light.accordion#accordionSidebar
                 }
             });
         });
+
+    //-     $('.nav-link').on('click', function(e) {
+
+    //-         console.log("Test")
+    //-         const href = $(this).attr('href');
+    //-         const type = $(this).attr('type');
+    //-         console.log(type)
+    //-         console.log(href)
+            
+            
+    //-         if (!href.includes(`/${type}`)) {
+    //-             e.preventDefault();
+    //-             $.ajax({
+    //-                 url: `/Library/admin/${type}/clear-undo`,
+    //-                 method: 'POST',
+    //-                 success: function(response) {
+    //-                     if (response.success) {
+    //-                         console.log('Undo stack cleared for type');
+    //-                         window.location.href = href;
+    //-                     } else {
+    //-                         alert('Không thể xóa stack undo: ' + response.message);
+    //-                     }
+    //-                 },
+    //-                     error: function() {
+    //-                     alert('Có lỗi xảy ra khi xóa stack undo!');
+    //-                     }
+    //-             });
+    //-         }
+    //-   });
+

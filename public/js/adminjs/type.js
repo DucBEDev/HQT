@@ -73,7 +73,6 @@ document.getElementById('btnGhi').addEventListener('click', function() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            pushToUndoStack('create', danhSachTheLoai.slice()); // Sao chép danh sách
             alert('Ghi dữ liệu thành công!');
             window.location.href = `/Library/admin/type`;
         } else {

@@ -1,15 +1,16 @@
-// type-undo.js
+// public/js/adminjs/reader/reader-undo.js
 const undoStack = [];
 
 // Hàm thêm thao tác vào stack
 function pushToUndoStack(action, data) {
     undoStack.push({
-        action: action, // 'create', 'delete', 'edit'
+        action: action, // 'create', 'delete', 'edit', 'changeStatus'
         data: data      // Dữ liệu liên quan đến thao tác
     });
     console.log(`Đã thêm thao tác vào stack:`, undoStack[undoStack.length - 1]);
 }
 
+// Hàm lấy thao tác cuối cùng từ stack
 function popUndoStack() {
     if (undoStack.length === 0) {
         return null;
@@ -17,9 +18,4 @@ function popUndoStack() {
     return undoStack.pop();
 }
 
-function clearUndoStack() {
-    undoStack.length = 0;
-    console.log('Undo stack đã được xóa.');
-}
-
-module.exports = { pushToUndoStack, popUndoStack, clearUndoStack, undoStack };
+module.exports = { pushToUndoStack, popUndoStack, undoStack };

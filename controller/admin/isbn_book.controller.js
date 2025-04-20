@@ -60,12 +60,14 @@ module.exports.getBooks = async (req, res) => {
 module.exports.deleteBook = async (req, res) => {
     const { maSach } = req.params;
 
+    console.log(maSach)
+
     const params = [
         { name: 'MASACH', type: sql.NChar, value: maSach }
     ];
 
     try {
-        // await executeStoredProcedureWithTransaction('sp_XoaSach', params);
+        await executeStoredProcedureWithTransaction('sp_XoaSach', params);
         req.flash('success', 'Xóa sách thành công!');
         res.redirect(`${systemConfig.prefixAdmin}/isbn_book`);
     } catch (error) {
@@ -75,13 +77,37 @@ module.exports.deleteBook = async (req, res) => {
     }
 };
 
-// [POST] /admin/isbn_book/book/write
+// [POST] /admin/isbn_book/book/create
 module.exports.write = async (req, res) => {
-    console.log(req.body);
-    res.json({ success: true });
+    const sachList = req.body;
+
+    try {
+        for (const sach of sachList) {
+            // Làm sạch dữ liệu
+            const cleanMaSach = sach.maSach.trim();
+            const cleanISBN = sach.isbn.trim();
+
+            // Chuẩn bị tham số cho stored procedure
+            const params = [
+                { name: 'MASACH', type: sql.NChar, value: cleanMaSach },
+                { name: 'ISBN', type: sql.NChar, value: cleanISBN },
+                { name: 'TINHTRANG', type: sql.Bit, value: sach.tinhTrang === 'true' || sach.tinhTrang === true },
+                { name: 'CHOMUON', type: sql.Bit, value: sach.choMuon === 'true' || sach.choMuon === false },
+                { name: 'MANGANTU', type: sql.Int, value: sach.maNganTu || null }
+            ];
+
+            // Gọi stored procedure để thêm sách
+            await executeStoredProcedureWithTransaction('sp_ThemSach', params);
+        }
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error creating sach:', error);
+        res.json({ success: false, message: error.message });
+    }
 }
 
-// [POST] /admin/isbn_book/write
+// [POST] /admin/isbn_book/create
 module.exports.createDauSach = async (req, res) => {
     const dauSachList = Object.values(req.body.dauSach || []).map((ds, index) => ({
         ...ds,
@@ -96,11 +122,6 @@ module.exports.createDauSach = async (req, res) => {
     res.json({ success: true });
 };
 
-module.exports.createSach = async (req, res) => {
-    const sachList = req.body.sachList;
-    // Xử lý lưu vào DB
-    res.json({ success: true });
-};
 
 // [DELETE] /admin/isbn_book/delete/:isbn
 module.exports.deleteTitle = async (req, res) => {
@@ -111,7 +132,7 @@ module.exports.deleteTitle = async (req, res) => {
     ];
 
     try {
-        // await executeStoredProcedureWithTransaction('sp_XoaDauSach', params);
+        await executeStoredProcedureWithTransaction('sp_XoaDauSach', params);
         req.flash('success', 'Xóa đầu sách thành công!');
         res.redirect(`${systemConfig.prefixAdmin}/isbn_book`);
     } catch (error) {
