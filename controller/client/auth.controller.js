@@ -67,7 +67,7 @@ module.exports.logIn = async (req, res) => {
     try {
         // const result = await executeStoredProcedure('sp_DangNhap', params);
 
-        res.render("");
+        res.redirect(`${systemConfig.prefixUrl}/dashboard`)
         
     } catch (error) {
         console.log(error);
