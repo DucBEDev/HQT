@@ -11,6 +11,7 @@ router.get('/next-id', controller.getNextId);
 router.get('/edit/:maTL', controller.edit);
 router.post('/edit/:maTL', controller.editPost);
 router.post('/undo', controller.undo); // Route mới cho undo
+router.post('/clear-undo', controller.clearUndo); // Thêm route mới
 
 
 module.exports = router;

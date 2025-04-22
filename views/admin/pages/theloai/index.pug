@@ -10,7 +10,7 @@ block main
             .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
                 h6.m-0.font-weight-bold.text-primary Danh Sách Thể Loại
                 a.btn.btn-primary(href=`${prefixAdmin}/type/create`) + Thêm thể loại
-                button.btn.btn-warning#btnUndo Khôi phục
+                button.btn.btn-warning#btnUndoType Hoàn tác
             
             .table-responsive.p-3
                 table#dataTable.table.align-items-center.table-flush
@@ -48,5 +48,4 @@ block main
         id="delete-type-item"
     )
     
-    script(src="/js/adminjs//type/type-undo.js")
     

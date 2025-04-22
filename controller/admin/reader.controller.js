@@ -1,4 +1,4 @@
-const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction } = require('../../configs/database');
+const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, executeStoredProcedureWithTransactionAndReturnCode } = require('../../configs/database');
 const puppeteer = require('puppeteer');
 const moment = require('moment');
 
@@ -6,6 +6,7 @@ const DocGiaRepository = require('../../repositories/DocGiaRepository');
 
 const systemConfig = require('../../configs/system');
 const DocGia = require('../../models/DocGia');
+const { pushToUndoStack, popUndoStack } = require('../../public/js/adminjs/reader/reader-undo');
 
 // [GET] /admin/reader
 module.exports.index = async (req, res) => {
@@ -20,13 +21,14 @@ module.exports.index = async (req, res) => {
 // [DELETE] /admin/reader/delete/:maDG
 module.exports.delete = async (req, res) => {
     const { maDG } = req.params; 
-
+    const reader = await DocGiaRepository.getById(maDG);
     const params = [
         { name: 'MADG', type: sql.Int, value: maDG }
     ];
 
     try {
         await executeStoredProcedureWithTransaction('sp_XoaDocGia', params);
+        pushToUndoStack('delete', reader);
         res.redirect(`${systemConfig.prefixAdmin}/reader`);
     } catch (error) {
         console.error('Error deleting type:', error);
@@ -54,7 +56,7 @@ module.exports.create = async (req, res) => {
 // [POST] /admin/reader/create
 module.exports.createPost = async (req, res) => {
     const readerList = req.body;
-
+    const savedReaders = [];
     for (const reader of readerList) {
         const cleanHoDG = reader.hoDG.trim().replace(/\s+/g, ' ');
         const cleanTenDG = reader.tenDG.trim().replace(/\s+/g, ' ');
@@ -74,8 +76,24 @@ module.exports.createPost = async (req, res) => {
             { name: 'NGAYHETHAN', type: sql.DateTime, value: reader.ngayHetHan },
             { name: 'HOATDONG', type: sql.Bit, value: reader.hoatDong == '1' }
         ];
-        await executeStoredProcedureWithTransaction('sp_ThemDocGia', params);
+        const maDG =await executeStoredProcedureWithTransactionAndReturnCode('sp_ThemDocGia', params);
+        savedReaders.push({
+            maDG: maDG,
+            hoDG: cleanHoDG,
+            tenDG: cleanTenDG,
+            emailDG: cleanEmailDG + '@gmail.com',
+            soCMND: reader.soCMND,
+            gioiTinh: reader.gioiTinh == '1',
+            ngaySinh: reader.ngaySinh,
+            diaChiDG: cleanDiaChiDG,
+            dienThoai: reader.dienThoai,
+            ngayLamThe: reader.ngayLamThe,
+            ngayHetHan: reader.ngayHetHan,
+            hoatDong: reader.hoatDong == '1'
+        });
     }
+    console.log(savedReaders)
+    pushToUndoStack('create', savedReaders);
 
     res.json({ success: true });
 }
@@ -98,6 +116,7 @@ module.exports.edit = async (req, res) => {
 // [PATCH] /reader/edit/:maDG
 module.exports.editPatch = async (req, res) => {
     const { maDG } = req.params;
+    const oldReader = await DocGiaRepository.getById(maDG);
     const { hoDG, tenDG, emailDG, soCMND, gioiTinh, ngaySinh, diaChiDG, dienThoai, ngayLamThe, ngayHetHan, hoatDong } = req.body;
     const cleanHoDG = hoDG.trim().replace(/\s+/g, ' ');
     const cleanTenDG = tenDG.trim().replace(/\s+/g, ' ');
@@ -121,6 +140,7 @@ module.exports.editPatch = async (req, res) => {
 
     try {
         await executeStoredProcedureWithTransaction('sp_SuaDocGia', params);
+        pushToUndoStack('edit', oldReader);
         res.redirect(`${systemConfig.prefixAdmin}/reader`);
     } catch (error) {
         console.error('Error updating reader:', error);
@@ -134,7 +154,71 @@ module.exports.getNextId = async (req, res) => {
     res.json({ success: true, nextId });
 }
 
-// [GET] /admin/reader/report?type=list/overdue
+// [POST] /admin/reader/undo
+module.exports.undo = async (req, res) => {
+    const lastAction = popUndoStack();
+
+    if (!lastAction) {
+        return res.json({ success: false, message: 'Không có thao tác để undo!' });
+    }
+
+    const { action, data } = lastAction;
+
+    try {
+        if (action === 'create') {
+            // Undo create: Xóa từng độc giả đã thêm
+            for (const reader of data) {
+                const params = [
+                    { name: 'HODG', type: sql.NVarChar, value: reader.hoDG },
+                    { name: 'TENDG', type: sql.NVarChar, value: reader.tenDG }
+                ];
+                await executeStoredProcedureWithTransaction('sp_XoaDocGiaByHoTen', params);
+            }
+        } else if (action === 'delete') {
+            // Undo delete: Thêm lại độc giả đã xóa
+            const params = [
+                { name: 'HODG', type: sql.NVarChar, value: data.hoDG },
+                { name: 'TENDG', type: sql.NVarChar, value: data.tenDG },
+                { name: 'EMAILDG', type: sql.NVarChar, value: data.emailDG },
+                { name: 'SOCMND', type: sql.NVarChar, value: data.soCMND },
+                { name: 'GIOITINH', type: sql.Bit, value: data.gioiTinh },
+                { name: 'NGAYSINH', type: sql.DateTime, value: data.ngaySinh },
+                { name: 'DIACHIDG', type: sql.NVarChar, value: data.diaChiDG },
+                { name: 'DIENTHOAI', type: sql.NVarChar, value: data.dienThoai },
+                { name: 'NGAYLAMTHE', type: sql.DateTime, value: data.ngayLamThe },
+                { name: 'NGAYHETHAN', type: sql.DateTime, value: data.ngayHetHan },
+                { name: 'HOATDONG', type: sql.Bit, value: data.hoatDong }
+            ];
+            await executeStoredProcedureWithTransaction('sp_ThemDocGia', params);
+        } else if (action === 'edit') {
+            // Undo edit: Khôi phục thông tin cũ
+            const params = [
+                { name: 'MADG', type: sql.Int, value: data.maDG },
+                { name: 'HODG', type: sql.NVarChar, value: data.hoDG },
+                { name: 'TENDG', type: sql.NVarChar, value: data.tenDG },
+                { name: 'EMAILDG', type: sql.NVarChar, value: data.emailDG },
+                { name: 'SOCMND', type: sql.NVarChar, value: data.soCMND },
+                { name: 'GIOITINH', type: sql.Bit, value: data.gioiTinh },
+                { name: 'NGAYSINH', type: sql.DateTime, value: data.ngaySinh },
+                { name: 'DIACHIDG', type: sql.NVarChar, value: data.diaChiDG },
+                { name: 'DIENTHOAI', type: sql.NVarChar, value: data.dienThoai },
+                { name: 'NGAYLAMTHE', type: sql.DateTime, value: data.ngayLamThe },
+                { name: 'NGAYHETHAN', type: sql.DateTime, value: data.ngayHetHan },
+                { name: 'HOATDONG', type: sql.Bit, value: data.hoatDong }
+            ];
+            await executeStoredProcedureWithTransaction('sp_SuaDocGia', params);
+        } else if (action === 'changeStatus') {
+            // Undo changeStatus: Khôi phục trạng thái cũ
+            await DocGiaRepository.changeStatus(data.maDG, data.oldStatus);
+        }
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error in undo:', error);
+        res.json({ success: false, message: 'Không thể thực hiện undo!' });
+    }
+};
+
+// [GET] /admin/reader/report
 module.exports.report = async (req, res) => {
     const type = req.query.type;
 

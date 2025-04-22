@@ -10,6 +10,8 @@ router.get('/create', controller.create);
 router.post('/create', controller.createPost);
 router.get('/next-id', controller.getNextId);
 router.post('/edit/:maTacGia', controller.editPost);
+router.post('/undo', controller.undo); // Route mới cho undo
+
 
 
 module.exports = router;
