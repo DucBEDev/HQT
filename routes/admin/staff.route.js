@@ -11,6 +11,7 @@ router.post('/create', controller.createPost);
 router.get('/next-id', controller.getNextId);
 router.post('/edit/:maNV', controller.editPost);
 router.post('/undo', controller.undo); // Route mới cho undo
+router.get('/profile', controller.profile);
 
 
 

@@ -181,3 +181,10 @@ module.exports.getNextId = async (req, res) => {
     res.json({ success: true, nextId });
 };
 
+// [GET] /staff/profile
+module.exports.profile = async (req, res) => {
+    const staff = await NhanVienRepository.getById("2");
+    res.render("admin/pages/nhanvien/profile", {
+        staff: staff
+    });
+};
