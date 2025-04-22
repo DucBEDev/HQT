@@ -1,0 +1,230 @@
+doctype html
+html(lang="vi")
+    head
+        meta(charset="UTF-8")
+        title Báo Cáo Danh Mục Đầu Sách Được Mượn Nhiều Nhất
+        link(rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.css" type="text/css")
+        link(rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css")
+        style.
+            body {
+                font-family: Arial, sans-serif;
+                margin: 50px;
+                font-size: 14px;
+                color: #333;
+            }
+            h1 {
+                text-align: center;
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+            .category {
+                margin-bottom: 20px;
+            }
+            .category-title {
+                font-size: 16px;
+                font-weight: bold;
+                display: inline-block;
+                padding-bottom: 5px;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 10px;
+            }
+            th, td {
+                border: 1px solid #000;
+                padding: 8px;
+                text-align: center;
+            }
+            th {
+                background-color: #2F4F4F;
+                color: white;
+                font-weight: bold;
+            }
+            tr:nth-child(even) {
+                background-color: #f2f2f2;
+            }
+            .button-container {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            button {
+                padding: 10px 20px;
+                font-size: 16px;
+                cursor: pointer;
+                margin: 0 10px;
+                background-color: #2F4F4F;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                margin-top: 10px;
+            }
+            button:hover {
+                background-color: #2F4F4F;
+            }
+            .modal {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0,0,0,0.5);
+            }
+            .modal-content {
+                background-color: white;
+                margin: 15% auto;
+                padding: 20px;
+                width: 300px;
+                text-align: center;
+                border-radius: 5px;
+            }
+            .modal-content label {
+                margin-right: 10px;
+            }
+            .modal-content input {
+                padding: 5px;
+                margin-right: 10px;
+            }
+            @media print {
+                .button-container {
+                    display: none;
+                }
+            }
+            .form-group {
+                margin-top: 10px;
+                margin-bottom: 10px;
+            }.signature-container {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 30px;
+            }
+            .staff-signature {
+                text-align: left;
+            }
+            .date-signature {
+                text-align: right;
+            }
+    body
+        .modal#dateModal
+            .modal-content
+                label(class="form-group") Từ ngày:
+                input(type="date" id="startDate" name="startDate")
+                label(class="form-group") Đến ngày:
+                input(type="date" id="endDate" name="endDate")
+                label(class="form-group") Số lượng sách muốn in:
+                input(type="number" id="quantity" name="quantity" min="1")
+                button(onclick="redirectToReport()") Tiến hành
+
+        .button-container
+            if dauSachList.length > 0
+                button(onclick="showModal()") Thay đổi thời gian
+            button(onclick="window.history.back()") Quay lại
+            button(onclick="printReport()") In Báo Cáo
+            form(action=`${prefixAdmin}/isbn_book/download-report?type=most-borrow` method="POST" style="display: inline;")
+                input(type="hidden" name="dauSachList" value=JSON.stringify(dauSachList))
+                input(type="hidden" name="printDate" value=printDate)
+                input(type="hidden" name="quantity" value=quantity)
+                input(type="hidden" name="startDate" value=startDate)
+                input(type="hidden" name="endDate" value=endDate)
+                button(type="submit") Xuất File PDF
+
+        h1 DANH MỤC ĐẦU SÁCH ĐƯỢC MƯỢN NHIỀU NHẤT
+
+        if dauSachList.length > 0
+            p(style="text-align: center;") Thời gian: Từ #{startDate} đến #{endDate} | Số lượng sách: #{quantity}
+        .category
+            table
+                thead
+                    tr
+                        th STT
+                        th ISBN
+                        th Tên sách
+                        th Tác giả
+                        th Số lượng mượn
+                        th Ghi chú
+                tbody
+                    if dauSachList.length > 0
+                        each dauSach, index in dauSachList
+                            tr
+                                td #{index + 1}
+                                td #{dauSach.isbn}
+                                td #{dauSach.tenSach}
+                                td #{dauSach.hoTenTG}
+                                td #{dauSach.soLuongMuon}
+                                td
+                    else
+                        tr
+                            td(colspan="6" style="text-align: center;") Không có dữ liệu
+
+        .signature-container
+            .staff-signature
+                p Nhân viên lập báo cáo: __________________
+            .date-signature
+                p Ngày lập: #{printDate}
+
+        script(src="https://cdn.jsdelivr.net/npm/flatpickr")
+        script(src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js")
+        script.
+            const startDatePicker = flatpickr('#startDate', {
+                dateFormat: 'd/m/Y',
+                allowInput: false,
+                maxDate: "today",
+                onClose: function(selectedDates, dateStr, instance) {
+                    if (!dateStr) { 
+                        alert('Vui lòng chọn ngày bắt đầu');
+                    }
+                }
+            });
+
+            const endDatePicker = flatpickr('#endDate', {
+                dateFormat: 'd/m/Y',
+                allowInput: false,
+                maxDate: "today",
+                onClose: function(selectedDates, dateStr, instance) {
+                    if (!dateStr) { 
+                        alert('Vui lòng chọn ngày kết thúc');
+                    }
+                }
+            });
+
+            window.onload = function() {
+                const hasData = !{hasData}; 
+                if (!hasData) {
+                    showModal();
+                }
+            };
+
+            function showModal() {
+                document.getElementById('dateModal').style.display = 'block';
+            }
+
+            function redirectToReport() {
+                const startDate = startDatePicker.selectedDates[0];
+                const endDate = endDatePicker.selectedDates[0];
+                const quantity = document.getElementById('quantity').value;
+
+                if (startDate && endDate) {
+                    // Sử dụng moment để định dạng ngày dựa trên múi giờ địa phương
+                    const formattedStartDate = moment(startDate).format('YYYY-MM-DD');
+                    const formattedEndDate = moment(endDate).format('YYYY-MM-DD');
+
+                    if (formattedStartDate > formattedEndDate) {
+                        alert('Ngày bắt đầu không được lớn hơn ngày kết thúc');
+                        return;
+                    }
+
+                    if (!quantity || quantity <= 0) {
+                        alert('Số lượng sách muốn in phải lớn hơn 0');
+                        return;
+                    }
+
+                    window.location.href = `/Library/admin/isbn_book/report?type=most-borrow&startDate=${formattedStartDate}&endDate=${formattedEndDate}&quantity=${quantity}`;
+                } else {
+                    alert('Vui lòng chọn cả hai ngày!');
+                }
+            }
+
+            function printReport() {
+                window.print();
+            }

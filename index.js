@@ -61,17 +61,17 @@ routeAdmin(app);
 // });
 
 // Database setup with mssql
-const { pool } = require('./configs/database');
+const { defaultPool } = require('./configs/database');
 
 // Test database connection
-pool.on('error', err => {
+defaultPool.on('error', err => {
     console.error('SQL Server Connection Error:', err);
 });
 
 // Initialize database connection
 (async () => {
     try {
-        await pool.connect();
+        await defaultPool.connect();
         console.log('Connected to SQL Server successfully');
     } catch (err) {
         console.error('Database connection failed:', err);

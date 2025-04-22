@@ -13,22 +13,29 @@ ul.navbar-nav.sidebar.sidebar-light.accordion#accordionSidebar
         #collapsePage.collapse(aria-labelledby="headingPage" data-parent="#accordionSidebar")
             .bg-white.py-2.collapse-inner.rounded
                 a.collapse-item(href=`${prefixAdmin}/isbn_book`) Quản lý
-                a.collapse-item(href=`${prefixAdmin}/isbn_book/report`) Báo cáo
+                a.collapse-item(href=`${prefixAdmin}/isbn_book/report?type=list`) Báo cáo danh mục
+                a.collapse-item(href=`${prefixAdmin}/isbn_book/report?type=most-borrow`) Sách mượn nhiều nhất
     li.nav-item
         a.nav-link(href=`${prefixAdmin}/author` type =`author`)
             i.fa-solid.fa-user-pen
             span Danh sách tác giả
     li.nav-item
         a.nav-link(href=`${prefixAdmin}/reader` type =`reader`)
+        a.nav-link.collapsed(href="#" data-toggle="collapse" data-target="#readerPage" aria-expanded="true" aria-controls="readerPage")
             i.fa-solid.fa-book-open-reader
             span Danh sách độc giả
+        #readerPage.collapse(aria-labelledby="headingPage" data-parent="#accordionSidebar")
+            .bg-white.py-2.collapse-inner.rounded
+                a.collapse-item(href=`${prefixAdmin}/reader`) Quản lý
+                a.collapse-item(href=`${prefixAdmin}/reader/report?type=list`) Báo cáo danh mục
+                a.collapse-item(href=`${prefixAdmin}/reader/report?type=overdue`) Mượn sách quá hạn
     li.nav-item
         a.nav-link(href=`${prefixAdmin}/type` type =`type`)
             i.fa-solid.fa-font-awesome
             span Danh sách thể loại
     li.nav-item
         a.nav-link(href=`${prefixAdmin}/phieumuon`)
-            i.fa-solid.fa-font-awesome
+            i.fa-solid.fa-file-lines
             span Danh sách phiếu mượn
 
     script(src="/vendor/jquery/jquery.min.js")

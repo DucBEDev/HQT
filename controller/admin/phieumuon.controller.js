@@ -1,15 +1,14 @@
 const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction } = require('../../configs/database');
-const PhieuMuonRepository = require('../../repositories/PhieuMuonRepository'); // Giả định bạn sẽ tạo repository tương ứng
-const DauSachRepository = require('../../repositories/DauSachRepository'); // Giả định bạn sẽ tạo repository tương ứng
-const SachRepository = require('../../repositories/SachRepository'); // Giả định bạn sẽ tạo repository tương ứng
-const NhanVienRepository = require('../../repositories/NhanVienRepository'); // Giả định bạn sẽ tạo repository tương ứng
-const DocGiaRepository = require('../../repositories/DocGiaRepository'); // Giả định bạn sẽ tạo repository tương ứng
+
+const PhieuMuonRepository = require('../../repositories/PhieuMuonRepository'); 
+const DauSachRepository = require('../../repositories/DauSachRepository'); 
+const NhanVienRepository = require('../../repositories/NhanVienRepository'); 
+const DocGiaRepository = require('../../repositories/DocGiaRepository');
+
 const systemConfig = require('../../configs/system');
-const DauSach = require('../../models/DauSach');
-const Sach = require('../../models/Sach');
 
 
-// [GET] /author
+// [GET] /phieumuon
 module.exports.index = async (req, res) => {
     try {
         const list = await PhieuMuonRepository.getAll();
@@ -23,9 +22,9 @@ module.exports.index = async (req, res) => {
     }
 };
 
+// [GET] /phieumuon/create
 module.exports.create = async (req, res) => {
-    const sachList = await DauSachRepository.getAllWithQuantity(); // Giả định hàm lấy danh sách sách
-    console.log(sachList)
+    const sachList = await DauSachRepository.getAllWithQuantity(); 
     const docGiaList = await DocGiaRepository.getAll();
     const nhanVienList = await NhanVienRepository.getAll();
     // const nextPhieuMuonId = await getNextPhieuMuonId(); // Giả định hàm tạo mã phiếu
@@ -35,9 +34,9 @@ module.exports.create = async (req, res) => {
     });
 };
 
+// [POST] /phieumuon/create
 module.exports.createPost = async (req, res) => {
     const { maDG, hinhThuc, maNV } = req.body;
-    console.log(req.body)
 
     const ctPhieuMuonList = [];
     let i = 0;
@@ -66,16 +65,13 @@ module.exports.createPost = async (req, res) => {
         ];
         await executeStoredProcedureWithTransaction('sp_LapPhieuMuon', paramsPhieu);
 
-    
-  
-        res.json({ success: true });
+        res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
     } 
     catch (error) {
-        // Lấy thông điệp lỗi từ SQL Server
         const errorMessage = error.message || 'Đã xảy ra lỗi không xác định';
-        const errorNumber = error.number || 50000; // Mã lỗi từ SQL Server (nếu có)
+        const errorNumber = error.number || 50000;
 
-        // Ánh xạ mã lỗi tùy chỉnh từ stored procedure để trả về thông điệp rõ ràng hơn (tùy chọn)
+        // Ánh xạ mã lỗi
         let customMessage;
         switch (errorNumber) {
             case 50001:
@@ -87,21 +83,38 @@ module.exports.createPost = async (req, res) => {
             case 50003:
                 customMessage = 'Độc giả chỉ được mượn tối đa 3 cuốn sách!';
                 break;
+            case 50004:
+                customMessage = 'Sách 1 không tồn tại hoặc không thể mượn!';
+                break;
+            case 50005:
+                customMessage = 'Sách 2 không tồn tại hoặc không thể mượn!';
+                break;
+            case 50006:
+                customMessage = 'Sách 3 không tồn tại hoặc không thể mượn!';
+                break;
             case 50007:
                 customMessage = 'Nhân viên không tồn tại!';
                 break;
+            case 50008:
+                customMessage = 'Phải mượn ít nhất một cuốn sách!';
+                break;
+            case 50009:
+                customMessage = 'Các mã sách không được trùng lặp!';
+                break;
             default:
-                customMessage = errorMessage; // Sử dụng thông điệp gốc nếu không khớp
+                customMessage = errorMessage;
         }
-        console.error('SQL Error:', error); // Ghi log lỗi chi tiết để debug
-        res.json({ 
-            success: false, 
+
+        console.error('SQL Error:', error);
+        res.status(400).json({
+            success: false,
             message: customMessage,
-            errorCode: errorNumber // Tùy chọn: trả về mã lỗi để client xử lý
+            errorCode: errorNumber
         });
     }
 };
 
+// [GET] /phieumuon/next-id
 module.exports.getNextId = async (req, res) => {
     try {
         const nextId = await PhieuMuonRepository.getNextId();
@@ -110,3 +123,52 @@ module.exports.getNextId = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
+
+// [GET] /phieumuon/detail/:maPhieu
+module.exports.detail = async (req, res) => {
+    const { maPhieu } = req.params;
+    const { phieuMuon, ctpmList } = await PhieuMuonRepository.getById(maPhieu);
+    const sachList = await DauSachRepository.getAllWithQuantity();
+
+    console.log(ctpmList)
+    console.log(phieuMuon)
+    
+    res.render('admin/pages/phieumuon/detail', { 
+        phieuMuon,
+        pageTitle: 'Chi tiết phiếu mượn',
+        sachList,
+        ctpmList,
+        ngayTra : ctpmList[0]?.ngayTra.toISOString().split('T')[0] || null,
+    });
+};
+
+// [PATCH] /phieumuon/edit/:maPhieu
+module.exports.edit = async (req, res) => {
+    console.log(req.body)
+    res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+};
+
+// [PATCH] /phieumuon/lostBook/:maPhieu
+module.exports.lostBook = async (req, res) => {
+    console.log(req.params.maPhieu)
+    res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+};
+
+// [POST] /phieumuon/returnBook/:maPhieu
+module.exports.returnBook = async (req, res) => {
+    console.log(req.params.maPhieu)
+    await PhieuMuonRepository.bookReturn(req.params.maPhieu);
+    res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+};
+
+// [DELETE] /phieumuon/delete/:maPhieu
+module.exports.delete = async (req, res) => {
+    console.log(req.params.maPhieu)
+    const params = 
+    [
+        { name: 'MAPHIEU', type: sql.BigInt, value: req.params.maPhieu }
+    ]
+    await executeStoredProcedureWithTransaction('sp_XoaPhieuMuon', params);
+    res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+};
+

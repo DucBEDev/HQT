@@ -91,7 +91,7 @@ h2 {
 	color: var(--primary-color);
 }
 
-button {
+button, .btn-login-back {
 	width: 100%;
 	padding: 15px;
 	background: var(--primary-color);
@@ -104,10 +104,19 @@ button {
 	transition: all 0.3s ease;
 }
 
-button:hover {
+.btn-login-back {
+	text-decoration: none;
+	text-align: center;
+}
+
+button:hover, .btn-login-back:hover {
 	background: #357abd;
 	transform: translateY(-2px);
 	box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+}
+
+.btn-login-back:hover {
+	color: white;
 }
 
 #password-message {

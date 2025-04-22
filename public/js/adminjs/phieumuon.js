@@ -2,14 +2,13 @@ let selectedBooks = [];
 
 async function getNextMaPhieu() {
     try {
-       
-            const response = await fetch(`/Library/admin/phieumuon/next-id`);
-            const data = await response.json();
-            if (data.success) {
-                document.getElementById('maPhieu').value = data.nextId;
-            }
+        const response = await fetch(`/Library/admin/phieumuon/next-id`);
+        const data = await response.json();
+        if (data.success) {
+            document.getElementById('maPhieu').value = data.nextId;
         }
-     catch (error) {
+    }
+    catch (error) {
         console.error('Error:', error);
         alert('Không thể lấy mã phiếu mượn tiếp theo!');
     }
@@ -21,7 +20,7 @@ $(document).ready(function() {
     // Tìm kiếm sách
     $('#sachSearch').on('input', function() {
         const searchTerm = $(this).val().toLowerCase();
-        $('.product-item').each(function() {
+        $('.product-detail-item').each(function() {
             const maSach = $(this).data('ma-sach').toString().toLowerCase();
             const tenSach = $(this).data('ten-sach').toLowerCase();
             if (maSach.includes(searchTerm) || tenSach.includes(searchTerm)) {
@@ -33,7 +32,7 @@ $(document).ready(function() {
     });
 
     // Chọn sách
-    $(document).on('click', '.product-item', function() {
+    $(document).on('click', '.product-detail-item', function() {
         const sach = {
             maSach: $(this).data('ma-sach'),
             tenSach: $(this).data('ten-sach'),

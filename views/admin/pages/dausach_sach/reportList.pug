@@ -1,0 +1,165 @@
+include ../../mixins/moment.pug
+
+doctype html
+html(lang="vi")
+    head
+        meta(charset="UTF-8")
+        title DANH MỤC ĐẦU SÁCH
+        style.
+            body {
+                font-family: Arial, sans-serif;
+                margin: 50px;
+                font-size: 14px;
+                color: #333;
+            }
+            h1 {
+                text-align: center;
+                font-size: 24px;
+                margin-bottom: 20px;
+            }
+            .info {
+                margin-bottom: 20px;
+            }
+            .category {
+                margin-bottom: 20px;
+            }
+            .category-title {
+                font-size: 16px;
+                font-weight: bold;
+                padding-bottom: 5px;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 10px;
+            }
+            th, td {
+                border: 1px solid #000;
+                padding: 8px;
+                text-align: center;
+            }
+            th {
+                background-color: #2F4F4F;
+                color: white;
+                font-weight: bold;
+            }
+            tr:nth-child(even) {
+                background-color: #f2f2f2;
+            }
+            .summary {
+                margin-top: 10px;
+                font-size: 14px;
+            }
+            .total {
+                margin-top: 20px;
+                font-size: 14px;
+            }
+            .note {
+                margin-top: 20px;
+                font-size: 12px;
+                border-top: 2px dashed red;
+                padding-top: 5px;
+            }
+            .bold {
+                font-weight: bold;
+            }
+            .button-container {
+                text-align: center;
+                margin-bottom: 20px;
+            }
+            button {
+                padding: 10px 20px;
+                font-size: 16px;
+                cursor: pointer;
+                margin: 0 10px;
+                background-color: #2F4F4F;
+                color: white;
+                border: none;
+                border-radius: 5px;
+            }
+            button:hover {
+                background-color: #2F4F4F;
+            }
+            @media print {
+                .button-container {
+                display: none; 
+                }
+            }
+            .signature-container {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 30px;
+            }
+            .staff-signature {
+                text-align: left;
+            }
+            .date-signature {
+                text-align: right;
+            }
+            form {
+                display: inline-block;
+                margin: 0;
+                padding: 0;
+            }
+            .summary {
+                text-align: left;
+                font-weight: bold;
+            }
+    body
+        .button-container
+            button(onclick="window.history.back()") Quay lại
+            button(onclick="printReport()") In Báo Cáo
+            form(action=`${prefixAdmin}/isbn_book/download-report?type=list` method="POST" style="display: inline;")
+                input(type="hidden" name="dauSachList" value=JSON.stringify(dauSachList))
+                input(type="hidden" name="printDate" value=printDate)
+                button(type="submit") Xuất File PDF
+
+        h1 DANH MỤC ĐẦU SÁCH
+        
+        .category
+            table
+                thead
+                    tr
+                        th STT
+                        th ISBN
+                        th Tên sách
+                        th Ngày XB
+                        th Số trang
+                        th Tác giả
+                        th Ngôn ngữ
+                        th Số cuốn
+                tbody
+                    each dauSach in dauSachList
+                        tr 
+                            td(colspan="8" class="category-title") Thể loại: #{dauSach.tenTL}
+                        each sach, index in dauSach.books
+                            tr
+                                td #{index + 1} 
+                                td #{sach.isbn}
+                                td #{sach.tenSach}
+                                td 
+                                    +formatDate(sach.ngayXuatBan)
+                                td #{sach.soTrang}
+                                td #{sach.tacGia}
+                                td #{sach.ngonNgu}
+                                td #{sach.soCuon}
+                            
+                        tr
+                            td(colspan="8" class="summary") Số đầu sách: 
+                                - const previousTotal = dauSach.books.reduce((sum, book) => sum + book.soCuon, 0)
+                                | #{previousTotal}
+                    tr 
+                        td(colspan="8" class="summary") Số đầu sách thư viện: 
+                            - const total = dauSachList.reduce((sum, category) => sum + category.books.reduce((bookSum, book) => bookSum + book.soCuon, 0), 0)
+                            | #{total}
+                                    
+        .signature-container
+            .staff-signature
+                p Nhân viên lập báo cáo: __________________
+            .date-signature
+                p Ngày lập: #{printDate}
+
+    script.
+        function printReport() {
+            window.print(); 
+        }

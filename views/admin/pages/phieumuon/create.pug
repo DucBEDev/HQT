@@ -21,8 +21,14 @@ block main
                                         input.form-control(type="text" id="sachSearch" placeholder="Nhập mã sách hoặc tên sách")
                                     .product-list#bookList
                                         each sach in sachList
-                                            .product-item(data-ma-sach=`${sach.MASACH}` data-ten-sach=`${sach.TENSACH}` data-isbn=`${sach.ISBN}`)
-                                                | #{sach.MASACH} - #{sach.TENSACH} 
+                                            .product-detail-item(
+                                                class=(sach.CHOMUON ? 'disabled' : '')
+                                                data-ma-sach=`${sach.MASACH}` 
+                                                data-ten-sach=`${sach.TENSACH}` 
+                                                data-isbn=`${sach.ISBN}`
+                                                data-tinh-trang=`${sach.TINHTRANG}`
+                                                style=(sach.CHOMUON ? 'pointer-events: none; opacity: 0.6;' : ''))
+                                                    | #{sach.MASACH} - #{sach.TENSACH} #{sach.CHOMUON ? '(Đã được mượn)' : ''}
                                 .col-lg-6
                                     .form-group
                                         label Sách đã chọn
@@ -48,9 +54,12 @@ block main
                                     option(value="0") Tại chỗ
                             .form-group
                                 label(for="ngayMuon") Ngày mượn <span class="required-text">*</span>
-                                input.form-control(type="date" id="ngayMuon" name="ngayMuon" required value=`${new Date().toISOString().split('T')[0]}`)
+                                input.form-control(type="date" id="ngayMuon" name="ngayMuon" required readonly)
                             .form-group
-                                label(for="maNV") Mã nhân viên <span class="required-text">*</span>
+                                label(for="ngayTra") Ngày trả <span class="required-text">*</span>
+                                input.form-control(type="date" id="ngayTra" name="ngayTra" readonly required)
+                            .form-group
+                                label(for="maNV") Mã nhân viên tạo phiếu <span class="required-text">*</span>
                                 select.form-control(id="maNV" name="maNV" required)
                                     option(value="") -- Chọn nhân viên --
                                     each nhanVien in nhanVienList
@@ -64,3 +73,29 @@ block main
     script(src="/vendor/jquery/jquery.min.js")
     script(src="/js/validation.js")
     script(src="/js/adminjs/phieumuon.js")
+    script(src="https://cdn.jsdelivr.net/npm/flatpickr")
+
+    script.
+        // Khởi tạo Flatpickr cho ngày mượn
+        flatpickr('#ngayMuon', {
+            dateFormat: 'Y-m-d', // Định dạng phù hợp với input type="date"
+            defaultDate: 'today',
+            allowInput: false,
+            clickOpens: false
+        });
+
+        // Tính và đặt giá trị ngày trả (ngày hiện tại + 15 ngày)
+        function setNgayTra() {
+            const today = new Date();
+            const ngayTra = new Date(today);
+            ngayTra.setDate(today.getDate() + 15);
+            
+            // Định dạng ngày trả thành YYYY-MM-DD
+            const formattedNgayTra = ngayTra.toISOString().split('T')[0];
+            document.getElementById('ngayTra').value = formattedNgayTra;
+        }
+
+        // Gọi hàm setNgayTra khi trang tải
+        document.addEventListener('DOMContentLoaded', function() {
+            setNgayTra();
+        });
