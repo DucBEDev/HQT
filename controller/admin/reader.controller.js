@@ -218,7 +218,7 @@ module.exports.undo = async (req, res) => {
     }
 };
 
-// [GET] /admin/reader/report
+// [GET] /admin/reader/report?type=list/overdue
 module.exports.report = async (req, res) => {
     const type = req.query.type;
 
@@ -278,8 +278,6 @@ module.exports.report = async (req, res) => {
             printDate: moment().format('DD/MM/YYYY')
         });
     }
-
-    
 }
 
 // [POST] /admin/reader/download-report?type=list/overdue
