@@ -1,5 +1,7 @@
 const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction } = require('../../configs/database');
 
+const NhanVienRepository = require('../../repositories/NhanVienRepository');
+
 const systemConfig = require('../../configs/system');
 
 // [GET] /auth/login
@@ -17,7 +19,8 @@ module.exports.logIn = async (req, res) => {
 
     try {
         // const result = await executeStoredProcedure('sp_DangNhap', params);
-        res.cookie('userAdmin', '123');
+        const staff = await NhanVienRepository.getById("2");
+        res.cookie('userAdmin', "2");
         res.redirect(`${systemConfig.prefixAdmin}/staff`);
         
     } catch (error) {
