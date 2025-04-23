@@ -183,7 +183,9 @@ module.exports.getNextId = async (req, res) => {
 
 // [GET] /staff/profile
 module.exports.profile = async (req, res) => {
-    const staff = await NhanVienRepository.getById("2");
+    const userAdmin = req.cookies.userAdmin;
+    const staff = await NhanVienRepository.getById(userAdmin);
+    
     res.render("admin/pages/nhanvien/profile", {
         staff: staff
     });

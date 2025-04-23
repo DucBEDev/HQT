@@ -29,7 +29,7 @@ class NhanVienRepository {
             const request = pool.request(); // Tạo request
             request.input('MANV', sql.Int, maNV); // Thêm tham số MATL
             const result = await request.query('SELECT * FROM NHANVIEN WHERE MANV = @MANV'); // Truy vấn với tham số
-            return new NhanVien(result.recordset[0].MANV, result.recordset[0].HONV, result.recordset[0].TENNV, result.recordset[0].GIOITINH, result.recordset[0].DIACHI, result.recordset[0].DIENTHOAI, result.recordset[0].EMAIL)         
+            return new NhanVien(result.recordset[0].MANV, result.recordset[0].HONV, result.recordset[0].TENNV, result.recordset[0].DIACHI, result.recordset[0].DIENTHOAI, result.recordset[0].GIOITINH, result.recordset[0].EMAIL)         
         } catch (err) {
             console.error('Error in getById NhanVien:', err);
             throw err;

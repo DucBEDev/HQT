@@ -19,8 +19,8 @@ module.exports.logIn = async (req, res) => {
 
     try {
         // const result = await executeStoredProcedure('sp_DangNhap', params);
-        const staff = await NhanVienRepository.getById("2");
-        res.cookie('userAdmin', "2");
+        const staff = await NhanVienRepository.getById("3");
+        res.cookie('userAdmin', "3");
         res.redirect(`${systemConfig.prefixAdmin}/staff`);
         
     } catch (error) {

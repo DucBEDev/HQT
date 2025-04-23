@@ -21,11 +21,8 @@ block main
                                         th Mã Nhân Viên
                                         td #{staff.maNV}
                                     tr
-                                        th Họ
-                                        td #{staff.hoNV}
-                                    tr
-                                        th Tên
-                                        td #{staff.tenNV}
+                                        th Họ và tên
+                                        td #{staff.hoNV} #{staff.tenNV}
                                     tr
                                         th Địa chỉ
                                         td #{staff.diaChi}
@@ -46,7 +43,7 @@ block main
                 // Password Change Section
                 .mb-5
                     h6.font-weight-bold.text-primary Đổi mật khẩu
-                    form#changePasswordForm(action="/account/change-password" method="POST")
+                    form#changePasswordForm(action=`/staff/change-password` method="POST" data-maNV=staff.maNV)
                         .form-group
                             label(for="currentPassword") Mật khẩu hiện tại
                             input#currentPassword.form-control(type="password" name="currentPassword" required)
@@ -63,6 +60,7 @@ block main
     script.
         document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const maNV = document.getElementById('changePasswordForm').getAttribute('data-maNV');
             const currentPassword = document.getElementById('currentPassword').value;
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
@@ -81,20 +79,20 @@ block main
             }
 
             try {
-                const response = await fetch('/account/change-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ currentPassword, newPassword })
+                const response = await fetch(`/staff/change-password/${maNV}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ currentPassword, newPassword })
                 });
                 const result = await response.json();
                 if (response.ok) {
-                message.textContent = 'Đổi mật khẩu thành công!';
-                message.classList.remove('text-danger', 'd-none');
-                message.classList.add('text-success');
-                document.getElementById('changePasswordForm').reset();
+                    message.textContent = 'Đổi mật khẩu thành công!';
+                    message.classList.remove('text-danger', 'd-none');
+                    message.classList.add('text-success');
+                    document.getElementById('changePasswordForm').reset();
                 } else {
-                message.textContent = result.message || 'Đổi mật khẩu thất bại!';
-                message.classList.remove('d-none');
+                    message.textContent = result.message || 'Đổi mật khẩu thất bại!';
+                    message.classList.remove('d-none');
                 }
             } catch (error) {
                 message.textContent = 'Có lỗi xảy ra, vui lòng thử lại!';
