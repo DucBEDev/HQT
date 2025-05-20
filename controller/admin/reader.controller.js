@@ -1,4 +1,4 @@
-const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, executeStoredProcedureWithTransactionAndReturnCode } = require('../../configs/database');
+const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, executeStoredProcedureWithTransactionAndReturnCode, getUserPool } = require('../../configs/database');
 const puppeteer = require('puppeteer');
 const moment = require('moment');
 
@@ -10,7 +10,12 @@ const { pushToUndoStack, popUndoStack } = require('../../public/js/adminjs/reade
 
 // [GET] /admin/reader
 module.exports.index = async (req, res) => {
-    const list = await DocGiaRepository.getAll();
+     const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+    const list = await DocGiaRepository.getAll(pool);
  
     res.render('admin/pages/docgia/index', {
         readerList: list,
@@ -20,14 +25,20 @@ module.exports.index = async (req, res) => {
 
 // [DELETE] /admin/reader/delete/:maDG
 module.exports.delete = async (req, res) => {
+    console.log("Deleting reader ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+     const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
     const { maDG } = req.params; 
-    const reader = await DocGiaRepository.getById(maDG);
+    const reader = await DocGiaRepository.getById(pool, maDG);
     const params = [
         { name: 'MADG', type: sql.Int, value: maDG }
     ];
 
     try {
-        await executeStoredProcedureWithTransaction('sp_XoaDocGia', params);
+        await executeStoredProcedureWithTransaction(pool, 'sp_XoaDocGia', params);
         pushToUndoStack('delete', reader);
         res.redirect(`${systemConfig.prefixAdmin}/reader`);
     } catch (error) {
@@ -38,10 +49,16 @@ module.exports.delete = async (req, res) => {
 
 // [PATCH] /admin/reader/change-status/:newStatus/:maDG
 module.exports.changeStatus = async (req, res) => {
+    console.log("Changing status reader ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+     const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
     const { newStatus, maDG } = req.params;
     const newStatusBool = newStatus === 'true' ? true : false;
 
-    await DocGiaRepository.changeStatus(maDG, newStatusBool);
+    await DocGiaRepository.changeStatus(pool, maDG, newStatusBool);
 
     res.redirect(`${systemConfig.prefixAdmin}/reader`);
 }
@@ -55,6 +72,13 @@ module.exports.create = async (req, res) => {
 
 // [POST] /admin/reader/create
 module.exports.createPost = async (req, res) => {
+    console.log("Creating reader ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+     const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+
     const readerList = req.body;
     const savedReaders = [];
     for (const reader of readerList) {
@@ -76,7 +100,7 @@ module.exports.createPost = async (req, res) => {
             { name: 'NGAYHETHAN', type: sql.DateTime, value: reader.ngayHetHan },
             { name: 'HOATDONG', type: sql.Bit, value: reader.hoatDong == '1' }
         ];
-        const maDG =await executeStoredProcedureWithTransactionAndReturnCode('sp_ThemDocGia', params);
+        const maDG =await executeStoredProcedureWithTransactionAndReturnCode(pool, 'sp_ThemDocGia', params);
         savedReaders.push({
             maDG: maDG,
             hoDG: cleanHoDG,
@@ -99,8 +123,13 @@ module.exports.createPost = async (req, res) => {
 }
 
 module.exports.edit = async (req, res) => {
+     const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
     const { maDG } = req.params;
-    const docGia = await DocGiaRepository.getById(maDG); 
+    const docGia = await DocGiaRepository.getById(pool, maDG); 
 
     docGia.ngaySinh = docGia.ngaySinh.toISOString().split('T')[0]; 
     docGia.ngayLamThe = docGia.ngayLamThe.toISOString().split('T')[0]; 
@@ -115,8 +144,15 @@ module.exports.edit = async (req, res) => {
 
 // [PATCH] /reader/edit/:maDG
 module.exports.editPatch = async (req, res) => {
+    console.log("Editing reader ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+     const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+
     const { maDG } = req.params;
-    const oldReader = await DocGiaRepository.getById(maDG);
+    const oldReader = await DocGiaRepository.getById(pool, maDG);
     const { hoDG, tenDG, emailDG, soCMND, gioiTinh, ngaySinh, diaChiDG, dienThoai, ngayLamThe, ngayHetHan, hoatDong } = req.body;
     const cleanHoDG = hoDG.trim().replace(/\s+/g, ' ');
     const cleanTenDG = tenDG.trim().replace(/\s+/g, ' ');
@@ -139,7 +175,7 @@ module.exports.editPatch = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedureWithTransaction('sp_SuaDocGia', params);
+        await executeStoredProcedureWithTransaction(pool, 'sp_SuaDocGia', params);
         pushToUndoStack('edit', oldReader);
         res.redirect(`${systemConfig.prefixAdmin}/reader`);
     } catch (error) {
@@ -150,13 +186,23 @@ module.exports.editPatch = async (req, res) => {
 
 // [GET] /admin/reader/next-id
 module.exports.getNextId = async (req, res) => {
-    const nextId = await DocGiaRepository.getNextId();
+     const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+    const nextId = await DocGiaRepository.getNextId(pool);
     res.json({ success: true, nextId });
 }
 
 
 // [GET] /admin/reader/report?type=list/overdue
 module.exports.undo = async (req, res) => {
+     const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
     const lastAction = popUndoStack();
 
     if (!lastAction) {
@@ -173,7 +219,7 @@ module.exports.undo = async (req, res) => {
                     { name: 'HODG', type: sql.NVarChar, value: reader.hoDG },
                     { name: 'TENDG', type: sql.NVarChar, value: reader.tenDG }
                 ];
-                await executeStoredProcedureWithTransaction('sp_XoaDocGiaByHoTen', params);
+                await executeStoredProcedureWithTransaction(pool, 'sp_XoaDocGiaByHoTen', params);
             }
         } else if (action === 'delete') {
             // Undo delete: Thêm lại độc giả đã xóa
@@ -190,7 +236,7 @@ module.exports.undo = async (req, res) => {
                 { name: 'NGAYHETHAN', type: sql.DateTime, value: data.ngayHetHan },
                 { name: 'HOATDONG', type: sql.Bit, value: data.hoatDong }
             ];
-            await executeStoredProcedureWithTransaction('sp_ThemDocGia', params);
+            await executeStoredProcedureWithTransaction(pool, 'sp_ThemDocGia', params);
         } else if (action === 'edit') {
             // Undo edit: Khôi phục thông tin cũ
             const params = [
@@ -207,7 +253,7 @@ module.exports.undo = async (req, res) => {
                 { name: 'NGAYHETHAN', type: sql.DateTime, value: data.ngayHetHan },
                 { name: 'HOATDONG', type: sql.Bit, value: data.hoatDong }
             ];
-            await executeStoredProcedureWithTransaction('sp_SuaDocGia', params);
+            await executeStoredProcedureWithTransaction(pool, 'sp_SuaDocGia', params);
         } else if (action === 'changeStatus') {
             // Undo changeStatus: Khôi phục trạng thái cũ
             await DocGiaRepository.changeStatus(data.maDG, data.oldStatus);

@@ -1,8 +1,8 @@
-const { sql, pool } = require('../configs/database');
+const { sql } = require('../configs/database');
 const NganTu = require('../models/NganTu');
 
 class NganTuRepository {
-    static async getAll() {
+    static async getAll(pool) {
         try {
             await pool.connect();
             const result = await pool.request().query('SELECT * FROM NGANTU');
@@ -18,7 +18,7 @@ class NganTuRepository {
     }
 
 
-    static async getById(maNT) {
+    static async getById(pool, maNT) {
         try {
             await pool.connect(); // Kết nối đến DB
             const request = pool.request(); // Tạo request
@@ -31,7 +31,7 @@ class NganTuRepository {
         }
     }
 
-    static async getCurrentId() {
+    static async getCurrentId(pool) {
         try {
             await pool.connect();
             const result = await pool.request()
@@ -46,7 +46,7 @@ class NganTuRepository {
         }
     }
 
-    static async getNextId() {
+    static async getNextId(pool) {
         try {
             await pool.connect();
             const result = await pool.request().query('SELECT MAX(MANGANTU) as maxId FROM NGANTU');

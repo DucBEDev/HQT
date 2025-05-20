@@ -1,4 +1,4 @@
-const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction } = require('../../configs/database');
+const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, getUserPool } = require('../../configs/database');
 
 const TheLoaiRepository = require('../../repositories/TheLoaiRepository');
 
@@ -8,7 +8,13 @@ const { pushToUndoStack, popUndoStack, clearUndoStack} = require('../../public/j
 
 // [GET] /type
 module.exports.index = async (req, res) => {
-    const list = await TheLoaiRepository.getAll();
+
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+    const list = await TheLoaiRepository.getAll(pool);
  
     res.render('admin/pages/theloai/index', {
         typeList: list,
@@ -18,12 +24,16 @@ module.exports.index = async (req, res) => {
 
 // [DELETE] /type/delete/:maTL
 module.exports.delete = async (req, res) => {
-    console.log("Called");
+    console.log("Deleting type ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
 
     const { maTL } = req.params; // Lấy giá trị maTL từ req.params
     console.log(maTL);
 
-    const type = await TheLoaiRepository.getById(maTL); // Lấy thông tin thể loại cũ
+    const type = await TheLoaiRepository.getById(pool, maTL); // Lấy thông tin thể loại cũ
 
     // Định dạng params thành mảng chứa một đối tượng
     const params = [
@@ -51,13 +61,17 @@ module.exports.create = async (req, res) => {
 // [POST] /type/create
 module.exports.createPost = async (req, res) => {
     const typeList = req.body;
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
 
     for (const type of typeList) {
         const params = [
             { name: 'MATL', type: sql.NVarChar, value: type.maTL },
             { name: 'TENTL', type: sql.NVarChar, value: type.tenTL }
         ];
-        await executeStoredProcedureWithTransaction('sp_ThemTheLoai', params);
+        await executeStoredProcedureWithTransaction(pool, 'sp_ThemTheLoai', params);
     }
     pushToUndoStack('create', typeList);
 
@@ -67,9 +81,14 @@ module.exports.createPost = async (req, res) => {
 
 // [GET] /type/edit/:maTL
 module.exports.edit = async (req, res) => {
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
     const { maTL } = req.params;
     console.log(maTL)
-    const type = await TheLoaiRepository.getById(maTL); // Hàm lấy thông tin thể loại
+    const type = await TheLoaiRepository.getById(pool, maTL); // Hàm lấy thông tin thể loại
     console.log(type)
     res.render('admin/pages/theloai/edit', {
         type,
@@ -79,8 +98,12 @@ module.exports.edit = async (req, res) => {
 
 // [POST] /type/edit/:maTL
 module.exports.editPost = async (req, res) => {
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
     const type = req.body;
-    const  oldType = await TheLoaiRepository.getById(type.maTL); // Lấy thông tin thể loại cũ
+    const  oldType = await TheLoaiRepository.getById(pool, type.maTL); // Lấy thông tin thể loại cũ
     const typeEdit = new TheLoai(type.maTL, type.tenTL)
 
     const params = [
@@ -89,7 +112,7 @@ module.exports.editPost = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedureWithTransaction('sp_SuaTheLoai', params);
+        await executeStoredProcedureWithTransaction(pool,'sp_SuaTheLoai', params);
         pushToUndoStack('edit',  oldType );
         res.render('admin/pages/theloai/edit', {
             type: typeEdit,
@@ -103,6 +126,11 @@ module.exports.editPost = async (req, res) => {
 
 
 module.exports.undo = async (req, res) => {
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
     const lastAction = popUndoStack();
 
     if (!lastAction) {
@@ -116,7 +144,7 @@ module.exports.undo = async (req, res) => {
             // Undo create: Xóa từng thể loại đã thêm
             for (const tl of data) {
                 const params = [{ name: 'MATL', type: sql.NVarChar, value: tl.maTL }];
-                await executeStoredProcedureWithTransaction('sp_XoaTheLoai', params);
+                await executeStoredProcedureWithTransaction(pool,'sp_XoaTheLoai', params);
             }
         } else if (action === 'delete') {
             // Undo delete: Thêm lại thể loại đã xóa
@@ -124,14 +152,14 @@ module.exports.undo = async (req, res) => {
                 { name: 'MATL', type: sql.NVarChar, value: data.maTL },
                 { name: 'TENTL', type: sql.NVarChar, value: data.tenTL }
             ];
-            await executeStoredProcedureWithTransaction('sp_ThemTheLoai', params);
+            await executeStoredProcedureWithTransaction(pool,'sp_ThemTheLoai', params);
         } else if (action === 'edit') {
             // Undo edit: Khôi phục tên cũ
             const params = [
                 { name: 'MATL', type: sql.NVarChar, value: data.maTL },
                 { name: 'TENTL', type: sql.NVarChar, value: data.tenTL }
             ];
-            await executeStoredProcedureWithTransaction('sp_SuaTheLoai', params);
+            await executeStoredProcedureWithTransaction(pool,'sp_SuaTheLoai', params);
         }
         res.json({ success: true });
     } catch (error) {
@@ -154,6 +182,10 @@ module.exports.clearUndo = async (req, res) => {
 
 // [GET] /type/next-id
 module.exports.getNextId = async (req, res) => {
-    const nextId = await TheLoaiRepository.getNextId();
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+    const nextId = await TheLoaiRepository.getNextId(pool);
     res.json({ success: true, nextId });
 }

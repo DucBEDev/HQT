@@ -68,6 +68,7 @@ defaultPool.on('error', err => {
     console.error('SQL Server Connection Error:', err);
 });
 
+
 // Initialize database connection
 (async () => {
     try {
@@ -82,3 +83,5 @@ defaultPool.on('error', err => {
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
+
+

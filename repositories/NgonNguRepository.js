@@ -1,8 +1,8 @@
-const { sql, pool } = require('../configs/database');
+const { sql } = require('../configs/database');
 const NgonNgu = require('../models/NgonNgu');
 
 class NgonNguRepository {
-    static async getAll() {
+    static async getAll(pool) {
         try {
             await pool.connect();
             const result = await pool.request().query('SELECT * FROM NGONNGU');
@@ -16,7 +16,7 @@ class NgonNguRepository {
         }
     }
 
-    static async add(ngonNgu) {
+    static async add(pool, ngonNgu) {
         try {
             await pool.connect();
             const request = pool.request();
@@ -33,7 +33,7 @@ class NgonNguRepository {
         }
     }
 
-    static async getCurrentId() {
+    static async getCurrentId(pool) {
         try {
             await pool.connect();
             const result = await pool.request().query('SELECT MAX(MANGONNGU) as maxId FROM NGONNGU');

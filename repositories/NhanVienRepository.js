@@ -1,8 +1,8 @@
-const { sql, pool } = require('../configs/database');
+const { sql } = require('../configs/database');
 const NhanVien = require('../models/NhanVien');
 
 class NhanVienRepository {
-    static async getAll() {
+    static async getAll(pool) {
         try {
             await pool.connect(); // Đảm bảo pool đã kết nối
             const request = pool.request();
@@ -23,7 +23,7 @@ class NhanVienRepository {
     }
 
 
-    static async getById(maNV) {
+    static async getById(pool, maNV) {
         try {
             await pool.connect(); // Kết nối đến DB
             const request = pool.request(); // Tạo request
@@ -37,7 +37,7 @@ class NhanVienRepository {
     }
 
 
-    static async add(nhanVien) {
+    static async add(pool, nhanVien) {
         try {
             await pool.connect();
             const request = pool.request();
@@ -56,7 +56,7 @@ class NhanVienRepository {
         }
     }
 
-    static async getCurrentId() {
+    static async getCurrentId(pool) {
         try {
             await pool.connect();
             const request = pool.request();
@@ -68,7 +68,7 @@ class NhanVienRepository {
         }
     }
 
-    static async delete(maNV) {
+    static async delete(pool, maNV) {
         try {
             await pool.connect();
             const request = pool.request();
@@ -81,7 +81,7 @@ class NhanVienRepository {
         }
     }
 
-    static async getNextId() {
+    static async getNextId(pool) {
         try {
             await pool.connect();
             const result = await pool.request().query('SELECT MAX(MANV) as maxId FROM NHANVIEN');

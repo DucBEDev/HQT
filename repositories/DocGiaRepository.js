@@ -1,8 +1,8 @@
-const { sql, pool } = require('../configs/database');
+const { sql } = require('../configs/database');
 const DocGia = require('../models/DocGia');
 
 class DocGiaRepository {
-    static async getAll() {
+    static async getAll(pool) {
         try {
             await pool.connect();
             // const result = await pool.request().query('SELECT * FROM DOCGIA WHERE XOA = 0');
@@ -28,7 +28,7 @@ class DocGiaRepository {
     }
 
 
-    static async getById(maDG) {
+    static async getById(pool, maDG) {
         try {
             await pool.connect(); // Kết nối đến DB
             const request = pool.request(); // Tạo request
@@ -58,7 +58,7 @@ class DocGiaRepository {
         }
     }
 
-    static async add(docGia) {
+    static async add(pool, docGia) {
         try {
             await pool.connect();
             const request = pool.request();
@@ -85,7 +85,7 @@ class DocGiaRepository {
         }
     }
 
-    static async getCurrentId() {
+    static async getCurrentId(pool) {
         try {
             await pool.connect();
             const result = await pool.request().query('SELECT MAX(MADG) as maxId FROM DOCGIA');
@@ -96,7 +96,7 @@ class DocGiaRepository {
         }
     }
 
-    static async delete(maDG) {
+    static async delete(pool, maDG) {
         try {
             await pool.connect();
             const request = pool.request();
@@ -109,7 +109,7 @@ class DocGiaRepository {
         }
     }
 
-    static async changeStatus(maDG, newStatus) {
+    static async changeStatus(pool, maDG, newStatus) {
         try {
             await pool.connect();
             const request = pool.request();
@@ -123,7 +123,7 @@ class DocGiaRepository {
         }
     }
 
-    static async getNextId() {
+    static async getNextId(pool) {
         try {
             await pool.connect();
             const result = await pool.request().query('SELECT MAX(MADG) as maxId FROM DOCGIA');
@@ -134,7 +134,7 @@ class DocGiaRepository {
         }
     }
 
-    static async getOverdueReader() {
+    static async getOverdueReader(pool) {
         try {
             await pool.connect();
             const result = await pool.request()

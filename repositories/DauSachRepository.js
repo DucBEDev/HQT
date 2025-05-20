@@ -1,8 +1,8 @@
-const { sql, pool } = require('../configs/database');
+const { sql } = require('../configs/database');
 const DauSach = require('../models/DauSach');
 
 class DauSachRepository {
-    static async getAll() {
+    static async getAll(pool) {
         try {
             await pool.connect();
             const result = await pool.request().query('SELECT * FROM DAUSACH');
@@ -26,7 +26,7 @@ class DauSachRepository {
         }
     }
 
-    static async add(dauSach) {
+    static async add(pool, dauSach) {
         try {
             await pool.connect();
             const request = pool.request();
@@ -54,7 +54,7 @@ class DauSachRepository {
         }
     }
 
-    static async getCurrentId() {
+    static async getCurrentId(pool) {
         try {
             await pool.connect();
             const result = await pool.request()
@@ -69,7 +69,7 @@ class DauSachRepository {
         }
     }
 
-    static async getAllBaseOnType(type) {
+    static async getAllBaseOnType(pool, type) {
         try {
             await pool.connect();
             const result = await pool.request()
@@ -97,7 +97,7 @@ class DauSachRepository {
         }
     }
 
-    static async getAllBaseOnDate(startDate, endDate, quantity) {
+    static async getAllBaseOnDate(pool, startDate, endDate, quantity) {
         try {
             await pool.connect();
             const result = await pool.request()
@@ -128,7 +128,7 @@ class DauSachRepository {
         }
     }
 
-    static async getAllWithQuantity() {
+    static async getAllWithQuantity(pool) {
         try {
             await pool.connect();
             const result = await pool.request().query(`SELECT 

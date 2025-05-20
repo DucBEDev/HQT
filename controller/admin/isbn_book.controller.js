@@ -1,4 +1,4 @@
-const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction } = require('../../configs/database');
+const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, getUserPool } = require('../../configs/database');
 const moment = require('moment');
 const puppeteer = require('puppeteer');
 
@@ -13,10 +13,15 @@ const systemConfig = require('../../configs/system');
 
 // [GET] /admin/isbn_book
 module.exports.index = async (req, res) => {
-    const dauSachList = await DauSachRepository.getAll(); 
-    const ngonNguList = await NgonNguRepository.getAll();
-    const theLoaiList = await TheLoaiRepository.getAll();
-    const tacGiaList = await TacGiaRepository.getAll();
+    const pool = getUserPool(req.session.id);
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
+    const dauSachList = await DauSachRepository.getAll(pool); 
+    const ngonNguList = await NgonNguRepository.getAll(pool);
+    const theLoaiList = await TheLoaiRepository.getAll(pool);
+    const tacGiaList = await TacGiaRepository.getAll(pool);
 
     res.render('admin/pages/dausach_sach/index', {
         dauSachList: dauSachList,
@@ -29,25 +34,35 @@ module.exports.index = async (req, res) => {
 
 // [GET] /admin/isbn_book/getData   
 module.exports.getData = async (req, res) => {
-    const ngonNguList = await NgonNguRepository.getAll();
-    const theLoaiList = await TheLoaiRepository.getAll();
-    const tacGiaList = await TacGiaRepository.getAll();
+    const pool = getUserPool(req.session.id);
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
+    const ngonNguList = await NgonNguRepository.getAll(pool);
+    const theLoaiList = await TheLoaiRepository.getAll(pool);
+    const tacGiaList = await TacGiaRepository.getAll(pool);
 
     res.json({ ngonNguList, theLoaiList, tacGiaList });
 };
 
 // [GET] /admin/isbn_book/book
 module.exports.getBooks = async (req, res) => {
+    const pool = getUserPool(req.session.id);
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
     const { selectedISBN } = req.query;
-    const sachList = await SachRepository.getBooksByISBN(selectedISBN);
+    const sachList = await SachRepository.getBooksByISBN(pool, selectedISBN);
     const updatedSachList = await Promise.all(sachList.map(async (sach) => {
-        const nganTu = await NganTuRepository.getById(sach.maNganTu);
+        const nganTu = await NganTuRepository.getById(pool, sach.maNganTu);
         return {
             ...sach,
             ke: nganTu.ke
         };
     }));
-    const nganTuList = await NganTuRepository.getAll(); 
+    const nganTuList = await NganTuRepository.getAll(pool); 
 
     res.json({ 
         success: true, 
@@ -58,6 +73,13 @@ module.exports.getBooks = async (req, res) => {
 
 // [DELETE] /admin/isbn_book/book/delete/:maSach
 module.exports.deleteBook = async (req, res) => {
+    console.log("Deleting book ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    const pool = getUserPool(req.session.id);
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
+
     const { maSach } = req.params;
 
     console.log(maSach)
@@ -67,7 +89,7 @@ module.exports.deleteBook = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedureWithTransaction('sp_XoaSach', params);
+        await executeStoredProcedureWithTransaction(pool, 'sp_XoaSach', params);
         req.flash('success', 'Xóa sách thành công!');
         res.redirect(`${systemConfig.prefixAdmin}/isbn_book`);
     } catch (error) {
@@ -79,6 +101,13 @@ module.exports.deleteBook = async (req, res) => {
 
 // [POST] /admin/isbn_book/book/create
 module.exports.write = async (req, res) => {
+    console.log("Creating book ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    const pool = getUserPool(req.session.id);
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
+
     const sachList = req.body;
 
     try {
@@ -97,7 +126,7 @@ module.exports.write = async (req, res) => {
             ];
 
             // Gọi stored procedure để thêm sách
-            await executeStoredProcedureWithTransaction('sp_ThemSach', params);
+            await executeStoredProcedureWithTransaction(pool, 'sp_ThemSach', params);
         }
 
         res.json({ success: true });
@@ -109,6 +138,13 @@ module.exports.write = async (req, res) => {
 
 // [POST] /admin/isbn_book/create
 module.exports.createDauSach = async (req, res) => {
+    console.log("Creating dauSach ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    const pool = getUserPool(req.session.id);
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
+
     const dauSachList = Object.values(req.body.dauSach || []).map((ds, index) => ({
         ...ds,
         hinhAnhPath: req.body.hinhAnhUrls ? req.body.hinhAnhUrls[index] : null
@@ -125,6 +161,13 @@ module.exports.createDauSach = async (req, res) => {
 
 // [DELETE] /admin/isbn_book/delete/:isbn
 module.exports.deleteTitle = async (req, res) => {
+    console.log("Deleting title ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    const pool = getUserPool(req.session.id);
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
+
     const { isbn } = req.params;
 
     const params = [
@@ -132,7 +175,7 @@ module.exports.deleteTitle = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedureWithTransaction('sp_XoaDauSach', params);
+        await executeStoredProcedureWithTransaction(pool, 'sp_XoaDauSach', params);
         req.flash('success', 'Xóa đầu sách thành công!');
         res.redirect(`${systemConfig.prefixAdmin}/isbn_book`);
     } catch (error) {
@@ -143,20 +186,31 @@ module.exports.deleteTitle = async (req, res) => {
 };
 
 module.exports.getNextISBN = async (req, res) => {
+    const pool = getUserPool(req.session.id);
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
     const nextId = 'ISBN000001'; // Giả định logic tạo ISBN
     res.json({ success: true, nextId });
 };
 
 // [GET] /admin/isbn_book/report?type=list/most-borrow
 module.exports.getReport = async (req, res) => {
+    const pool = getUserPool(req.session.id);
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
+
     const type = req.query.type;
 
     if (type == 'list') {
-        const typeList = await TheLoaiRepository.getAll();
+        const typeList = await TheLoaiRepository.getAll(pool);
         const dauSachList = [];
 
         for (const type of typeList) {
-            const dauSach = await DauSachRepository.getAllBaseOnType(type.maTL);
+            const dauSach = await DauSachRepository.getAllBaseOnType(pool, type.maTL);
             
             const categoryData = {
                 tenTL: type.tenTL,
@@ -190,7 +244,7 @@ module.exports.getReport = async (req, res) => {
                 return res.status(400).send('Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu');
             }
 
-            const dauSachList = await DauSachRepository.getAllBaseOnDate(start, end, updatedQuantity);
+            const dauSachList = await DauSachRepository.getAllBaseOnDate(pool, start, end, updatedQuantity);
 
             res.render('admin/pages/dausach_sach/reportMostBorrow', { 
                 printDate: moment().format('DD/MM/YYYY'),

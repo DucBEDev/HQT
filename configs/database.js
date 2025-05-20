@@ -1,5 +1,8 @@
+const session = require('express-session');
 const sql = require('mssql');
 require('dotenv').config();
+
+const userPools = new Map(); // Use Map for better key-value management
 
 // Config mặc định
 const defaultConfig = {
@@ -25,7 +28,7 @@ const defaultPool = new sql.ConnectionPool(defaultConfig);
 const defaultPoolConnect = defaultPool.connect();
 
 // Hàm tạo kết nối động với thông tin đăng nhập người dùng
-const createUserConnection = async (username, password) => {
+const createUserConnection = async (username, password, sessionId) => {
     const userConfig = {
         ...defaultConfig,
         user: username,
@@ -36,13 +39,44 @@ const createUserConnection = async (username, password) => {
             idleTimeoutMillis: 30000
         }
     };
+    console.log(sessionId)
 
     const userPool = new sql.ConnectionPool(userConfig);
     try {
         await userPool.connect();
+        userPools.set(sessionId, userPool); // Store in Map
         return userPool;
     } catch (err) {
         console.error('Error creating user connection:', err);
+        throw err;
+    }
+};
+
+// Hàm lấy pool từ sessionId
+const getUserPool = (sessionId) => {
+    console.log(userPools)
+    return userPools.get(sessionId);
+};
+
+// Hàm đóng pool và xóa khỏi userPools
+const closeUserPool = async (sessionId) => {
+    const pool = userPools.get(sessionId);
+    if (pool) {
+        await pool.close();
+        userPools.delete(sessionId);
+    }
+};
+
+const recreateUserPool = async (config) => {
+    if (!config || !config.user || !config.password) {
+        throw new Error('Invalid configuration for recreating user pool');
+    }
+    const userPool = new sql.ConnectionPool(config);
+    try {
+        await userPool.connect();
+        return userPool;
+    } catch (err) {
+        console.error('Error recreating user pool:', err);
         throw err;
     }
 };
@@ -108,6 +142,7 @@ const executeStoredProcedureWithTransactionAndReturnCode = async (pool, procedur
     }
 };
 
+
 // Test connection cho pool mặc định
 defaultPool.on('error', err => {
     console.error('Default SQL Server Connection Error:', err);
@@ -117,8 +152,10 @@ module.exports = {
     sql,
     defaultPool,
     defaultPoolConnect,
+    getUserPool,
     createUserConnection,
     executeStoredProcedure,
     executeStoredProcedureWithTransaction,
-    executeStoredProcedureWithTransactionAndReturnCode
+    executeStoredProcedureWithTransactionAndReturnCode, 
+    recreateUserPool
 };

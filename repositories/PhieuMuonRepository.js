@@ -1,9 +1,9 @@
-const { sql, pool } = require('../configs/database');
+const { sql } = require('../configs/database');
 const PhieuMuon = require('../models/PhieuMuon');
 
 class PhieuMuonRepository {
     // Lấy tất cả phiếu mượn (chưa bị xóa)
-    static async getAll() {
+    static async getAll(pool) {
         try {
             await pool.connect();
             const result = await pool.request().query('SELECT * FROM PHIEUMUON WHERE ISDELETED = 0');
@@ -21,7 +21,7 @@ class PhieuMuonRepository {
     }
 
     // Lấy phiếu mượn theo mã phiếu
-    static async getById(maPhieu) {
+    static async getById(pool,maPhieu) {
         try {
             await pool.connect();
             const request = pool.request();
@@ -54,7 +54,7 @@ class PhieuMuonRepository {
     }
 
     // Thêm phiếu mượn mới
-    static async add(phieuMuon) {
+    static async add(pool, phieuMuon) {
         try {
             await pool.connect();
             const request = pool.request();
@@ -75,7 +75,7 @@ class PhieuMuonRepository {
     }
 
     // Lấy mã phiếu mượn hiện tại (mã lớn nhất)
-    static async getCurrentId() {
+    static async getCurrentId(pool) {
         try {
             await pool.connect();
             const result = await pool.request().query('SELECT MAX(MAPHIEU) as maxId FROM PHIEUMUON');
@@ -87,7 +87,7 @@ class PhieuMuonRepository {
     }
 
     // Lấy mã phiếu mượn tiếp theo
-    static async getNextId() {
+    static async getNextId(pool) {
         try {
             await pool.connect();
             const result = await pool.request().query('SELECT MAX(MAPHIEU) as maxId FROM PHIEUMUON');
@@ -99,7 +99,7 @@ class PhieuMuonRepository {
     }
 
     // Trả sách
-    static async bookReturn(maPhieu) {
+    static async bookReturn(pool, maPhieu) {
         try {
             await pool.connect();
             const request = pool.request();

@@ -1,8 +1,8 @@
-const { sql, pool } = require('../configs/database');
+const { sql } = require('../configs/database');
 const TacGia = require('../models/TacGia');
 
 class TacGiaRepository {
-    static async getAll() {
+    static async getAll(pool) {
         try {
             await pool.connect();
             const result = await pool.request().query('SELECT * FROM TACGIA WHERE ISDELETED =0');
@@ -19,7 +19,7 @@ class TacGiaRepository {
     }
 
 
-    static async getById(maTacGia) {
+    static async getById(pool, maTacGia) {
         try {
             await pool.connect(); // Kết nối đến DB
             const request = pool.request(); // Tạo request
@@ -33,7 +33,7 @@ class TacGiaRepository {
     }
 
 
-    static async add(tacGia) {
+    static async add(pool, tacGia) {
         try {
             await pool.connect();
             const request = pool.request();
@@ -52,7 +52,7 @@ class TacGiaRepository {
         }
     }
 
-    static async getCurrentId() {
+    static async getCurrentId(pool) {
         try {
             await pool.connect();
             const result = await pool.request().query('SELECT MAX(MATACGIA) as maxId FROM TACGIA');
@@ -63,7 +63,7 @@ class TacGiaRepository {
         }
     }
 
-    static async getNextId() {
+    static async getNextId(pool) {
         try {
             await pool.connect();
             const result = await pool.request().query('SELECT MAX(MATACGIA) as maxId FROM TACGIA');
