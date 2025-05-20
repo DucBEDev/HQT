@@ -1,12 +1,18 @@
-const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, executeStoredProcedureWithTransactionAndReturnCode } = require('../../configs/database');
+const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, executeStoredProcedureWithTransactionAndReturnCode, getUserPool } = require('../../configs/database');
 const TacGiaRepository = require('../../repositories/TacGiaRepository'); // Giả định bạn sẽ tạo repository tương ứng
 const systemConfig = require('../../configs/system');
 const TacGia = require('../../models/TacGia');
 const { pushToUndoStack, popUndoStack } = require('../../public/js/adminjs/author/author-undo');
 
+
 // [GET] /author
 module.exports.index = async (req, res) => {
-    const list = await TacGiaRepository.getAll();
+     const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+    const list = await TacGiaRepository.getAll(pool);
 
     res.render('admin/pages/tacgia/index', {
         authorList: list,
@@ -16,10 +22,14 @@ module.exports.index = async (req, res) => {
 
 // [DELETE] /author/delete/:maTacGia
 module.exports.delete = async (req, res) => {
-    console.log("Called");
+    console.log("Deletiing author ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
 
     const { maTacGia } = req.params; // Lấy giá trị maTacGia từ req.params
-    const author = await TacGiaRepository.getById(maTacGia); // Lấy thông tin tác giả trước khi xóa
+    const author = await TacGiaRepository.getById(pool, maTacGia); // Lấy thông tin tác giả trước khi xóa
 
     console.log(maTacGia);
 
@@ -47,6 +57,12 @@ module.exports.create = async (req, res) => {
 
 // [POST] /author/create
 module.exports.createPost = async (req, res) => {
+    console.log("Creating author ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
     const authorList = req.body;
 
     const savedAuthors = [];
@@ -59,7 +75,7 @@ module.exports.createPost = async (req, res) => {
             { name: 'DIACHITG', type: sql.NVarChar, value: cleanDiaChiTG },
             { name: 'DIENTHOAITG', type: sql.NVarChar, value: author.dienThoaiTG }
         ];
-        const maTacGia = await executeStoredProcedureWithTransactionAndReturnCode('sp_ThemTacGia', params);
+        const maTacGia = await executeStoredProcedureWithTransactionAndReturnCode(pool,'sp_ThemTacGia', params);
         savedAuthors.push({
             maTacGia: maTacGia, // Giả định bạn có maTacGia trong author
             hoTenTG: cleanHoTenTG,
@@ -81,10 +97,14 @@ module.exports.createPost = async (req, res) => {
 
 // [GET] /author/edit/:maTacGia
 module.exports.edit = async (req, res) => {
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
     const { maTacGia } = req.params;
 
     // Giả định có hàm lấy thông tin tác giả từ DB
-    const author = await TacGiaRepository.getById(maTacGia); // Bạn cần triển khai hàm này
+    const author = await TacGiaRepository.getById(pool, maTacGia); // Bạn cần triển khai hàm này
 
     res.render('admin/pages/tacgia/edit', {
         author,
@@ -94,10 +114,16 @@ module.exports.edit = async (req, res) => {
 
 // [POST] /author/edit/:maTacGia
 module.exports.editPost = async (req, res) => {
+    console.log("Editing author ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
     const { maTacGia } = req.params;
     const { hoTenTG, diaChiTG, dienThoaiTG } = req.body;
 
-    const oldAuthor = await TacGiaRepository.getById(maTacGia);
+    const oldAuthor = await TacGiaRepository.getById(pool,maTacGia);
     const author = new TacGia(maTacGia, hoTenTG, diaChiTG, dienThoaiTG)
 
     const params = [
@@ -108,7 +134,7 @@ module.exports.editPost = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedureWithTransaction('sp_SuaTacGia', params);
+        await executeStoredProcedureWithTransaction(pool,'sp_SuaTacGia', params);
         pushToUndoStack('edit', oldAuthor);
         res.render('admin/pages/tacgia/edit', {
             author: author,
@@ -123,6 +149,11 @@ module.exports.editPost = async (req, res) => {
 
 // [POST] /author/undo
 module.exports.undo = async (req, res) => {
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
     const lastAction = popUndoStack();
 
     if (!lastAction) {
@@ -139,7 +170,7 @@ module.exports.undo = async (req, res) => {
                 const params = [
                     { name: 'MATACGIA', type: sql.Int, value: author.maTacGia }
                 ];
-                await executeStoredProcedureWithTransaction('sp_XoaTacGia', params);
+                await executeStoredProcedureWithTransaction(pool, 'sp_XoaTacGia', params);
             }
         } else if (action === 'delete') {
             // Undo delete: Thêm lại tác giả đã xóa
@@ -148,7 +179,7 @@ module.exports.undo = async (req, res) => {
                 { name: 'DIACHITG', type: sql.NVarChar, value: data.diaChiTG },
                 { name: 'DIENTHOAITG', type: sql.NVarChar, value: data.dienThoaiTG }
             ];
-            await executeStoredProcedureWithTransaction('sp_ThemTacGia', params);
+            await executeStoredProcedureWithTransaction(pool, 'sp_ThemTacGia', params);
         } else if (action === 'edit') {
             // Undo edit: Khôi phục thông tin cũ
             const params = [
@@ -157,7 +188,7 @@ module.exports.undo = async (req, res) => {
                 { name: 'DIACHITG', type: sql.NVarChar, value: data.diaChiTG },
                 { name: 'DIENTHOAITG', type: sql.NVarChar, value: data.dienThoaiTG }
             ];
-            await executeStoredProcedureWithTransaction('sp_SuaTacGia', params);
+            await executeStoredProcedureWithTransaction(pool, 'sp_SuaTacGia', params);
         }
         res.json({ success: true });
     } catch (error) {
@@ -169,6 +200,10 @@ module.exports.undo = async (req, res) => {
 
 // [GET] /author/next-id
 module.exports.getNextId = async (req, res) => {
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
     const nextId = await TacGiaRepository.getNextId();
     res.json({ success: true, nextId });
 };

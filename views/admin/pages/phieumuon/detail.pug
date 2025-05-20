@@ -62,7 +62,7 @@ block main
                                     span(id="ngayMuon" value=`${phieuMuon.ngayMuon}`) #{moment(phieuMuon.ngayMuon).format("DD/MM/YYYY")}
                             .form-group
                                 label(for="ngayTra") Ngày trả
-                                input.form-control(type="date" id="ngayTra" name="ngayTra" required disabled)
+                                input.form-control(type="date" id="ngayTra"  value=ngayTra name="ngayTra" required disabled)
                             .form-group
                                 label(for="maNV") Mã nhân viên tạo phiếu
                                 input.form-control(type="text" id="maNV" name="maNV" readonly value=phieuMuon.maNV)

@@ -1,4 +1,4 @@
-const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, executeStoredProcedureWithTransactionAndReturnCode } = require('../../configs/database');
+const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, executeStoredProcedureWithTransactionAndReturnCode, getUserPool } = require('../../configs/database');
 const NhanVienRepository = require('../../repositories/NhanVienRepository'); // Giả định bạn sẽ tạo repository tương ứng
 const systemConfig = require('../../configs/system');
 const NhanVien = require('../../models/NhanVien');
@@ -6,7 +6,11 @@ const { pushToUndoStack, popUndoStack } = require('../../public/js/adminjs/staff
 
 // [GET] /staff
 module.exports.index = async (req, res) => {
-    const list = await NhanVienRepository.getAll();
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+    const list = await NhanVienRepository.getAll(pool);
 
     res.render('admin/pages/nhanvien/index', {
         staffList: list,
@@ -16,11 +20,15 @@ module.exports.index = async (req, res) => {
 
 // [DELETE] /staff/delete/:maNV
 module.exports.delete = async (req, res) => {
-    console.log("Called");
+    console.log("Deleting staff ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+     const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
 
     const { maNV } = req.params; // Lấy giá trị maNV từ req.params
     console.log(maNV);
-    const staff = await NhanVienRepository.getById(maNV);
+    const staff = await NhanVienRepository.getById(pool, maNV);
 
     // Định dạng params thành mảng chứa một đối tượng
     const params = [
@@ -28,7 +36,7 @@ module.exports.delete = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedureWithTransaction('sp_XoaNhanVien', params);
+        await executeStoredProcedureWithTransaction(pool,'sp_XoaNhanVien', params);
         pushToUndoStack('delete', staff);
         res.redirect(`${systemConfig.prefixAdmin}/staff`);
     } catch (error) {
@@ -46,6 +54,12 @@ module.exports.create = async (req, res) => {
 
 // [POST] /staff/create
 module.exports.createPost = async (req, res) => {
+    console.log("Creating staff ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+    
     const staffList = req.body;
 
     const savedStaff = [];
@@ -62,7 +76,7 @@ module.exports.createPost = async (req, res) => {
             { name: 'DIENTHOAI', type: sql.NVarChar, value: staff.dienThoai },
             { name: 'EMAIL', type: sql.NVarChar, value: staff.email }
         ];
-        const maNV=await executeStoredProcedureWithTransactionAndReturnCode('sp_ThemNhanVien', params);
+        const maNV=await executeStoredProcedureWithTransactionAndReturnCode(pool, 'sp_ThemNhanVien', params);
         savedStaff.push({
             maNV: maNV,
             hoNV: cleanHoNV,
@@ -82,10 +96,15 @@ module.exports.createPost = async (req, res) => {
 
 // [GET] /staff/edit/:maNV
 module.exports.edit = async (req, res) => {
+     const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
     const { maNV } = req.params;
 
     // Giả định có hàm lấy thông tin nhân viên từ DB
-    const staff = await NhanVienRepository.getById(maNV); // Bạn cần triển khai hàm nàyd
+    const staff = await NhanVienRepository.getById(pool, maNV); // Bạn cần triển khai hàm nàyd
 
     res.render('admin/pages/nhanvien/edit', {
         staff,
@@ -95,6 +114,12 @@ module.exports.edit = async (req, res) => {
 
 // [POST] /staff/edit/:maNV
 module.exports.editPost = async (req, res) => {
+    console.log("Editing staff ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+     const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
     const { maNV } = req.params;
     const { hoNV, tenNV, diaChi, dienThoai, gioiTinh, email } = req.body;
 
@@ -112,7 +137,7 @@ module.exports.editPost = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedureWithTransaction('sp_SuaNhanVien', params);
+        await executeStoredProcedureWithTransaction(pool,'sp_SuaNhanVien', params);
         pushToUndoStack('edit', oldStaff);
         res.render('admin/pages/nhanvien/edit', {
             staff: staff,
@@ -127,6 +152,11 @@ module.exports.editPost = async (req, res) => {
 
 // [POST] /staff/undo
 module.exports.undo = async (req, res) => {
+     const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
     const lastAction = popUndoStack();
 
     if (!lastAction) {
@@ -142,7 +172,7 @@ module.exports.undo = async (req, res) => {
                 const params = [
                     { name: 'MANV', type: sql.Int, value: staff.maNV }
                 ];
-                await executeStoredProcedureWithTransaction('sp_XoaNhanVien', params);
+                await executeStoredProcedureWithTransaction(pool, 'sp_XoaNhanVien', params);
             }
         } else if (action === 'delete') {
             // Undo delete: Thêm lại nhân viên đã xóa
@@ -154,7 +184,7 @@ module.exports.undo = async (req, res) => {
                 { name: 'DIENTHOAI', type: sql.NVarChar, value: data.dienThoai },
                 { name: 'EMAIL', type: sql.NVarChar, value: data.email }
             ];
-            await executeStoredProcedureWithTransaction('sp_ThemNhanVien', params);
+            await executeStoredProcedureWithTransaction(pool, 'sp_ThemNhanVien', params);
         } else if (action === 'edit') {
             // Undo edit: Khôi phục thông tin cũ
             const params = [
@@ -166,7 +196,7 @@ module.exports.undo = async (req, res) => {
                 { name: 'GIOITINH', type: sql.Bit, value: data.gioiTinh },
                 { name: 'EMAIL', type: sql.NVarChar, value: data.email }
             ];
-            await executeStoredProcedureWithTransaction('sp_SuaNhanVien', params);
+            await executeStoredProcedureWithTransaction(pool, 'sp_SuaNhanVien', params);
         }
         res.json({ success: true });
     } catch (error) {
@@ -177,7 +207,12 @@ module.exports.undo = async (req, res) => {
 
 // [GET] /staff/next-id
 module.exports.getNextId = async (req, res) => {
-    const nextId = await NhanVienRepository.getNextId();
+     const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+    const nextId = await NhanVienRepository.getNextId(pool);
     res.json({ success: true, nextId });
 };
 

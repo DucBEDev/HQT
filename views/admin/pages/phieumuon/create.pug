@@ -54,12 +54,12 @@ block main
                                     option(value="0") Tại chỗ
                             .form-group
                                 label(for="ngayMuon") Ngày mượn <span class="required-text">*</span>
-                                input.form-control(type="date" id="ngayMuon" name="ngayMuon" required)
+                                input.form-control(type="date" id="ngayMuon" name="ngayMuon" required readonly)
                             .form-group
                                 label(for="ngayTra") Ngày trả <span class="required-text">*</span>
-                                input.form-control(type="date" id="ngayTra" name="ngayTra" required)  
+                                input.form-control(type="date" id="ngayTra" name="ngayTra" readonly required)
                             .form-group
-                                label(for="maNV") Mã nhân viên tạo phiếu<span class="required-text">*</span>
+                                label(for="maNV") Mã nhân viên tạo phiếu <span class="required-text">*</span>
                                 select.form-control(id="maNV" name="maNV" required)
                                     option(value="") -- Chọn nhân viên --
                                     each nhanVien in nhanVienList
@@ -76,31 +76,26 @@ block main
     script(src="https://cdn.jsdelivr.net/npm/flatpickr")
 
     script.
+        // Khởi tạo Flatpickr cho ngày mượn
         flatpickr('#ngayMuon', {
-            dateFormat: 'd/m/Y', 
-            defaultDate: "today",
+            dateFormat: 'Y-m-d', // Định dạng phù hợp với input type="date"
+            defaultDate: 'today',
             allowInput: false,
             clickOpens: false
         });
 
-        flatpickr('#ngayTra', {
-            dateFormat: 'd/m/Y',
-            allowInput: false,
-            minDate: "today",
-            onClose: function(selectedDates, dateStr, instance) {
-                if (!dateStr) {
-                    alert('Vui lòng chọn ngày trả');
-                    return;
-                }
-                
-                const ngayMuon = document.querySelector("#ngayMuon")._flatpickr.selectedDates[0];
-                const ngayTra = selectedDates[0];
-                const maxNgayTra = new Date(ngayMuon);
-                maxNgayTra.setDate(maxNgayTra.getDate() + 15);
+        // Tính và đặt giá trị ngày trả (ngày hiện tại + 15 ngày)
+        function setNgayTra() {
+            const today = new Date();
+            const ngayTra = new Date(today);
+            ngayTra.setDate(today.getDate() + 15);
+            
+            // Định dạng ngày trả thành YYYY-MM-DD
+            const formattedNgayTra = ngayTra.toISOString().split('T')[0];
+            document.getElementById('ngayTra').value = formattedNgayTra;
+        }
 
-                if (ngayTra > maxNgayTra) {
-                    alert('Ngày trả không được quá 15 ngày so với ngày mượn');
-                    instance.clear();
-                }
-            }
+        // Gọi hàm setNgayTra khi trang tải
+        document.addEventListener('DOMContentLoaded', function() {
+            setNgayTra();
         });

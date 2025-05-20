@@ -1,10 +1,16 @@
-const { sql, pool } = require('../configs/database');
+const { sql, defaultPool, recreateUserPool} = require('../configs/database');
 const TheLoai = require('../models/TheLoai');
 
+
 class TheLoaiRepository {
-    static async getAll() {
+    static async getAll(pool) {
         try {
-            await pool.connect();
+            console.log("Getting all TheLoai ----------------------------------------------------------------------------------------------------------------------------------------------------------")
+            console.log(pool)
+            //const userPool = await recreateUserPool(pool.config);  Tạo lại pool với thông tin đăng nhập người dùng
+            //await userPool.connect(); // Kết nối đến DB
+            //console.log(defaultPool)
+            // Use direct query (if you prefer keeping it)
             const result = await pool.request().query('SELECT * FROM THELOAI WHERE ISDELETED=0');
             return result.recordset.map(row => new TheLoai(
                 row.MATL,
@@ -17,9 +23,9 @@ class TheLoaiRepository {
     }
 
 
-    static async getById(maTL) {
+    static async getById(pool, maTL) {
         try {
-            await pool.connect(); // Kết nối đến DB
+           // await pool.connect(); // Kết nối đến DB
             const request = pool.request(); // Tạo request
             request.input('MATL', sql.NVarChar, maTL); // Thêm tham số MATL
             const result = await request.query('SELECT * FROM THELOAI WHERE MATL = @MATL'); // Truy vấn với tham số
@@ -36,9 +42,9 @@ class TheLoaiRepository {
 
 
 
-    static async getCurrentId() {
+    static async getCurrentId(pool) {
         try {
-            await pool.connect();
+           // await pool.connect();
             const result = await pool.request()
                 .input('prefix', sql.NVarChar, 'TL%')
                 .query('SELECT MAX(MATL) as maxId FROM THELOAI WHERE MATL LIKE @prefix');
@@ -51,9 +57,9 @@ class TheLoaiRepository {
         }
     }
 
-    static async getNextId() {
+    static async getNextId(pool) {
         try {
-            await pool.connect();
+           // await pool.connect();
             const result = await pool.request().query('SELECT MAX(MATL) as maxId FROM THELOAI');
             const maxId = parseInt(result.recordset[0].maxId.substring(2));
 

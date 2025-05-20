@@ -1,8 +1,8 @@
-const { sql, pool } = require('../configs/database');
+const { sql } = require('../configs/database');
 const Sach = require('../models/Sach');
 
 class SachRepository {
-    static async getAll() {
+    static async getAll(pool) {
         try {
             await pool.connect();
             const result = await pool.request().query('SELECT * FROM SACH');
@@ -19,7 +19,7 @@ class SachRepository {
         }
     }
 
-    static async add(sach) {
+    static async add(pool, sach) {
         try {
             await pool.connect();
             const request = pool.request();
@@ -40,7 +40,7 @@ class SachRepository {
         }
     }
 
-    static async getCurrentId() {
+    static async getCurrentId(pool) {
         try {
             await pool.connect();
             const result = await pool.request()
@@ -55,7 +55,7 @@ class SachRepository {
         }
     }
 
-    static async getBooksByISBN(isbn) {
+    static async getBooksByISBN(pool, isbn) {
         try {
             await pool.connect();
             const result = await pool.request()
@@ -74,7 +74,7 @@ class SachRepository {
         }
     }
 
-    static async getNextId() {
+    static async getNextId(pool) {
         try {
             await pool.connect();
             const result = await pool.request().query('SELECT MAX(MASACH) as maxId FROM SACH');

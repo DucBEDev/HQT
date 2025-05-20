@@ -1,4 +1,4 @@
-const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction } = require('../../configs/database');
+const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, getUserPool } = require('../../configs/database');
 
 const PhieuMuonRepository = require('../../repositories/PhieuMuonRepository'); 
 const DauSachRepository = require('../../repositories/DauSachRepository'); 
@@ -11,7 +11,13 @@ const systemConfig = require('../../configs/system');
 // [GET] /phieumuon
 module.exports.index = async (req, res) => {
     try {
-        const list = await PhieuMuonRepository.getAll();
+         const pool = getUserPool(req.session.id);
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
+
+        const list = await PhieuMuonRepository.getAll(pool);
         res.render('admin/pages/phieumuon/index', {
             phieuMuonList: list,
             pageTitle: 'Quản lý phiếu mượn',
@@ -24,9 +30,16 @@ module.exports.index = async (req, res) => {
 
 // [GET] /phieumuon/create
 module.exports.create = async (req, res) => {
-    const sachList = await DauSachRepository.getAllWithQuantity(); 
-    const docGiaList = await DocGiaRepository.getAll();
-    const nhanVienList = await NhanVienRepository.getAll();
+    console.log("Creating phieumuon ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    const pool = getUserPool(req.session.id);
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
+
+    const sachList = await DauSachRepository.getAllWithQuantity(pool); 
+    const docGiaList = await DocGiaRepository.getAll(pool);
+    const nhanVienList = await NhanVienRepository.getAll(pool);
     // const nextPhieuMuonId = await getNextPhieuMuonId(); // Giả định hàm tạo mã phiếu
     res.render('admin/pages/phieumuon/create', {
         sachList, docGiaList, nhanVienList,
@@ -36,6 +49,13 @@ module.exports.create = async (req, res) => {
 
 // [POST] /phieumuon/create
 module.exports.createPost = async (req, res) => {
+    console.log("Creating phieumuon post ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    const pool = getUserPool(req.session.id);
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
+
     const { maDG, hinhThuc, maNV } = req.body;
 
     const ctPhieuMuonList = [];
@@ -63,16 +83,15 @@ module.exports.createPost = async (req, res) => {
 
 
         ];
-        await executeStoredProcedureWithTransaction('sp_LapPhieuMuon', paramsPhieu);
+        await executeStoredProcedureWithTransaction(pool, 'sp_LapPhieuMuon', paramsPhieu);
 
         res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
     } 
     catch (error) {
-        // Lấy thông điệp lỗi từ SQL Server
         const errorMessage = error.message || 'Đã xảy ra lỗi không xác định';
-        const errorNumber = error.number || 50000; // Mã lỗi từ SQL Server (nếu có)
+        const errorNumber = error.number || 50000;
 
-        // Ánh xạ mã lỗi tùy chỉnh từ stored procedure để trả về thông điệp rõ ràng hơn (tùy chọn)
+        // Ánh xạ mã lỗi
         let customMessage;
         switch (errorNumber) {
             case 50001:
@@ -84,17 +103,33 @@ module.exports.createPost = async (req, res) => {
             case 50003:
                 customMessage = 'Độc giả chỉ được mượn tối đa 3 cuốn sách!';
                 break;
+            case 50004:
+                customMessage = 'Sách 1 không tồn tại hoặc không thể mượn!';
+                break;
+            case 50005:
+                customMessage = 'Sách 2 không tồn tại hoặc không thể mượn!';
+                break;
+            case 50006:
+                customMessage = 'Sách 3 không tồn tại hoặc không thể mượn!';
+                break;
             case 50007:
                 customMessage = 'Nhân viên không tồn tại!';
                 break;
+            case 50008:
+                customMessage = 'Phải mượn ít nhất một cuốn sách!';
+                break;
+            case 50009:
+                customMessage = 'Các mã sách không được trùng lặp!';
+                break;
             default:
-                customMessage = errorMessage; // Sử dụng thông điệp gốc nếu không khớp
+                customMessage = errorMessage;
         }
-        console.error('SQL Error:', error); // Ghi log lỗi chi tiết để debug
-        res.json({ 
-            success: false, 
+
+        console.error('SQL Error:', error);
+        res.status(400).json({
+            success: false,
             message: customMessage,
-            errorCode: errorNumber // Tùy chọn: trả về mã lỗi để client xử lý
+            errorCode: errorNumber
         });
     }
 };
@@ -102,7 +137,12 @@ module.exports.createPost = async (req, res) => {
 // [GET] /phieumuon/next-id
 module.exports.getNextId = async (req, res) => {
     try {
-        const nextId = await PhieuMuonRepository.getNextId();
+        const pool = getUserPool(req.session.id);
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
+        const nextId = await PhieuMuonRepository.getNextId(pool);
         res.json({ success: true, nextId });
     } catch (error) {
         res.json({ success: false, message: error.message });
@@ -111,15 +151,24 @@ module.exports.getNextId = async (req, res) => {
 
 // [GET] /phieumuon/detail/:maPhieu
 module.exports.detail = async (req, res) => {
+    const pool = getUserPool(req.session.id);
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
     const { maPhieu } = req.params;
-    const { phieuMuon, ctpmList } = await PhieuMuonRepository.getById(maPhieu);
-    const sachList = await DauSachRepository.getAllWithQuantity();
+    const { phieuMuon, ctpmList } = await PhieuMuonRepository.getById(pool, maPhieu);
+    const sachList = await DauSachRepository.getAllWithQuantity(pool);
+
+    console.log(ctpmList)
+    console.log(phieuMuon)
     
     res.render('admin/pages/phieumuon/detail', { 
         phieuMuon,
         pageTitle: 'Chi tiết phiếu mượn',
         sachList,
-        ctpmList
+        ctpmList,
+        ngayTra : ctpmList[0]?.ngayTra.toISOString().split('T')[0] || null,
     });
 };
 
@@ -137,13 +186,32 @@ module.exports.lostBook = async (req, res) => {
 
 // [POST] /phieumuon/returnBook/:maPhieu
 module.exports.returnBook = async (req, res) => {
+    console.log("Returning book ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+
+    const pool = getUserPool(req.session.id);
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
     console.log(req.params.maPhieu)
+    await PhieuMuonRepository.bookReturn(pool, req.params.maPhieu);
     res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
 };
 
 // [DELETE] /phieumuon/delete/:maPhieu
 module.exports.delete = async (req, res) => {
+    console.log("Deleting phieumuon ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    const pool = getUserPool(req.session.id);
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
     console.log(req.params.maPhieu)
+    const params = 
+    [
+        { name: 'MAPHIEU', type: sql.BigInt, value: req.params.maPhieu }
+    ]
+    await executeStoredProcedureWithTransaction(pool, 'sp_XoaPhieuMuon', params);
     res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
 };
 
