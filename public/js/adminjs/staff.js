@@ -23,31 +23,35 @@ async function getNextMaNV() {
 
 getNextMaNV();
 
+function splitFullName(fullName) {
+    const nameParts = fullName.trim().split(/\s+/);
+    const firstName = nameParts.pop();
+    const lastName = nameParts.join(' ');
+    
+    return {
+      hoNV: lastName || '', 
+      tenNV: firstName || '' 
+    };
+  }
+
 document.getElementById('btnThem').addEventListener('click', function() {
     const form = document.getElementById('addStaffForm');
-    const hoNVInput = document.getElementById('hoNV');
-    const tenNVInput = document.getElementById('tenNV');
+    const fullNameInput = document.getElementById('fullName');
     const diaChiInput = document.getElementById('diaChi');
     const dienThoaiInput = document.getElementById('dienThoai');
     const gioiTinhInput = document.getElementById('gioiTinh');
     const emailInput = document.getElementById('email');
 
-    const hoNVValue = hoNVInput.value.trim();
-    const tenNVValue = tenNVInput.value.trim();
+    const fullNameValue = fullNameInput.value.trim();
     const diaChiValue = diaChiInput.value.trim();
     const dienThoaiValue = dienThoaiInput.value.trim();
     const gioiTinhValue = gioiTinhInput.value;
     const emailValue = emailInput.value.trim();
 
     // Kiểm tra các trường bắt buộc
-    if (hoNVValue.length === 0) {
-        alert('Họ nhân viên không được để trống!');
+    if (fullNameValue.length === 0) {
+        alert('Họ và tên nhân viên không được để trống!');
         hoNVInput.classList.add('is-invalid');
-        return;
-    }
-    if (tenNVValue.length === 0) {
-        alert('Tên nhân viên không được để trống!');
-        tenNVInput.classList.add('is-invalid');
         return;
     }
     if (diaChiValue.length === 0) {
@@ -72,14 +76,15 @@ document.getElementById('btnThem').addEventListener('click', function() {
     }
 
     if (form.checkValidity()) {
+        const { hoNV, tenNV } = splitFullName(fullNameValue);
         const nhanVien = {
             maNV: document.getElementById('maNV').value,
-            hoNV: hoNVValue,
-            tenNV: tenNVValue,
+            hoNV: hoNV,
+            tenNV: tenNV,
             diaChi: diaChiValue,
             dienThoai: dienThoaiValue,
             gioiTinh: gioiTinhValue === '1', // Chuyển thành boolean
-            email: emailValue
+            email: emailValue + "@gmail.com"
         };
 
         if (danhSachNhanVien.some(nv => nv.maNV === nhanVien.maNV)) {
@@ -158,19 +163,19 @@ function hienThiDanhSachNhanVien() {
 // Validate
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('addStaffForm');
-    const hoNVInput = document.getElementById('hoNV');
-    const tenNVInput = document.getElementById('tenNV');
+    const fullNameInput = document.getElementById('fullName');
     const dienThoaiInput = document.getElementById('dienThoai');
+    const diaChiInput = document.getElementById('diaChi');
     const emailInput = document.getElementById('email');
 
     // Chặn nhập số và ký tự đặc biệt cho họ và tên
-    window.restrictNameInput(hoNVInput);
-    window.restrictNameInput(tenNVInput);
+    window.restrictNameInput(fullNameInput);
 
-    // Kiểm tra định dạng email và điện thoại (giả định validation.js có các hàm này)
-    dienThoaiInput.addEventListener('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, ''); // Chỉ cho phép số
-    });
+    window.restrictSpecialCharInput(diaChiInput);
+
+    // Kiểm tra định dạng email và điện thoại 
+    window.restrictNumberInput(dienThoaiInput, 10);
+    window.restrictEmailInput(emailInput);
 
     // Form submission validation
     form.addEventListener('submit', function(event) {

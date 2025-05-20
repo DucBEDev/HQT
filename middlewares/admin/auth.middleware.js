@@ -1,11 +1,11 @@
 const systemConfig = require('../../configs/system');
+const { getUserPool } = require('../../configs/database');
+
 
 module.exports.auth = async (req, res, next) => {
-    if (req.cookies.userAdmin) {
-        next();
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
-    else {
-        res.redirect(`${systemConfig.prefixAdmin}/auth/login`)
-    }
-    
+    next();
 }

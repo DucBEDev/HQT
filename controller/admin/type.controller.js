@@ -8,7 +8,6 @@ const { pushToUndoStack, popUndoStack, clearUndoStack} = require('../../public/j
 
 // [GET] /type
 module.exports.index = async (req, res) => {
-
     const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);

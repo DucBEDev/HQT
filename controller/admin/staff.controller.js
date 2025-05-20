@@ -1,8 +1,10 @@
 const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, executeStoredProcedureWithTransactionAndReturnCode, getUserPool } = require('../../configs/database');
-const NhanVienRepository = require('../../repositories/NhanVienRepository'); // Giả định bạn sẽ tạo repository tương ứng
-const systemConfig = require('../../configs/system');
-const NhanVien = require('../../models/NhanVien');
 const { pushToUndoStack, popUndoStack } = require('../../public/js/adminjs/staff/staff-undo');
+
+const NhanVienRepository = require('../../repositories/NhanVienRepository'); 
+const NhanVien = require('../../models/NhanVien');
+
+const systemConfig = require('../../configs/system');
 
 // [GET] /staff
 module.exports.index = async (req, res) => {
@@ -20,17 +22,14 @@ module.exports.index = async (req, res) => {
 
 // [DELETE] /staff/delete/:maNV
 module.exports.delete = async (req, res) => {
-    console.log("Deleting staff ----------------------------------------------------------------------------------------------------------------------------------------------------------");
-     const pool = getUserPool(req.session.id);
+    const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
-    const { maNV } = req.params; // Lấy giá trị maNV từ req.params
-    console.log(maNV);
+    const { maNV } = req.params; 
     const staff = await NhanVienRepository.getById(pool, maNV);
 
-    // Định dạng params thành mảng chứa một đối tượng
     const params = [
         { name: 'MANV', type: sql.Int, value: maNV }
     ];
@@ -54,7 +53,6 @@ module.exports.create = async (req, res) => {
 
 // [POST] /staff/create
 module.exports.createPost = async (req, res) => {
-    console.log("Creating staff ----------------------------------------------------------------------------------------------------------------------------------------------------------");
     const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
@@ -76,7 +74,7 @@ module.exports.createPost = async (req, res) => {
             { name: 'DIENTHOAI', type: sql.NVarChar, value: staff.dienThoai },
             { name: 'EMAIL', type: sql.NVarChar, value: staff.email }
         ];
-        const maNV=await executeStoredProcedureWithTransactionAndReturnCode(pool, 'sp_ThemNhanVien', params);
+        const maNV = await executeStoredProcedureWithTransactionAndReturnCode(pool, 'sp_ThemNhanVien', params);
         savedStaff.push({
             maNV: maNV,
             hoNV: cleanHoNV,
@@ -88,7 +86,6 @@ module.exports.createPost = async (req, res) => {
         });
     }
 
-    console.log(savedStaff)
     pushToUndoStack('create', savedStaff);
 
     res.json({ success: true });
@@ -96,15 +93,14 @@ module.exports.createPost = async (req, res) => {
 
 // [GET] /staff/edit/:maNV
 module.exports.edit = async (req, res) => {
-     const pool = getUserPool(req.session.id);
+    const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
     const { maNV } = req.params;
 
-    // Giả định có hàm lấy thông tin nhân viên từ DB
-    const staff = await NhanVienRepository.getById(pool, maNV); // Bạn cần triển khai hàm nàyd
+    const staff = await NhanVienRepository.getById(pool, maNV);
 
     res.render('admin/pages/nhanvien/edit', {
         staff,
@@ -114,8 +110,7 @@ module.exports.edit = async (req, res) => {
 
 // [POST] /staff/edit/:maNV
 module.exports.editPost = async (req, res) => {
-    console.log("Editing staff ----------------------------------------------------------------------------------------------------------------------------------------------------------");
-     const pool = getUserPool(req.session.id);
+    const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
@@ -123,7 +118,7 @@ module.exports.editPost = async (req, res) => {
     const { maNV } = req.params;
     const { hoNV, tenNV, diaChi, dienThoai, gioiTinh, email } = req.body;
 
-    const oldStaff = await NhanVienRepository.getById(maNV);
+    const oldStaff = await NhanVienRepository.getById(pool, maNV);
     const staff = new NhanVien(maNV, hoNV, tenNV, diaChi, dienThoai, gioiTinh, email)
 
     const params = [
@@ -139,10 +134,7 @@ module.exports.editPost = async (req, res) => {
     try {
         await executeStoredProcedureWithTransaction(pool,'sp_SuaNhanVien', params);
         pushToUndoStack('edit', oldStaff);
-        res.render('admin/pages/nhanvien/edit', {
-            staff: staff,
-            pageTitle: 'Chỉnh sửa nhân viên',
-        });
+        res.redirect(`${systemConfig.prefixAdmin}/staff`)
     } catch (error) {
         console.error('Error updating staff:', error);
         res.status(500).send('Có lỗi xảy ra khi cập nhật nhân viên!');
@@ -152,7 +144,7 @@ module.exports.editPost = async (req, res) => {
 
 // [POST] /staff/undo
 module.exports.undo = async (req, res) => {
-     const pool = getUserPool(req.session.id);
+    const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
@@ -207,7 +199,7 @@ module.exports.undo = async (req, res) => {
 
 // [GET] /staff/next-id
 module.exports.getNextId = async (req, res) => {
-     const pool = getUserPool(req.session.id);
+    const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
@@ -216,12 +208,16 @@ module.exports.getNextId = async (req, res) => {
     res.json({ success: true, nextId });
 };
 
-// [GET] /staff/profile
-module.exports.profile = async (req, res) => {
-    const userAdmin = req.cookies.userAdmin;
-    const staff = await NhanVienRepository.getById(userAdmin);
+// // [GET] /staff/profile
+// module.exports.profile = async (req, res) => {
+//     const pool = getUserPool(req.session.id);
+//     if (!pool) {
+//         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+//     }
+
+//     const staff = await NhanVienRepository.getById(pool, req.session.id);
     
-    res.render("admin/pages/nhanvien/profile", {
-        staff: staff
-    });
-};
+//     res.render("admin/pages/nhanvien/profile", {
+//         staff: staff
+//     });
+// };

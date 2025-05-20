@@ -10,8 +10,8 @@ router.get('/create', controller.create);
 router.post('/create', controller.createPost);
 router.get('/next-id', controller.getNextId);
 router.post('/edit/:maNV', controller.editPost);
-router.post('/undo', controller.undo); // Route mới cho undo
-router.get('/profile', controller.profile);
+router.post('/undo', controller.undo); 
+// router.get('/profile', controller.profile);
 
 
 

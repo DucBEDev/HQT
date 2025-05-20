@@ -18,15 +18,19 @@ block main
                         .form-group
                             label(for="hoNV") Họ nhân viên <span class="required-text">*</span>
                             input.form-control(type="text" id="hoNV" name="hoNV" value=`${staff.hoNV}` placeholder="Nhập họ nhân viên" required)
+                            .invalid-feedback#hoNVError Họ không được chứa ký tự đặc biệt
                         .form-group
                             label(for="tenNV") Tên nhân viên <span class="required-text">*</span>
                             input.form-control(type="text" id="tenNV" name="tenNV" value=`${staff.tenNV}` placeholder="Nhập tên nhân viên" required)
+                            .invalid-feedback#tenNVError Họ tên không được chứa ký tự đặc biệt
                         .form-group
                             label(for="diaChi") Địa chỉ <span class="required-text">*</span>
                             input.form-control(type="text" id="diaChi" name="diaChi" value=`${staff.diaChi}` placeholder="Nhập địa chỉ" required)
+                            .invalid-feedback#diaChiError Địa chỉ không được chứa ký tự đặc biệt
                         .form-group
                             label(for="dienThoai") Điện thoại <span class="required-text">*</span>
                             input.form-control(type="text" id="dienThoai" name="dienThoai" value=`${staff.dienThoai}` placeholder="Nhập số điện thoại" required)
+                            .invalid-feedback#dienThoaiError Số điện thoại phải đủ 10 số
                         .form-group
                                 label(for="gioiTinh") Giới tính <span class="required-text">*</span>
                                 select.form-control(id="gioiTinh" name="gioiTinh" required)
@@ -41,7 +45,12 @@ block main
                                         option(value="0") Nữ
                         .form-group
                             label(for="email") Email <span class="required-text">*</span>
-                            input.form-control(type="email" id="email" name="email" value=`${staff.email}` placeholder="Nhập email" required)
+                            - const updateEmail = staff.email.split("@")[0];
+                            .input-group.mb-3 
+                                input.form-control(type="email" id="email" name="email" value=`${updateEmail}` placeholder="Nhập email" required)
+                                .input-group-append 
+                                    span.input-group-text @gmail.com
+                            .invalid-feedback#emailError Email không được chứa ký tự đặc biệt
                 .d-flex.justify-content-end.mt-3
                     a.btn.btn-secondary.mr-2(href=`${prefixAdmin}/staff`) Thoát
                     button.btn.btn-primary(type="submit" id="btnLuu") Lưu

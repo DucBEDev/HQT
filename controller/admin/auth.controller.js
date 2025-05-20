@@ -12,25 +12,17 @@ module.exports.showLogIn = async (req, res) => {
 // [POST] /auth/login
 module.exports.logIn = async (req, res) => {
     const { username, password } = req.body;
-    console.log(username, password)
 
     try {
-        // Tạo kết nối với thông tin đăng nhập người dùng
-        console.log('Creating user pool...');
-        console.log(req.session.id)
         const userPool = await createUserConnection(username, password, req.session.id);
-        console.log(req.session.id)
         userPool.on('error', err => {
             console.error(`UserPool (${username}) Connection Error:`, err);
         });
 
         // Lưu pool vào session
         req.session.username = username;
-        console.log('User pool created successfully!');
 
-        console.log(userPool);
-
-        res.redirect(`${systemConfig.prefixAdmin}/type`);
+        res.redirect(`${systemConfig.prefixAdmin}/staff`);
     } catch (err) {
         req.flash('error', 'Tên người dùng hoặc mật khẩu không đúng!');
         res.redirect(`${systemConfig.prefixAdmin}/auth/login`);

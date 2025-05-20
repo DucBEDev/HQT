@@ -10,14 +10,12 @@ html
       form#form-login(action=`${prefixAdmin}/auth/login`, method='post', data-oc-toggle='ajax') 
         .input-field
           input(type="text" id="username" name="username" required)
-          label Nhập email 
+          label Nhập user name
         .input-field
           input(type="password" id="password" name="password" required)
           label Nhập mật khẩu
-        .forget
-          label(for='remember')
-            input(type='checkbox', id='remember')
-            p Remember me
+        .forget.d-flex.justify-content-end
           a(href='/Library/admin/auth/change-password-enter-login') Quên mật khẩu? 
+
         span(style='color:red;') #{message}
         button(type='submit') Đăng nhập

@@ -16,17 +16,17 @@ block main
                             label(for="maNV") Mã nhân viên
                             input.form-control(type="text" id="maNV" name="maNV" readonly)
                         .form-group
-                            label(for="hoNV") Họ nhân viên <span class="required-text">*</span>
-                            input.form-control(type="text" id="hoNV" name="hoNV" placeholder="Nhập họ nhân viên" required)
-                        .form-group
-                            label(for="tenNV") Tên nhân viên <span class="required-text">*</span>
-                            input.form-control(type="text" id="tenNV" name="tenNV" placeholder="Nhập tên nhân viên" required)
+                            label(for="hoNV") Họ và tên <span class="required-text">*</span>
+                            input.form-control(type="text" id="fullName" name="fullName" placeholder="Nhập họ và tên nhân viên" required)
+                            .invalid-feedback#fullNameError Họ tên không được chứa ký tự đặc biệt
                         .form-group
                             label(for="diaChi") Địa chỉ <span class="required-text">*</span>
                             input.form-control(type="text" id="diaChi" name="diaChi" placeholder="Nhập địa chỉ" required)
+                            .invalid-feedback#diaChiError Địa chỉ không được chứa ký tự đặc biệt
                         .form-group
                             label(for="dienThoai") Điện thoại <span class="required-text">*</span>
                             input.form-control(type="text" id="dienThoai" name="dienThoai" placeholder="Nhập số điện thoại" required)
+                            .invalid-feedback#dienThoaiError Số điện thoại phải đủ 10 số
                         .form-group
                             label(for="gioiTinh") Giới tính <span class="required-text">*</span>
                             select.form-control(id="gioiTinh" name="gioiTinh" required)
@@ -35,7 +35,11 @@ block main
                                 option(value="0") Nữ
                         .form-group
                             label(for="email") Email <span class="required-text">*</span>
-                            input.form-control(type="email" id="email" name="email" placeholder="Nhập email" required)
+                            .input-group.mb-3 
+                                input.form-control(type="text" id="email" name="email" placeholder="Nhập email" required)
+                                .input-group-append 
+                                    span.input-group-text @gmail.com
+                            .invalid-feedback#emailError Email không được chứa ký tự đặc biệt
                 .d-flex.justify-content-end.mt-3
                     button.btn.btn-secondary.mr-2(type="button" onclick="window.history.back()") Hủy
                     button.btn.btn-success.mr-2(type="button" id="btnThem") Thêm
