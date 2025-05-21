@@ -56,10 +56,13 @@ window.restrictNumberInput = function (input, maxLength = 0) {
         
         if (maxLength > 0) {
             if (filteredValue.length !== maxLength) {
+                console.log("Chay vao day ", filteredValue)
                 this.classList.remove('is-valid');
                 this.classList.add('is-invalid');
                 document.getElementById(errorElementId).style.display = 'block';
             } else {
+                console.log("Chay vao day 2 ", filteredValue)
+
                 this.classList.remove('is-invalid');
                 this.classList.add('is-valid');
                 document.getElementById(errorElementId).style.display = 'none';

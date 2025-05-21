@@ -8,6 +8,19 @@ const systemConfig = require('../../configs/system');
 const DocGia = require('../../models/DocGia');
 const { pushToUndoStack, popUndoStack, clearUndoStack } = require('../../public/js/adminjs/reader/reader-undo');
 
+// Hàm chuyển đổi chuỗi DD/MM/YYYY thành đối tượng Date
+function parseDate(dateStr) {
+    if (!dateStr || !/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+        throw new Error(`Định dạng ngày không hợp lệ: ${dateStr}. Yêu cầu: DD/MM/YYYY`);
+    }
+    const [day, month, year] = dateStr.split("/").map(Number);
+
+    // Tạo Date sử dụng UTC để không bị lệch múi giờ
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return date;
+}
+
+
 // [GET] /admin/reader
 module.exports.index = async (req, res) => {
      const pool = getUserPool(req.session.id);
@@ -49,8 +62,7 @@ module.exports.delete = async (req, res) => {
 
 // [PATCH] /admin/reader/change-status/:newStatus/:maDG
 module.exports.changeStatus = async (req, res) => {
-    console.log("Changing status reader ----------------------------------------------------------------------------------------------------------------------------------------------------------");
-     const pool = getUserPool(req.session.id);
+    const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
@@ -72,12 +84,10 @@ module.exports.create = async (req, res) => {
 
 // [POST] /admin/reader/create
 module.exports.createPost = async (req, res) => {
-    console.log("Creating reader ----------------------------------------------------------------------------------------------------------------------------------------------------------");
-     const pool = getUserPool(req.session.id);
+    const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
-
 
     const readerList = req.body;
     const savedReaders = [];
@@ -87,20 +97,24 @@ module.exports.createPost = async (req, res) => {
         const cleanDiaChiDG = reader.diaChiDG.trim().replace(/\s+/g, ' ');
         const cleanEmailDG = reader.emailDG.trim().replace(/\s+/g, ' ');
 
+        const ngaySinh = parseDate(reader.ngaySinh);
+        const ngayLamThe = parseDate(reader.ngayLamThe);
+        const ngayHetHan = parseDate(reader.ngayHetHan);
+
         const params = [
             { name: 'HODG', type: sql.NVarChar, value: cleanHoDG },
             { name: 'TENDG', type: sql.NVarChar, value: cleanTenDG },
             { name: 'EMAILDG', type: sql.NVarChar, value: cleanEmailDG + '@gmail.com' },
             { name: 'SOCMND', type: sql.NVarChar, value: reader.soCMND },
             { name: 'GIOITINH', type: sql.Bit, value: reader.gioiTinh == '1' },
-            { name: 'NGAYSINH', type: sql.DateTime, value: reader.ngaySinh },
+            { name: 'NGAYSINH', type: sql.DateTime, value: ngaySinh },
             { name: 'DIACHIDG', type: sql.NVarChar, value: cleanDiaChiDG },
             { name: 'DIENTHOAI', type: sql.NVarChar, value: reader.dienThoai },
-            { name: 'NGAYLAMTHE', type: sql.DateTime, value: reader.ngayLamThe },
-            { name: 'NGAYHETHAN', type: sql.DateTime, value: reader.ngayHetHan },
+            { name: 'NGAYLAMTHE', type: sql.DateTime, value: ngayLamThe },
+            { name: 'NGAYHETHAN', type: sql.DateTime, value: ngayHetHan },
             { name: 'HOATDONG', type: sql.Bit, value: reader.hoatDong == '1' }
         ];
-        const maDG =await executeStoredProcedureWithTransactionAndReturnCode(pool, 'sp_ThemDocGia', params);
+        const maDG = await executeStoredProcedureWithTransactionAndReturnCode(pool, 'sp_ThemDocGia', params);
         savedReaders.push({
             maDG: maDG,
             hoDG: cleanHoDG,
@@ -116,24 +130,20 @@ module.exports.createPost = async (req, res) => {
             hoatDong: reader.hoatDong == '1'
         });
     }
-    console.log(savedReaders)
+
     pushToUndoStack('create', savedReaders);
 
     res.json({ success: true });
 }
 
 module.exports.edit = async (req, res) => {
-     const pool = getUserPool(req.session.id);
+    const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
     const { maDG } = req.params;
     const docGia = await DocGiaRepository.getById(pool, maDG); 
-
-    docGia.ngaySinh = docGia.ngaySinh.toISOString().split('T')[0]; 
-    docGia.ngayLamThe = docGia.ngayLamThe.toISOString().split('T')[0]; 
-    docGia.ngayHetHan = docGia.ngayHetHan.toISOString().split('T')[0]; 
     docGia.emailDG = docGia.emailDG.split('@')[0];
 
     res.render('admin/pages/docgia/edit', {
@@ -142,22 +152,24 @@ module.exports.edit = async (req, res) => {
     });
 };
 
-// [PATCH] /reader/edit/:maDG
+// [POST] /reader/edit/:maDG
 module.exports.editPatch = async (req, res) => {
-    console.log("Editing reader ----------------------------------------------------------------------------------------------------------------------------------------------------------");
-     const pool = getUserPool(req.session.id);
+    const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
-
     const { maDG } = req.params;
     const oldReader = await DocGiaRepository.getById(pool, maDG);
-    const { hoDG, tenDG, emailDG, soCMND, gioiTinh, ngaySinh, diaChiDG, dienThoai, ngayLamThe, ngayHetHan, hoatDong } = req.body;
+    let { hoDG, tenDG, emailDG, soCMND, gioiTinh, ngaySinh, diaChiDG, dienThoai, ngayLamThe, ngayHetHan, hoatDong } = req.body;
     const cleanHoDG = hoDG.trim().replace(/\s+/g, ' ');
     const cleanTenDG = tenDG.trim().replace(/\s+/g, ' ');
     const cleanDiaChiDG = diaChiDG.trim().replace(/\s+/g, ' ');
     const cleanEmailDG = emailDG.trim().replace(/\s+/g, ' ');
+
+    ngaySinh = parseDate(ngaySinh);
+    ngayLamThe = parseDate(ngayLamThe);
+    ngayHetHan = parseDate(ngayHetHan);
 
     const params = [
         { name: 'MADG', type: sql.Int, value: maDG },
@@ -171,13 +183,16 @@ module.exports.editPatch = async (req, res) => {
         { name: 'DIENTHOAI', type: sql.NVarChar, value: dienThoai },
         { name: 'NGAYLAMTHE', type: sql.Date, value: ngayLamThe },
         { name: 'NGAYHETHAN', type: sql.Date, value: ngayHetHan },
-        { name: 'HOATDONG', type: sql.Bit, value: hoatDong == 'true' }
+        { name: 'HOATDONG', type: sql.Bit, value: hoatDong == '1' }
     ];
 
     try {
         await executeStoredProcedureWithTransaction(pool, 'sp_SuaDocGia', params);
         pushToUndoStack('edit', oldReader);
-        res.redirect(`${systemConfig.prefixAdmin}/reader`);
+
+        res.status(200).json({
+            success: true
+        });
     } catch (error) {
         console.error('Error updating reader:', error);
         res.status(500).send('Có lỗi xảy ra khi cập nhật độc giả!');
@@ -186,7 +201,7 @@ module.exports.editPatch = async (req, res) => {
 
 // [GET] /admin/reader/next-id
 module.exports.getNextId = async (req, res) => {
-     const pool = getUserPool(req.session.id);
+    const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
@@ -195,10 +210,9 @@ module.exports.getNextId = async (req, res) => {
     res.json({ success: true, nextId });
 }
 
-
-// [GET] /admin/reader/report?type=list/overdue
+// [POST] /admin/reader/undo
 module.exports.undo = async (req, res) => {
-     const pool = getUserPool(req.session.id);
+    const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
@@ -265,15 +279,16 @@ module.exports.undo = async (req, res) => {
     }
 };
 
-
-
-
-// [GET] /admin/reader/report
+// [GET] /admin/reader/report?type=list/overdue
 module.exports.report = async (req, res) => {
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
     const type = req.query.type;
 
     if (type == 'list') {
-        const readerList = await DocGiaRepository.getAll();
+        const readerList = await DocGiaRepository.getAll(pool);
         const updatedReaderList = readerList.map(dt => {
             hoTen = dt.hoDG + ' ' + dt.tenDG;
             cmnd = dt.soCMND;
@@ -300,7 +315,7 @@ module.exports.report = async (req, res) => {
         });
     }
     else if (type == 'overdue') {
-        const readerList = await DocGiaRepository.getOverdueReader();
+        const readerList = await DocGiaRepository.getOverdueReader(pool);
         const updatedReaderList = readerList.map(dt => {
             cmnd = dt.soCMND;
             hoTen = dt.hoTen;
@@ -328,8 +343,6 @@ module.exports.report = async (req, res) => {
             printDate: moment().format('DD/MM/YYYY')
         });
     }
-
-    
 }
 
 // [POST] /admin/reader/download-report?type=list/overdue

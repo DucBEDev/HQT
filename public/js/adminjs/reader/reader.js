@@ -25,16 +25,50 @@ getNextMaDG();
 
 document.getElementById('btnThem').addEventListener('click', function() {
     const form = document.getElementById('addDocGiaForm');
-    const dienThoaiInput = document.getElementById('dienThoai');
+    const hoDGInput = document.getElementById('hoDG');
+    const tenDGInput = document.getElementById('tenDG');
+    const emailDGInput = document.getElementById('emailDG');
     const soCMNDInput = document.getElementById('soCMND');
+    const gioiTinhInput = document.getElementById('gioiTinh');
+    const ngaySinhInput = document.getElementById('ngaySinh');
+    const diaChiDGInput = document.getElementById('diaChiDG');
+    const dienThoaiInput = document.getElementById('dienThoai');
+    const ngayLamTheInput = document.getElementById('ngayLamThe');
+    const ngayHetHanInput = document.getElementById('ngayHetHan');
 
-    // Kiểm tra độ dài số điện thoại và số CCCD
-    const dienThoaiValue = dienThoaiInput.value;
-    const soCMNDValue = soCMNDInput.value;
+    // Lấy giá trị
+    const hoDGValue = hoDGInput.value.trim();
+    const tenDGValue = tenDGInput.value.trim();
+    const emailDGValue = emailDGInput.value.trim();
+    const soCMNDValue = soCMNDInput.value.trim();
+    const gioiTinhValue = gioiTinhInput.value;
+    const ngaySinhValue = ngaySinhInput.value;
+    const diaChiDGValue = diaChiDGInput.value.trim();
+    const dienThoaiValue = dienThoaiInput.value.trim();
+    const ngayLamTheValue = ngayLamTheInput.value;
+    const ngayHetHanValue = ngayHetHanInput.value;
 
-    if (dienThoaiValue.length !== 10) {
-        alert('Số điện thoại phải đúng 10 chữ số!');
-        dienThoaiInput.classList.add('is-invalid');
+    if (!hoDGValue) {
+        alert('Họ độc giả không được để trống!');
+        hoDGInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (!tenDGValue) {
+        alert('Tên độc giả không được để trống!');
+        tenDGInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (!emailDGValue) {
+        alert('Email không được để trống!');
+        emailDGInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (!soCMNDValue) {
+        alert('Số CCCD không được để trống!');
+        soCMNDInput.classList.add('is-invalid');
         return;
     }
 
@@ -44,19 +78,61 @@ document.getElementById('btnThem').addEventListener('click', function() {
         return;
     }
 
+    if (!gioiTinhValue) {
+        alert('Giới tính không được để trống!');
+        gioiTinhInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (!ngaySinhValue) {
+        alert('Ngày sinh không được để trống!');
+        ngaySinhInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (!diaChiDGValue) {
+        alert('Địa chỉ không được để trống!');
+        diaChiDGInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (!dienThoaiValue) {
+        alert('Số điện thoại không được để trống!');
+        dienThoaiInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (dienThoaiValue.length !== 10) {
+        alert('Số điện thoại phải đúng 10 chữ số!');
+        dienThoaiInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (!ngayLamTheValue) {
+        alert('Ngày làm thẻ không được để trống!');
+        ngayLamTheInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (!ngayHetHanValue) {
+        alert('Ngày hết hạn không được để trống!');
+        ngayHetHanInput.classList.add('is-invalid');
+        return;
+    }
+
     if (form.checkValidity()) {
         const docGia = {
             maDG: document.getElementById('maDG').value,
-            hoDG: document.getElementById('hoDG').value,
-            tenDG: document.getElementById('tenDG').value,
-            emailDG: document.getElementById('emailDG').value,
+            hoDG: hoDGValue,
+            tenDG: tenDGValue,
+            emailDG: emailDGValue,
             soCMND: soCMNDValue,
-            gioiTinh: document.getElementById('gioiTinh').value,
-            ngaySinh: document.getElementById('ngaySinh').value,
-            diaChiDG: document.getElementById('diaChiDG').value,
+            gioiTinh: gioiTinhValue,
+            ngaySinh: ngaySinhValue,
+            diaChiDG: diaChiDGValue,
             dienThoai: dienThoaiValue,
-            ngayLamThe: document.getElementById('ngayLamThe').value,
-            ngayHetHan: document.getElementById('ngayHetHan').value,
+            ngayLamThe: ngayLamTheValue,
+            ngayHetHan: ngayHetHanValue,
             hoatDong: document.getElementById('hoatDong').checked ? 1 : 0
         };
 
@@ -116,17 +192,18 @@ function hienThiDanhSachDocGia() {
 
     danhSachDocGia.forEach(dg => {
         const tr = document.createElement('tr');
+        console.log(dg.ngayHetHan)
         tr.innerHTML = `
             <td>${dg.maDG}</td>
             <td>${dg.hoDG} ${dg.tenDG}</td>
             <td>${dg.emailDG}</td>
             <td>${dg.soCMND}</td>
             <td>${dg.gioiTinh}</td>
-            <td>${new Date(dg.ngaySinh).toLocaleDateString('vi-VN')}</td>
+            <td>${dg.ngaySinh}</td>
             <td>${dg.diaChiDG}</td>
             <td>${dg.dienThoai}</td>
-            <td>${new Date(dg.ngayLamThe).toLocaleDateString('vi-VN')}</td>
-            <td>${new Date(dg.ngayHetHan).toLocaleDateString('vi-VN')}</td>
+            <td>${dg.ngayLamThe}</td>
+            <td>${dg.ngayHetHan}</td>
             <td>${dg.hoatDong ? 'Hoạt động' : 'Không hoạt động'}</td>
             <td>
                 <button class="btn btn-danger btn-sm" onclick="xoaDocGia('${dg.maDG}')">
@@ -140,6 +217,37 @@ function hienThiDanhSachDocGia() {
 
 // Validate
 // Áp dụng các hàm chặn nhập vào các input
+function validateCardDates(startInput, endInput) {
+    startInput.addEventListener('input', validateCardDateFields);
+    endInput.addEventListener('input', validateCardDateFields);
+
+    function parseDate(dateStr) {
+        const [day, month, year] = dateStr.split("/").map(Number);
+        return new Date(year, month - 1, day);
+    }
+
+    function validateCardDateFields() {
+        const startDate = startInput.value;
+        const endDate = endInput.value;
+
+        if (startDate && endDate) {
+            const start = parseDate(startDate);
+            const end = parseDate(endDate);
+            const currentDate = new Date();
+
+            if (start < currentDate || end <= start) {
+                startInput.classList.add('is-invalid');
+                endInput.classList.add('is-invalid');
+            } else {
+                startInput.classList.remove('is-invalid');
+                startInput.classList.add('is-valid');
+                endInput.classList.remove('is-invalid');
+                endInput.classList.add('is-valid');
+            }
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('addDocGiaForm');
     const hoDGInput = document.getElementById('hoDG');
@@ -167,6 +275,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Chặn nhập khoảng trắng trong ô email
     window.restrictEmailInput(emailDGInput);
+
+    window.restrictDateInput(ngaySinhInput, isBirthDay = true);
+
+    validateCardDates(ngayLamTheInput, ngayHetHanInput);
 
     // Form submission validation
     form.addEventListener('submit', function(event) {

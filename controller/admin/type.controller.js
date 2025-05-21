@@ -8,7 +8,6 @@ const { pushToUndoStack, popUndoStack, clearUndoStack} = require('../../public/j
 
 // [GET] /type
 module.exports.index = async (req, res) => {
-
     const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
@@ -24,32 +23,30 @@ module.exports.index = async (req, res) => {
 
 // [DELETE] /type/delete/:maTL
 module.exports.delete = async (req, res) => {
-    console.log("Deleting type ----------------------------------------------------------------------------------------------------------------------------------------------------------");
     const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
-    const { maTL } = req.params; // Lấy giá trị maTL từ req.params
-    console.log(maTL);
+    const { maTL } = req.params; 
 
-    const type = await TheLoaiRepository.getById(pool, maTL); // Lấy thông tin thể loại cũ
+    const type = await TheLoaiRepository.getById(pool, maTL); 
 
-    // Định dạng params thành mảng chứa một đối tượng
     const params = [
         { name: 'MATL', type: sql.NVarChar, value: maTL }
     ];
 
     try {
-        await executeStoredProcedureWithTransaction(pool,'sp_XoaTheLoai', params);
+        await executeStoredProcedureWithTransaction(pool, 'sp_XoaTheLoai', params);
         pushToUndoStack('delete', type);
+
+        req.flash("success", "Xóa thể loại thành công!");
         res.redirect(`${systemConfig.prefixAdmin}/type`);
     } catch (error) {
         console.error('Error deleting type:', error);
         res.status(500).send('Có lỗi xảy ra khi xóa thể loại!');
     }
 };
-
 
 // [GET] /type/create
 module.exports.create = async (req, res) => {
@@ -67,9 +64,11 @@ module.exports.createPost = async (req, res) => {
     }
 
     for (const type of typeList) {
+        const cleanTenTL = type.tenTL.trim().replace(/\s+/g, ' ');
+
         const params = [
             { name: 'MATL', type: sql.NVarChar, value: type.maTL },
-            { name: 'TENTL', type: sql.NVarChar, value: type.tenTL }
+            { name: 'TENTL', type: sql.NVarChar, value: cleanTenTL }
         ];
         await executeStoredProcedureWithTransaction(pool, 'sp_ThemTheLoai', params);
     }
@@ -77,7 +76,6 @@ module.exports.createPost = async (req, res) => {
 
     res.json({ success: true });
 }
-
 
 // [GET] /type/edit/:maTL
 module.exports.edit = async (req, res) => {
@@ -87,9 +85,7 @@ module.exports.edit = async (req, res) => {
     }
 
     const { maTL } = req.params;
-    console.log(maTL)
-    const type = await TheLoaiRepository.getById(pool, maTL); // Hàm lấy thông tin thể loại
-    console.log(type)
+    const type = await TheLoaiRepository.getById(pool, maTL); 
     res.render('admin/pages/theloai/edit', {
         type,
         pageTitle: 'Chỉnh sửa thể loại',
@@ -103,21 +99,23 @@ module.exports.editPost = async (req, res) => {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
     const type = req.body;
-    const  oldType = await TheLoaiRepository.getById(pool, type.maTL); // Lấy thông tin thể loại cũ
+    const oldType = await TheLoaiRepository.getById(pool, type.maTL); 
     const typeEdit = new TheLoai(type.maTL, type.tenTL)
 
+    const cleanTenTL = type.tenTL.trim().replace(/\s+/g, ' ');
+
     const params = [
-        { name: 'MATL', type: sql.NVarChar, value: typeEdit.maTL },
-        { name: 'TENTL', type: sql.NVarChar, value: typeEdit.tenTL }
+        { name: 'MATL', type: sql.NVarChar, value: type.maTL },
+        { name: 'TENTL', type: sql.NVarChar, value: cleanTenTL }
     ];
 
     try {
         await executeStoredProcedureWithTransaction(pool,'sp_SuaTheLoai', params);
         pushToUndoStack('edit',  oldType );
-        res.render('admin/pages/theloai/edit', {
-            type: typeEdit,
-            pageTitle: 'Chỉnh sửa thể loại',
-        });
+        
+        res.status(200).json({
+            success: true
+        })
     } catch (error) {
         console.error('Error editing type:', error);
         res.status(500).send('Có lỗi xảy ra khi sửa thể loại!');

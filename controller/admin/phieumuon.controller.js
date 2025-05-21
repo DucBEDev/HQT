@@ -169,6 +169,8 @@ module.exports.detail = async (req, res) => {
         sachList,
         ctpmList,
         ngayTra : ctpmList[0]?.ngayTra.toISOString().split('T')[0] || null,
+        trangThai : ctpmList[0]?.tra,
+
     });
 };
 
@@ -268,15 +270,37 @@ module.exports.lostBook = async (req, res) => {
 // [POST] /phieumuon/returnBook/:maPhieu
 module.exports.returnBook = async (req, res) => {
     console.log("Returning book ----------------------------------------------------------------------------------------------------------------------------------------------------------");
-
-    const pool = getUserPool(req.session.id);
+    try
+    {
+        const pool = getUserPool(req.session.id);
         if (!pool) {
             return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
         }
 
     console.log(req.params.maPhieu)
-    await PhieuMuonRepository.bookReturn(pool, req.params.maPhieu);
-    res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+    const maPhieu = req.params.maPhieu;
+    const params = [
+            { name: 'MAPHIEU', type: sql.BigInt, value: maPhieu },
+            { name: 'MANVS', type:sql.Int, value: 1}
+        ];
+
+    // Gọi stored procedure với params
+    const result = await executeStoredProcedure(pool, 'sp_TraSach', params);
+
+    // Check if stored procedure executed successfully
+        if (result.returnValue === 0) {
+            req.flash('success', 'Trả sách thành công!');
+            return res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+        } else {
+            throw new Error('Lỗi khi gọi stored procedure');
+        }
+    }
+    catch (error) {
+        console.error('Error return borrowing slip:', error);
+        req.flash('error', error.message || 'Lỗi khi trả sách!');
+        return res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+    }
+ 
 };
 
 // [DELETE] /phieumuon/delete/:maPhieu

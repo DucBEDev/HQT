@@ -149,6 +149,107 @@ class DauSachRepository {
             throw err;
         }
     }
+
+    static async getAllWithStatus(pool) {
+        try {
+            await pool.connect();
+            const result = await pool.request().query(`
+                WITH SachStats AS (
+                    SELECT 
+                        ISBN,
+                        COUNT(MASACH) AS SOLUONG,
+                        SUM(CASE WHEN CHOMUON = 0 THEN 1 ELSE 0 END) AS SOLUONGCHOMUON
+                    FROM SACH
+                    GROUP BY ISBN
+                ),
+                DauSachInfo AS (
+                    SELECT DISTINCT
+                        ds.ISBN, ds.Tensach, ds.KHOSACH, ds.Noidung, ds.Sotrang, ds.Gia, 
+                        ds.HinhAnhPath, ds.Ngayxuatban, ds.Lanxuatban, ds.NHAXB,
+                        nt.MOTA, nt.KE,
+                        tg.HOTENTG,
+                        COALESCE(ss.SOLUONG, 0) AS SOLUONG,
+                        COALESCE(ss.SOLUONGCHOMUON, 0) AS SOLUONGCHOMUON
+                    FROM DAUSACH ds
+                    LEFT JOIN SachStats ss ON ds.ISBN = ss.ISBN
+                    LEFT JOIN SACH s ON ds.ISBN = s.ISBN
+                    LEFT JOIN THELOAI tl ON ds.MaTL = tl.MaTL
+                    LEFT JOIN NGONNGU nn ON ds.MANGONNGU = nn.MaNgonNgu
+                    LEFT JOIN NGANTU nt ON nt.MANGANTU = s.MANGANTU
+                    LEFT JOIN TACGIA_SACH tgs ON tgs.ISBN = ds.ISBN
+                    LEFT JOIN TACGIA tg ON tg.MATACGIA = tgs.MATACGIA
+                    GROUP BY ds.ISBN, ds.Tensach, ds.KHOSACH, ds.Noidung, ds.Sotrang, ds.Gia,
+                             ds.HinhAnhPath, ds.Ngayxuatban, ds.Lanxuatban, ds.NHAXB,
+                             nt.MOTA, nt.KE, ss.SOLUONG, ss.SOLUONGCHOMUON, tg.HOTENTG
+                )
+                SELECT * FROM DauSachInfo
+            `);
+            return result.recordset;
+        } catch (err) {
+            console.error('Error in getAll DauSach:', err);
+            throw err;
+        }
+    }
+
+    static async getBookDetailByISBN(isbn) {
+        await pool.connect();
+        
+        const bookResult = await pool.request()
+            .input('isbn', sql.NVarChar, isbn)
+            .query(`
+                WITH SachStats AS (
+                    SELECT 
+                        ISBN,
+                        COUNT(MASACH) AS SOLUONG,
+                        SUM(CASE WHEN CHOMUON = 0 THEN 1 ELSE 0 END) AS SOLUONGCHOMUON
+                    FROM SACH
+                    WHERE ISBN = @isbn
+                    GROUP BY ISBN
+                ),
+                DauSachInfo AS (
+                    SELECT DISTINCT
+                        ds.ISBN, ds.Tensach, ds.KHOSACH, ds.Noidung, ds.Sotrang, ds.Gia, 
+                        ds.HinhAnhPath, ds.Ngayxuatban, ds.Lanxuatban, ds.NHAXB,
+                        nt.MOTA, nt.KE,
+                        tg.HOTENTG,
+                        COALESCE(ss.SOLUONG, 0) AS SOLUONG,
+                        COALESCE(ss.SOLUONGCHOMUON, 0) AS SOLUONGCHOMUON
+                    FROM SachStats ss
+                    LEFT JOIN DAUSACH ds ON ss.ISBN = ds.ISBN
+                    LEFT JOIN SACH s ON ds.ISBN = s.ISBN
+                    LEFT JOIN THELOAI tl ON ds.MaTL = tl.MaTL
+                    LEFT JOIN NGONNGU nn ON ds.MANGONNGU = nn.MaNgonNgu
+                    LEFT JOIN NGANTU nt ON nt.MANGANTU = s.MANGANTU
+                    LEFT JOIN TACGIA_SACH tgs ON tgs.ISBN = ds.ISBN
+                    LEFT JOIN TACGIA tg ON tg.MATACGIA = tgs.MATACGIA
+                    GROUP BY ds.ISBN, ds.Tensach, ds.KHOSACH, ds.Noidung, ds.Sotrang, ds.Gia,
+                             ds.HinhAnhPath, ds.Ngayxuatban, ds.Lanxuatban, ds.NHAXB,
+                             nt.MOTA, nt.KE, ss.SOLUONG, ss.SOLUONGCHOMUON, tg.HOTENTG
+                )
+                SELECT * FROM DauSachInfo
+            `);
+    
+        const copiesResult = await pool.request()
+            .input('isbn', sql.NVarChar, isbn)
+            .query(`
+                SELECT 
+                    s.MASACH AS Masach,
+                    CONCAT(nt.MOTA, ' - Kệ ', nt.KE) AS ViTri,
+                    s.TINHTRANG AS TinhTrang,
+                    s.CHOMUON AS TrangThai
+                FROM SACH s
+                LEFT JOIN NGANTU nt ON s.MANGANTU = nt.MANGANTU
+                WHERE s.ISBN = @isbn
+            `);
+    
+        // Kết hợp dữ liệu
+        const book = bookResult.recordset[0] || null;
+        if (book) {
+            book.copies = copiesResult.recordset;
+        }
+    
+        return book;
+    }
 }
 
 module.exports = DauSachRepository;

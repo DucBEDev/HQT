@@ -1,0 +1,101 @@
+extends ../../layouts/default.pug
+include ../../mixins/alert.pug
+
+block main
+    +alert-error(3000)
+    +alert-success(3000)
+
+    .col-lg-12
+        .card.mb-4
+            .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+                h6.m-0.font-weight-bold.text-primary Thông tin tài khoản nhân viên
+
+            .card-body
+                // Employee Information Section
+                .mb-5
+                    h6.font-weight-bold.text-primary Thông tin cá nhân
+                        .table-responsive
+                            table.table.table-bordered.table-flush
+                                tbody
+                                    tr
+                                        th Mã Nhân Viên
+                                        td #{staff.maNV}
+                                    tr
+                                        th Họ và tên
+                                        td #{staff.hoNV} #{staff.tenNV}
+                                    tr
+                                        th Địa chỉ
+                                        td #{staff.diaChi}
+                                    tr
+                                        th Điện thoại
+                                        td #{staff.dienThoai}
+                                    tr
+                                        th Giới tính
+                                        td
+                                            if staff.gioiTinh === true
+                                                | Nam
+                                            else
+                                                | Nữ
+                                    tr
+                                        th Email
+                                        td #{staff.email}
+
+                // Password Change Section
+                .mb-5
+                    h6.font-weight-bold.text-primary Đổi mật khẩu
+                    form#changePasswordForm(action=`/staff/change-password` method="POST" data-maNV=staff.maNV)
+                        .form-group
+                            label(for="currentPassword") Mật khẩu hiện tại
+                            input#currentPassword.form-control(type="password" name="currentPassword" required)
+                        .form-group
+                            label(for="newPassword") Mật khẩu mới
+                            input#newPassword.form-control(type="password" name="newPassword" required)
+                        .form-group
+                            label(for="confirmPassword") Xác nhận mật khẩu mới
+                            input#confirmPassword.form-control(type="password" name="confirmPassword" required)
+                        .form-group
+                            button.btn.btn-primary(type="submit") Đổi mật khẩu
+                        p#message.text-danger.mt-3.d-none Vui lòng kiểm tra lại thông tin
+
+    script.
+        document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const maNV = document.getElementById('changePasswordForm').getAttribute('data-maNV');
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const message = document.getElementById('message');
+
+            // Client-side validation
+            if (newPassword !== confirmPassword) {
+                message.textContent = 'Mật khẩu mới và xác nhận không khớp!';
+                message.classList.remove('d-none');
+                return;
+            }
+            if (newPassword.length < 6) {
+                message.textContent = 'Mật khẩu mới phải có ít nhất 6 ký tự!';
+                message.classList.remove('d-none');
+                return;
+            }
+
+            try {
+                const response = await fetch(`/staff/change-password/${maNV}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    message.textContent = 'Đổi mật khẩu thành công!';
+                    message.classList.remove('text-danger', 'd-none');
+                    message.classList.add('text-success');
+                    document.getElementById('changePasswordForm').reset();
+                } else {
+                    message.textContent = result.message || 'Đổi mật khẩu thất bại!';
+                    message.classList.remove('d-none');
+                }
+            } catch (error) {
+                message.textContent = 'Có lỗi xảy ra, vui lòng thử lại!';
+                message.classList.remove('d-none');
+            }
+        });

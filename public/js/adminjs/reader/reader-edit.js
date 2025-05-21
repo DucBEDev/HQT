@@ -1,52 +1,22 @@
-// Validate functions (tái sử dụng từ reader.js)
-function restrictEmailInput(input) {
-    input.addEventListener('input', function(e) {
-        const value = this.value;
-        const filteredValue = value.replace(/\s/g, '');
-        if (value !== filteredValue) {
-            this.value = filteredValue;
-        }
-    });
-}
-
-function restrictDateInput(input, isBirthDate = false) {
-    input.addEventListener('input', function(e) {
-        const value = this.value;
-        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
-        if (value && !dateRegex.test(value)) {
-            this.classList.add('is-invalid');
-        } else {
-            const date = new Date(value);
-            const currentDate = new Date();
-            if (isNaN(date.getTime())) {
-                this.classList.add('is-invalid');
-            } else if (isBirthDate && date > currentDate) {
-                this.classList.add('is-invalid');
-            } else {
-                this.classList.remove('is-invalid');
-                this.classList.add('is-valid');
-            }
-        }
-    });
-}
-
 function validateCardDates(startInput, endInput) {
     startInput.addEventListener('input', validateCardDateFields);
     endInput.addEventListener('input', validateCardDateFields);
+
+    function parseDate(dateStr) {
+        const [day, month, year] = dateStr.split("/").map(Number);
+        return new Date(year, month - 1, day);
+    }
 
     function validateCardDateFields() {
         const startDate = startInput.value;
         const endDate = endInput.value;
 
         if (startDate && endDate) {
-            const start = new Date(startDate);
-            const end = new Date(endDate);
+            const start = parseDate(startDate);
+            const end = parseDate(endDate);
             const currentDate = new Date();
 
-            if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-                startInput.classList.add('is-invalid');
-                endInput.classList.add('is-invalid');
-            } else if (start < currentDate || end <= start) {
+            if (start < currentDate || end <= start) {
                 startInput.classList.add('is-invalid');
                 endInput.classList.add('is-invalid');
             } else {
@@ -71,26 +41,25 @@ document.addEventListener('DOMContentLoaded', function() {
     const ngaySinhInput = document.getElementById('ngaySinh');
     const ngayLamTheInput = document.getElementById('ngayLamThe');
     const ngayHetHanInput = document.getElementById('ngayHetHan');
-    const gioiTinhInput = document.getElementById('gioiTinh');
 
-    // Chặn nhập số và ký tự đặc biệt trong ô họ và tên
+    // Chặn nhập số và ký tự đặc biệt trong ô tên
     window.restrictNameInput(hoDGInput);
     window.restrictNameInput(tenDGInput);
 
-    // Chặn nhập chữ và ký tự đặc biệt trong ô số điện thoại và CCCD
-    window.restrictPhoneInput(dienThoaiInput);
-    window.restrictCitizenIdInput(soCMNDInput);
+    // Chặn nhập chữ và ký tự đặc biệt trong ô số điện thoại
+    window.restrictNumberInput(dienThoaiInput, 10);
+
+    // Chặn nhập chữ và ký tự đặc biệt trong ô số CCCD
+    window.restrictNumberInput(soCMNDInput, 12);
 
     // Chặn nhập ký tự đặc biệt nguy hiểm trong ô địa chỉ
     window.restrictSpecialCharInput(diaChiDGInput);
 
     // Chặn nhập khoảng trắng trong ô email
-    restrictEmailInput(emailDGInput);
+    window.restrictEmailInput(emailDGInput);
 
-    // Validate ngày sinh (không lớn hơn ngày hiện tại)
-    restrictDateInput(ngaySinhInput, true);
+    window.restrictDateInput(ngaySinhInput, isBirthDay = true);
 
-    // Validate ngày làm thẻ và ngày hết hạn
     validateCardDates(ngayLamTheInput, ngayHetHanInput);
 
     // Form submission validation
@@ -99,16 +68,139 @@ document.addEventListener('DOMContentLoaded', function() {
             event.preventDefault();
             event.stopPropagation();
         }
-
-        // Kiểm tra riêng trường gioiTinh
-        if (!gioiTinhInput.value) {
-            gioiTinhInput.classList.add('is-invalid');
-            event.preventDefault();
-            event.stopPropagation();
-        } else {
-            gioiTinhInput.classList.remove('is-invalid');
-        }
-
         form.classList.add('was-validated');
+    });
+});
+
+document.getElementById('btnLuu').addEventListener('click', function() {
+    const hoDGInput = document.getElementById('hoDG');
+    const tenDGInput = document.getElementById('tenDG');
+    const emailDGInput = document.getElementById('emailDG');
+    const soCMNDInput = document.getElementById('soCMND');
+    const gioiTinhInput = document.getElementById('gioiTinh');
+    const ngaySinhInput = document.getElementById('ngaySinh');
+    const diaChiDGInput = document.getElementById('diaChiDG');
+    const dienThoaiInput = document.getElementById('dienThoai');
+    const ngayLamTheInput = document.getElementById('ngayLamThe');
+    const ngayHetHanInput = document.getElementById('ngayHetHan');
+
+    // Lấy giá trị
+    const hoDGValue = hoDGInput.value.trim();
+    const tenDGValue = tenDGInput.value.trim();
+    const emailDGValue = emailDGInput.value.trim();
+    const soCMNDValue = soCMNDInput.value.trim();
+    const gioiTinhValue = gioiTinhInput.value;
+    const ngaySinhValue = ngaySinhInput.value;
+    const diaChiDGValue = diaChiDGInput.value.trim();
+    const dienThoaiValue = dienThoaiInput.value.trim();
+    const ngayLamTheValue = ngayLamTheInput.value;
+    const ngayHetHanValue = ngayHetHanInput.value;
+
+    if (!hoDGValue) {
+        alert('Họ độc giả không được để trống!');
+        hoDGInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (!tenDGValue) {
+        alert('Tên độc giả không được để trống!');
+        tenDGInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (!emailDGValue) {
+        alert('Email không được để trống!');
+        emailDGInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (!soCMNDValue) {
+        alert('Số CCCD không được để trống!');
+        soCMNDInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (soCMNDValue.length !== 12) {
+        alert('Số CCCD phải đúng 12 chữ số!');
+        soCMNDInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (!gioiTinhValue) {
+        alert('Giới tính không được để trống!');
+        gioiTinhInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (!ngaySinhValue) {
+        alert('Ngày sinh không được để trống!');
+        ngaySinhInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (!diaChiDGValue) {
+        alert('Địa chỉ không được để trống!');
+        diaChiDGInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (!dienThoaiValue) {
+        alert('Số điện thoại không được để trống!');
+        dienThoaiInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (dienThoaiValue.length !== 10) {
+        alert('Số điện thoại phải đúng 10 chữ số!');
+        dienThoaiInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (!ngayLamTheValue) {
+        alert('Ngày làm thẻ không được để trống!');
+        ngayLamTheInput.classList.add('is-invalid');
+        return;
+    }
+
+    if (!ngayHetHanValue) {
+        alert('Ngày hết hạn không được để trống!');
+        ngayHetHanInput.classList.add('is-invalid');
+        return;
+    }
+
+    const docGia = {
+        maDG: document.getElementById('maDG').value,
+        hoDG: hoDGValue,
+        tenDG: tenDGValue,
+        emailDG: emailDGValue,
+        soCMND: soCMNDValue,
+        gioiTinh: gioiTinhValue,
+        ngaySinh: ngaySinhValue,
+        diaChiDG: diaChiDGValue,
+        dienThoai: dienThoaiValue,
+        ngayLamThe: ngayLamTheValue,
+        ngayHetHan: ngayHetHanValue,
+        hoatDong: document.getElementById('hoatDong').checked ? 1 : 0
+    };
+
+    fetch(`/Library/admin/reader/edit/${document.getElementById('maDG').value}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: JSON.stringify(docGia)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Sửa thông tin thành công!');
+            window.location.href = `/Library/admin/reader`;
+        } else {
+            alert('Có lỗi xảy ra: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Có lỗi xảy ra khi sửa dữ liệu123!');
     });
 });

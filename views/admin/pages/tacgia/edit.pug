@@ -18,12 +18,15 @@ block main
                         .form-group
                             label(for="hoTenTG") Họ tên tác giả <span class="required-text">*</span>
                             input.form-control(type="text" id="hoTenTG" name="hoTenTG" value=`${author.hoTenTG}` placeholder="Nhập họ tên tác giả" required)
+                            .invalid-feedback#hoTenTGError Họ tên không được chứa ký tự đặc biệt
                         .form-group
                             label(for="diaChiTG") Địa chỉ <span class="required-text">*</span>
                             input.form-control(type="text" id="diaChiTG" name="diaChiTG" value=`${author.diaChiTG}` placeholder="Nhập địa chỉ" required)
+                            .invalid-feedback#diaChiTGError Địa chỉ không được chứa ký tự đặc biệt
                         .form-group
                             label(for="dienThoaiTG") Điện thoại <span class="required-text">*</span>
                             input.form-control(type="text" id="dienThoaiTG" name="dienThoaiTG" value=`${author.dienThoaiTG}` placeholder="Nhập số điện thoại" required)
+                            .invalid-feedback#dienThoaiTGError Số điện thoại phải đủ 10 số
                 .d-flex.justify-content-end.mt-3
                     a.btn.btn-secondary.mr-2(href=`${prefixAdmin}/author`) Thoát
                     button.btn.btn-primary(type="submit" id="btnLuu") Lưu

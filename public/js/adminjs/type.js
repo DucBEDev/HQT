@@ -117,7 +117,6 @@ function hienThiDanhSachTheLoai() {
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('addTypeForm');
     const tenTLInput = document.getElementById('tenTL');
-    console.log(tenTLInput);
 
     // Chặn nhập số và ký tự đặc biệt trong ô 
     window.restrictNameInput(tenTLInput);

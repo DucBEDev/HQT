@@ -1,0 +1,298 @@
+doctype html
+html(lang="vi")
+    head
+        meta(charset="UTF-8")
+        meta(name="viewport" content="width=device-width, initial-scale=1.0")
+        title Chi tiết sách - Thư viện
+        link(rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css")
+        link(rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css")
+        style.
+            body {
+                background-color: #f4f6f9;
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            }
+            .navbar {
+                background: linear-gradient(90deg, #007bff, #00c4b4);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .navbar-brand {
+                font-weight: 700;
+                color: white !important;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+            .container-main {
+                max-width: 1200px;
+                margin: 100px auto 50px;
+            }
+            .book-detail-card {
+                background: white;
+                border-radius: 20px;
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+                overflow: hidden;
+                transition: transform 0.3s ease;
+            }
+            .book-image-container {
+                position: relative;
+                padding: 20px;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                text-align: center;
+            }
+            .book-image {
+                max-height: 450px;
+                max-width: 100%;
+                object-fit: contain;
+                border-radius: 12px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+                transition: transform 0.3s ease;
+            }
+            .book-image:hover {
+                transform: scale(1.02);
+            }
+            .book-info {
+                padding: 30px;
+            }
+            .book-title {
+                color: #1a3c6d;
+                font-size: 2.2rem;
+                font-weight: 700;
+                margin-bottom: 1.5rem;
+                line-height: 1.2;
+            }
+            .book-meta {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 15px;
+                margin-bottom: 1.5rem;
+            }
+            .meta-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                color: #444;
+                font-size: 1rem;
+            }
+            .meta-item i {
+                color: #007bff;
+                font-size: 1.2rem;
+            }
+            .meta-item strong {
+                color: #1a3c6d;
+            }
+            .price-badge {
+                background: #ffc107;
+                color: #1a3c6d;
+                font-weight: 600;
+                padding: 8px 20px;
+                border-radius: 20px;
+                font-size: 1.1rem;
+                display: inline-block;
+                margin: 1rem 0;
+            }
+            .book-description {
+                margin: 2rem 0;
+                line-height: 1.8;
+                color: #555;
+                font-size: 1rem;
+                background: #f8f9fa;
+                padding: 20px;
+                border-radius: 10px;
+            }
+            .copies-table {
+                margin-top: 2rem;
+            }
+            .table {
+                border-radius: 10px;
+                overflow: hidden;
+                background: white;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            }
+            .table th {
+                background: #1a3c6d;
+                color: white;
+                padding: 15px;
+                font-weight: 600;
+            }
+            .table td {
+                padding: 15px;
+                vertical-align: middle;
+            }
+            .status-available {
+                color: #28a745;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+            .status-borrowed {
+                color: #dc3545;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+            .badge-total {
+                background: #007bff;
+                color: white;
+                padding: 6px 12px;
+                border-radius: 12px;
+                font-size: 0.9rem;
+            }
+            .footer {
+                background: #1a3c6d;
+                color: white;
+                padding: 40px 0;
+                margin-top: 50px;
+            }
+            .footer a {
+                color: #00c4b4;
+                text-decoration: none;
+                transition: color 0.3s;
+            }
+            .footer a:hover {
+                color: #ffffff;
+            }
+            @media (max-width: 768px) {
+                .book-title {
+                    font-size: 1.8rem;
+                }
+                .book-image {
+                    max-height: 300px;
+                }
+                .book-info {
+                    padding: 20px;
+                }
+                .book-meta {
+                    grid-template-columns: 1fr;
+                }
+                .table {
+                    font-size: 0.9rem;
+                }
+                .table th, .table td {
+                    padding: 10px;
+                }
+            }
+
+    body
+        // Header
+        nav.navbar.navbar-expand-lg.navbar-dark.fixed-top
+            .container
+                a.navbar-brand(href="/")
+                    i.fas.fa-book-open
+                    span Thư viện thông minh
+                button.navbar-toggler(type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav")
+                    span.navbar-toggler-icon
+                #navbarNav.collapse.navbar-collapse
+                    ul.navbar-nav.ms-auto
+                        li.nav-item
+                            a.nav-link.text-white(href="/") Trang chủ
+
+        // Main content
+        .container-main
+            if book
+                .book-detail-card
+                    .book-image-container
+                        if book.HinhAnhPath
+                            img.book-image(src='https://res.cloudinary.com/daayitzhk/image/upload/v1745034822/bia-1_ubsvsd.webp' alt=book.Tensach)
+                        else
+                            img.book-image(src='https://res.cloudinary.com/daayitzhk/image/upload/v1745034822/bia-1_ubsvsd.webp' alt="Default book image")
+                    .book-info
+                        h1.book-title= book.Tensach
+                        .book-meta
+                            .meta-item
+                                i.fas.fa-user-pen
+                                | 
+                                strong Tác giả: 
+                                span= book.HOTENTG || 'Không có thông tin'
+                            .meta-item
+                                i.fas.fa-building
+                                | 
+                                strong Nhà xuất bản: 
+                                span= book.NHAXB || 'Không có thông tin'
+                            .meta-item
+                                i.fas.fa-calendar
+                                | 
+                                strong Năm xuất bản: 
+                                span= book.Ngayxuatban ? new Date(book.Ngayxuatban).getFullYear() : 'Không có thông tin'
+                            .meta-item
+                                i.fas.fa-book
+                                | 
+                                strong Số trang: 
+                                span= book.Sotrang || 'Không có thông tin'
+                            .meta-item
+                                i.fas.fa-language
+                                | 
+                                strong Ngôn ngữ: 
+                                span= book.MANGONNGU || 'Không có thông tin'
+                            .meta-item
+                                i.fas.fa-layer-group
+                                | 
+                                strong Lần xuất bản: 
+                                span= book.Lanxuatban || 'Không có thông tin'
+                        if book.Gia
+                            .price-badge
+                                i.fas.fa-tag.me-1
+                                - const price = book.Gia.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                                span= price + ' ₫'
+                        .book-description
+                            h4 Mô tả
+                            p= book.MoTa || book.Noidung || 'Chưa có mô tả cho sách này.'
+                        .copies-table
+                            h3.mb-4
+                                | Danh sách sách 
+                                span.badge-total #{book.copies ? book.copies.length : 0} cuốn
+                            .table-responsive
+                                table.table.table-hover
+                                    thead
+                                        tr
+                                            th Mã sách
+                                            th Vị trí
+                                            th Tình trạng
+                                            th Trạng thái
+                                    tbody
+                                        if book.copies && book.copies.length
+                                            each copy in book.copies
+                                                tr
+                                                    td= copy.Masach
+                                                    td= copy.ViTri || 'Không xác định'
+                                                    td 
+                                                        if copy.TinhTrang == 1
+                                                            span.status-available
+                                                                i.fas.fa-check-circle
+                                                                | Còn cho mượn
+                                                        else
+                                                            span.status-borrowed
+                                                                i.fas.fa-clock
+                                                                | Đã thanh lý
+                                                    td
+                                                        if copy.TrangThai == 1
+                                                            span.status-available
+                                                                i.fas.fa-check-circle
+                                                                | Có sẵn
+                                                        else
+                                                            span.status-borrowed
+                                                                i.fas.fa-clock
+                                                                | Đang mượn
+                                        else
+                                            tr
+                                                td(colspan="5").text-center Không có sách nào
+            else
+                .alert.alert-warning.text-center.py-4
+                    h3 Không tìm thấy thông tin sách
+                    p Vui lòng kiểm tra lại hoặc liên hệ với quản trị viên.
+
+        // Footer
+        footer.footer.text-center
+            .container
+                p.mb-2 &copy; 2025 Thư viện thông minh. All rights reserved.
+                p.mb-1
+                    a(href="/privacy") Chính sách bảo mật
+                    |  | 
+                    a(href="/terms") Điều khoản sử dụng
+                p
+                    | Liên hệ: 
+                    a(href="mailto:support@library.com") support@library.com
+
+        script(src="https://code.jquery.com/jquery-3.6.0.min.js")
+        script(src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js")

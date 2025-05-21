@@ -11,7 +11,9 @@ block main
                 h6.m-0.font-weight-bold.text-primary Chi Tiết Phiếu Mượn
                 .d-flex
                     button#editButton.btn.btn-primary.mr-2(type="button") Chỉnh sửa
-                    a.btn.btn-sm.btn-danger.lost-book-btn.mr-1.d-flex.align-items-center(href=`javascript:void(0);` data-ma-phieu=`${phieuMuon.maPhieu}` data-toggle="modal" data-target="#lostBookModal") Xác nhận mất sách
+                    //- a.btn.btn-sm.btn-danger.lost-book-btn.mr-1.d-flex.align-items-center(href=`javascript:void(0);` data-ma-phieu=`${phieuMuon.maPhieu}` data-toggle="modal" data-target="#lostBookModal") Xác nhận mất sách
+                    a.btn.btn-sm.btn-primary.tra-sach-btn.mr-1(href="javascript:void(0);" data-phieu-id=`${phieuMuon.maPhieu}` data-toggle="modal" data-target="#TraSachModal") Trả sách
+
             .card-body
                 form#phieuMuonDetailForm(action=`${prefixAdmin}/phieumuon/edit/${phieuMuon.maPhieu}?_method=PATCH` method="post")
                     .row
@@ -67,9 +69,9 @@ block main
                                 label(for="maNV") Mã nhân viên tạo phiếu
                                 input.form-control(type="text" id="maNV" name="maNV" readonly value=phieuMuon.maNV)
                             .form-group
-                                label(for="trangThai") Trạng thái
+                                label(for="trangThai") Trạng thái #{trangThai}
                                 span 
-                                    if (phieuMuon.TRA == true)
+                                    if (trangThai == true)
                                         | Đã trả sách
                                     else
                                         | Chưa trả sách
@@ -91,11 +93,35 @@ block main
                     button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
                     button#confirmLossButton.btn.btn-primary(type="button") Xác nhận
 
+
+    //- Modal Tra Sach
+    #TraSachModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="TraSachModal" aria-hidden="true")
+        .modal-dialog(role="document")
+            .modal-content
+                .modal-header
+                    h5#exampleModalLabelLogout.modal-title Trả sách
+                    button.close(type="button" data-dismiss="modal" aria-label="Close")
+                        span(aria-hidden="true") ×
+                .modal-body
+                    p Xác nhận trả sách?
+                .modal-footer
+                    button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
+                    button#tra-sach-link.btn.btn-primary(type="button") Xác nhận
+
+    
     form(
         action=""
         id="lostBookForm"
         method="POST"
     )
+
+        form(
+        action=""
+        method="POST"
+        id="tra-sach-item"
+    )
+
+
 
     script(src="/vendor/jquery/jquery.min.js")
     script(src="https://cdn.jsdelivr.net/npm/flatpickr")
@@ -191,6 +217,9 @@ block main
             });
         });
 
+
+        
+
         // Book selection functionality
         $(document).on('click', '#bookList .product-detail-item', function() {
             if (!$(this).hasClass('disabled')) {
@@ -200,6 +229,30 @@ block main
                     tinhTrangMuon: true
                 };
                 addBook(sach);
+            }
+        });
+
+
+        // Xử lý trả sách
+        let currentPhieuId = null;
+
+        $('#phieuMuonDetailCard').on('click', '.tra-sach-btn', function() {
+            currentPhieuId = $(this).data('phieu-id');
+            console.log(currentPhieuId);
+            if (typeof currentPhieuId === 'string') {
+                currentPhieuId = currentPhieuId.trim();
+            }
+        });
+
+        $('#tra-sach-link').on('click', function(e) {
+            console.log("Test")
+            e.preventDefault();
+            if (currentPhieuId) {
+                console.log('Submitting form to:', `/Library/admin/phieumuon/returnBook/${currentPhieuId}`);
+                $('#tra-sach-item').attr('action', `/Library/admin/phieumuon/returnBook/${currentPhieuId}`);
+                $('#tra-sach-item')[0].submit();
+            } else {
+                alert('Không thể xác định mã phiếu mượn!');
             }
         });
 
@@ -283,3 +336,5 @@ block main
                 return false;
             }
         });
+
+    
