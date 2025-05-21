@@ -109,6 +109,31 @@ const executeStoredProcedure = async (pool, procedureName, params = []) => {
     }
 };
 
+
+// Hàm thực thi Stored Procedure với pool cụ thể
+const executeStoredProcedureAndReturnCode = async (pool, procedureName, params = []) => {
+    try {
+        const request = pool.request();
+        params.forEach(param => {
+            request.input(param.name, param.type, param.value);
+        });
+        const result = await request.execute(procedureName);
+        let id;
+        if (procedureName === 'sp_ThemTacGia') {
+            id = result.recordset.length > 0 ? result.recordset[0].MATACGIA : null;
+        } else if (procedureName === 'sp_ThemNhanVien') {
+            id = result.recordset.length > 0 ? result.recordset[0].MANV : null;
+        } else if (procedureName === 'sp_ThemDocGia') {
+            id = result.recordset.length > 0 ? result.recordset[0].MADG : null;
+        }
+        return id;
+    } catch (err) {
+        console.error(`Error executing stored procedure ${procedureName}:`, err);
+        throw err;
+    }
+};
+
+
 // Hàm thực thi Stored Procedure với transaction
 const executeStoredProcedureWithTransaction = async (pool, procedureName, params = []) => {
     const transaction = new sql.Transaction(pool);
@@ -168,6 +193,7 @@ module.exports = {
     getUserPool,
     createUserConnection,
     executeStoredProcedure,
+    executeStoredProcedureAndReturnCode,
     executeStoredProcedureWithTransaction,
     executeStoredProcedureWithTransactionAndReturnCode, 
     recreateUserPool, 

@@ -26,7 +26,7 @@ const cookieParser = require("cookie-parser");
 const session = require("express-session");
 
 app.use(cookieParser("keyboard cat"));
-app.use(session({ cookie: { maxAge: 60000 }}));
+app.use(session({ cookie: { maxAge: 1000*60*60 }}));
 app.use(flash());
 
 // Set Pug as the view engine

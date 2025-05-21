@@ -199,31 +199,50 @@ $(document).ready(function () {
             sachDisplayList = sachDisplayList.filter(s => s.maSach !== maSach);
         }
         else if (sach && sach.type == 'edit') {
-            sachSubmitList = sachSubmitList.filter(s => s.maSach !== maSach);
-            const oldData = sachDisplayList.find(s => s.maSach === maSach);
+            // sachSubmitList = sachSubmitList.filter(s => s.maSach !== maSach);
+            // const oldData = sachDisplayList.find(s => s.maSach === maSach);
 
-            const tr = document.createElement('tr');
-            tr.setAttribute('data-ma-sach', sach.maSach);
+            // const tr = document.createElement('tr');
+            // tr.setAttribute('data-ma-sach', sach.maSach);
 
-            tr.innerHTML = `
-                <td class="align-middle" name="maSach">${oldData.maSach}</td>
-                <td class="align-middle" name="tinhTrang">${oldData.tinhTrang ? 'Tốt' : 'Hỏng'}</td>
-                <td class="align-middle" name="choMuon">${oldData.choMuon ? 'Có' : 'Không'}</td>
-                <td class="align-middle" name="maNganTu">${oldData.maNganTu ? nganTuList.find(nt => nt.maNganTu == oldData.maNganTu).ke : 'Chưa gán'}</td>
-                <td class="align-middle">
-                    <button type="button" class="btn btn-sm btn-dark btn-small edit-sach-btn">Sửa</button>
-                    <button type="button" class="btn btn-sm btn-danger btn-small delete-sach-btn" data-ma-sach="${oldData.maSach}" data-toggle="modal" data-target="#DeleteSachModal">Xóa</button>
-                </td>`;
+            // tr.innerHTML = `
+            //     <td class="align-middle" name="maSach">${oldData.maSach}</td>
+            //     <td class="align-middle" name="tinhTrang">${oldData.tinhTrang ? 'Tốt' : 'Hỏng'}</td>
+            //     <td class="align-middle" name="choMuon">${oldData.choMuon ? 'Có' : 'Không'}</td>
+            //     <td class="align-middle" name="maNganTu">${oldData.maNganTu ? nganTuList.find(nt => nt.maNganTu == oldData.maNganTu).ke : 'Chưa gán'}</td>
+            //     <td class="align-middle">
+            //         <button type="button" class="btn btn-sm btn-dark btn-small edit-sach-btn">Sửa</button>
+            //         <button type="button" class="btn btn-sm btn-danger btn-small delete-sach-btn" data-ma-sach="${oldData.maSach}" data-toggle="modal" data-target="#DeleteSachModal">Xóa</button>
+            //     </td>`;
 
-            // Chèn tr mới vào đúng vị trí cũ
-            const tbody = $('#sachList');
-            const rows = tbody.children();
-            if (currentIndex === 0) {
-                tbody.prepend(tr);
-            } else if (currentIndex >= rows.length) {
-                tbody.append(tr);
-            } else {
-                $(rows[currentIndex]).before(tr);
+            // // Chèn tr mới vào đúng vị trí cũ
+            // const tbody = $('#sachList');
+            // const rows = tbody.children();
+            // if (currentIndex === 0) {
+            //     tbody.prepend(tr);
+            // } else if (currentIndex >= rows.length) {
+            //     tbody.append(tr);
+            // } else {
+            //     $(rows[currentIndex]).before(tr);
+            // }
+
+
+
+            // Cancel an edit, restore original data
+            sachSubmitList = sachSubmitList.filter(s => s.maSach !== maSach); // Remove temporary edit
+            const originalSach = sachDisplayList.find(s => s.maSach === maSach);
+            if (originalSach) {
+                // Update the row’s HTML to restore original data without removing it
+                currentRow.html(`
+                    <td class="align-middle" name="maSach">${originalSach.maSach}</td>
+                    <td class="align-middle" name="tinhTrang">${originalSach.tinhTrang ? 'Tốt' : 'Hỏng'}</td>
+                    <td class="align-middle" name="choMuon">${originalSach.choMuon ? 'Có' : 'Không'}</td>
+                    <td class="align-middle" name="maNganTu">${originalSach.maNganTu ? nganTuList.find(nt => nt.maNganTu == originalSach.maNganTu).ke : 'Chưa gán'}</td>
+                    <td class="align-middle">
+                        <button type="button" class="btn btn-sm btn-dark btn-small edit-sach-btn">Sửa</button>
+                        <button type="button" class="btn btn-sm btn-danger btn-small delete-sach-btn" data-ma-sach="${originalSach.maSach}" data-toggle="modal" data-target="#DeleteSachModal">Xóa</button>
+                    </td>
+                `);
             }
         }
     });

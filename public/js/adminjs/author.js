@@ -1,27 +1,27 @@
 let danhSachTacGia = [];
-let currentMaTacGia = 0;
+// let currentMaTacGia = 0;
 
-async function getNextMaTacGia() {
-    try {
-        if (danhSachTacGia.length === 0) {
-            const response = await fetch(`/Library/admin/author/next-id`);
-            const data = await response.json();
-            if (data.success) {
-                currentMaTacGia = data.nextId;
-                document.getElementById('maTacGia').value = currentMaTacGia;
-            }
-        } else {
-            const currentId = parseInt(danhSachTacGia[danhSachTacGia.length - 1].maTacGia);
-            currentMaTacGia = currentId + 1;
-            document.getElementById('maTacGia').value = currentMaTacGia;
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Không thể lấy mã tác giả tiếp theo!');
-    }
-}
+// async function getNextMaTacGia() {
+//     try {
+//         if (danhSachTacGia.length === 0) {
+//             const response = await fetch(`/Library/admin/author/next-id`);
+//             const data = await response.json();
+//             if (data.success) {
+//                 currentMaTacGia = data.nextId;
+//                 document.getElementById('maTacGia').value = currentMaTacGia;
+//             }
+//         } else {
+//             const currentId = parseInt(danhSachTacGia[danhSachTacGia.length - 1].maTacGia);
+//             currentMaTacGia = currentId + 1;
+//             document.getElementById('maTacGia').value = currentMaTacGia;
+//         }
+//     } catch (error) {
+//         console.error('Error:', error);
+//         alert('Không thể lấy mã tác giả tiếp theo!');
+//     }
+// }
 
-getNextMaTacGia();
+// getNextMaTacGia();
 
 document.getElementById('btnThem').addEventListener('click', function() {
     const form = document.getElementById('addAuthorForm');
@@ -52,21 +52,21 @@ document.getElementById('btnThem').addEventListener('click', function() {
 
     if (form.checkValidity()) {
         const tacGia = {
-            maTacGia: document.getElementById('maTacGia').value,
+            //maTacGia: document.getElementById('maTacGia').value,
             hoTenTG: hoTenTGValue,
             diaChiTG: diaChiTGValue,
             dienThoaiTG: dienThoaiTGValue
         };
 
-        if (danhSachTacGia.some(tg => tg.maTacGia === tacGia.maTacGia)) {
-            alert('Mã tác giả đã tồn tại trong danh sách!');
-            return;
-        }
+        // if (danhSachTacGia.some(tg => tg.maTacGia === tacGia.maTacGia)) {
+        //     alert('Mã tác giả đã tồn tại trong danh sách!');
+        //     return;
+        // }
 
         danhSachTacGia.push(tacGia);
         hienThiDanhSachTacGia();
         form.reset();
-        getNextMaTacGia();
+        //getNextMaTacGia();
     } else {
         form.reportValidity();
     }
@@ -100,11 +100,11 @@ document.getElementById('btnGhi').addEventListener('click', function() {
     });
 });
 
-function xoaTacGia(maTacGia) {
+function xoaTacGia(dienThoaiTG) {
     if (confirm('Bạn có chắc chắn muốn xóa tác giả này khỏi danh sách?')) {
-        danhSachTacGia = danhSachTacGia.filter(tg => tg.maTacGia !== maTacGia);
+        danhSachTacGia = danhSachTacGia.filter(tg => tg.dienThoaiTG !== dienThoaiTG);
         hienThiDanhSachTacGia();
-        getNextMaTacGia();
+        // getNextMaTacGia();
     }
 }
 
@@ -115,12 +115,11 @@ function hienThiDanhSachTacGia() {
     danhSachTacGia.forEach(tg => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${tg.maTacGia}</td>
             <td>${tg.hoTenTG}</td>
             <td>${tg.diaChiTG}</td>
             <td>${tg.dienThoaiTG}</td>
             <td>
-                <button class="btn btn-danger btn-sm" onclick="xoaTacGia('${tg.maTacGia}')">
+                <button class="btn btn-danger btn-sm" onclick="xoaTacGia('${tg.dienThoaiTG}')">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>

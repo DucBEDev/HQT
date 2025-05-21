@@ -1,4 +1,4 @@
-const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, executeStoredProcedureWithTransactionAndReturnCode, getUserPool } = require('../../configs/database');
+const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, executeStoredProcedureAndReturnCode, getUserPool } = require('../../configs/database');
 const TacGiaRepository = require('../../repositories/TacGiaRepository'); // Giả định bạn sẽ tạo repository tương ứng
 const systemConfig = require('../../configs/system');
 const TacGia = require('../../models/TacGia');
@@ -39,7 +39,7 @@ module.exports.delete = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedureWithTransaction('sp_XoaTacGia', params);
+        await executeStoredProcedureWithTransaction(pool, 'sp_XoaTacGia', params);
         pushToUndoStack('delete', author);
         res.redirect(`${systemConfig.prefixAdmin}/author`);
     } catch (error) {
@@ -75,18 +75,15 @@ module.exports.createPost = async (req, res) => {
             { name: 'DIACHITG', type: sql.NVarChar, value: cleanDiaChiTG },
             { name: 'DIENTHOAITG', type: sql.NVarChar, value: author.dienThoaiTG }
         ];
-        const maTacGia = await executeStoredProcedureWithTransactionAndReturnCode(pool,'sp_ThemTacGia', params);
+        const maTacGia = await executeStoredProcedureAndReturnCode(pool,'sp_ThemTacGia', params);
         savedAuthors.push({
             maTacGia: maTacGia, // Giả định bạn có maTacGia trong author
             hoTenTG: cleanHoTenTG,
             diaChiTG: cleanDiaChiTG,
             dienThoaiTG: author.dienThoaiTG
         });
-
-        
-        
+   
     }
-
 
     console.log(savedAuthors)
     pushToUndoStack('create', savedAuthors);
@@ -179,7 +176,7 @@ module.exports.undo = async (req, res) => {
                 { name: 'DIACHITG', type: sql.NVarChar, value: data.diaChiTG },
                 { name: 'DIENTHOAITG', type: sql.NVarChar, value: data.dienThoaiTG }
             ];
-            await executeStoredProcedureWithTransaction(pool, 'sp_ThemTacGia', params);
+            await executeStoredProcedure(pool, 'sp_ThemTacGia', params);
         } else if (action === 'edit') {
             // Undo edit: Khôi phục thông tin cũ
             const params = [
