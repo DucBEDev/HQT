@@ -41,7 +41,7 @@ module.exports.delete = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedureWithTransaction('sp_XoaTheLoai', params);
+        await executeStoredProcedureWithTransaction(pool,'sp_XoaTheLoai', params);
         pushToUndoStack('delete', type);
         res.redirect(`${systemConfig.prefixAdmin}/type`);
     } catch (error) {
@@ -171,6 +171,7 @@ module.exports.undo = async (req, res) => {
 
 // [POST] /type/clear-undo
 module.exports.clearUndo = async (req, res) => {
+    //console.log("Clearing type undo stack ----------------------------------------------------------------------------------------------------------------------------------------------------------");
     try {
         clearUndoStack();
         res.json({ success: true });

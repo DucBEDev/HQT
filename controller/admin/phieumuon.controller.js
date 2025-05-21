@@ -174,8 +174,89 @@ module.exports.detail = async (req, res) => {
 
 // [PATCH] /phieumuon/edit/:maPhieu
 module.exports.edit = async (req, res) => {
+    console.log("Editing phieumuon ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    const { maPhieu } = req.params; // MAPHIEU from URL
+    //const { hinhThuc, maSach1, tinhTrangMuon1, maSach2, tinhTrangMuon2, maSach3, tinhTrangMuon3 } = req.body;
+    const nhanvien = req.session.username; // Assuming MADG is stored in session for the logged-in user
+    console.log(nhanvien)
+    const madg = req.body.maDG
+
+    // Phân tích ctPhieuMuonList từ req.body
+        const books = [];
+        Object.keys(req.body).forEach(key => {
+            const match = key.match(/ctPhieuMuonList\[(\d+)\]\.(\w+)/);
+            if (match) {
+                const index = parseInt(match[1], 10);
+                const prop = match[2];
+                if (!books[index]) {
+                    books[index] = {};
+                }
+                books[index][prop] = req.body[key];
+            }
+        });
+
+        // Làm sạch dữ liệu: cắt bỏ khoảng trắng và chuyển đổi tinhTrangMuon
+        books.forEach(book => {
+            if (book.maSach) {
+                book.maSach = book.maSach.trim(); // Loại bỏ khoảng trắng thừa
+            }
+            if (book.tinhTrangMuon) {
+                book.tinhTrangMuon = book.tinhTrangMuon === 'true' ? 1 : 0; // Chuyển 'true'/'false' thành 1/0
+            } else {
+                book.tinhTrangMuon = 1; // Giá trị mặc định nếu không cung cấp
+            }
+        });
+
+        console.log(books)
+
+        // Ánh xạ dữ liệu thành các tham số riêng lẻ
+        const maSach1 = books[0]?.maSach || null;
+        const tinhTrangMuon1 = books[0]?.tinhTrangMuon ?? 1;
+        const maSach2 = books[1]?.maSach || null;
+        const tinhTrangMuon2 = books[1]?.tinhTrangMuon ?? 1;
+        const maSach3 = books[2]?.maSach || null;
+        const tinhTrangMuon3 = books[2]?.tinhTrangMuon ?? 1;
+
+        // Lấy hinhThuc từ req.body
+        const hinhThuc = req.body.hinhThuc;
+
+
     console.log(req.body)
-    res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+
+
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+    try {
+        const params = [
+            { name: 'MAPHIEU', type: sql.BigInt, value: maPhieu },
+            { name: 'MADG', type: sql.BigInt, value: madg },
+            { name: 'HINHTHUC', type: sql.Bit, value: hinhThuc },
+            { name: 'MASACH1', type: sql.NChar(20), value: maSach1 },
+            { name: 'TINHTRANGMUON1', type: sql.Bit, value: tinhTrangMuon1 },
+            { name: 'MASACH2', type: sql.NChar(20), value: maSach2 },
+            { name: 'TINHTRANGMUON2', type: sql.Bit, value: tinhTrangMuon2 },
+            { name: 'MASACH3', type: sql.NChar(20), value: maSach3 },
+            { name: 'TINHTRANGMUON3', type: sql.Bit, value: tinhTrangMuon3 }
+        ];
+
+        // Gọi stored procedure với params
+        const result = await executeStoredProcedure(pool, 'sp_SuaPhieuMuon', params);
+
+        // Check if stored procedure executed successfully
+        if (result.returnValue === 0) {
+            req.flash('success', 'Chỉnh sửa phiếu mượn thành công!');
+            return res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+        } else {
+            throw new Error('Lỗi khi gọi stored procedure');
+        }
+    } catch (error) {
+        console.error('Error editing borrowing slip:', error);
+        req.flash('error', error.message || 'Lỗi khi chỉnh sửa phiếu mượn!');
+        return res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+    }
 };
 
 // [PATCH] /phieumuon/lostBook/:maPhieu

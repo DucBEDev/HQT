@@ -14,6 +14,8 @@ router.patch('/edit/:maDG', controller.editPatch);
 router.get('/report', controller.report);
 router.post('/download-report', controller.downloadReport);
 router.post('/undo', controller.undo); // Route mới cho undo
+router.post('/clear-undo', controller.clearUndo); // Thêm route mới
+
 
 
 module.exports = router;

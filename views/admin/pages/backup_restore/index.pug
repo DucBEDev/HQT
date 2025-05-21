@@ -1,0 +1,94 @@
+extends ../../layouts/default.pug
+include ../../mixins/alert.pug
+
+block main 
+    +alert-error(3000)
+    +alert-success(3000)
+
+    .col-lg-12
+        .card.mb-4
+            .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
+                h6.m-0.font-weight-bold.text-primary Danh Sách Bản Backup
+                a.btn.btn-primary(href=`javascript:void(0);` data-toggle="modal" data-target="#CreateBackupModal") + Tạo Backup
+                a.btn.btn-success(href=`javascript:void(0);` data-toggle="modal" data-target="#RestoreBackupModal") + Khôi phục
+            
+            .table-responsive.p-3
+                table#dataTable.table.align-items-center.table-flush
+                    thead.thead-light
+                        tr
+                            th Tên Database
+                            th Thời Điểm Bắt Đầu
+                            th Thời Điểm Kết Thúc
+                            th Kích Thước (MB)
+                            th Chế Độ Backup
+                            th Đường Dẫn File
+                            th Người Thực Hiện
+                            th Mô Tả
+                    tbody#backupTableBody
+                        each backup in backupList
+                            tr.backup-item
+                                td.align-middle #{backup.database_name}
+                                td.align-middle #{backup.backup_start_date}
+                                td.align-middle #{backup.backup_finish_date}
+                                td.align-middle #{backup.BackupSizeMB.toFixed(2)}
+                                td.align-middle #{backup.BackupType}
+                                td.align-middle #{backup.physical_device_name}
+                                td.align-middle #{backup.BackupUser}
+                                td.align-middle #{backup.BackupDescription}
+
+    //- Modal Create Backup
+    #CreateBackupModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="CreateBackupModal" aria-hidden="true")
+        .modal-dialog(role="document")
+            .modal-content
+                .modal-header
+                    h5#exampleModalLabelCreateBackup.modal-title Tạo bản backup
+                    button.close(type="button" data-dismiss="modal" aria-label="Close")
+                        span(aria-hidden="true") ×
+                .modal-body
+                    p Bạn chắc chắn muốn tạo một bản backup mới không?
+                .modal-footer
+                    button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
+                    button#create-backup-link.btn.btn-primary(type="button") Tạo
+    
+    //- Modal Restore Backup
+    #RestoreBackupModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="RestoreBackupModal" aria-hidden="true")
+        .modal-dialog(role="document")
+            .modal-content
+                .modal-header
+                    h5#exampleModalLabelRestoreBackup.modal-title Khôi phục bản backup
+                    button.close(type="button" data-dismiss="modal" aria-label="Close")
+                        span(aria-hidden="true") ×
+                .modal-body
+                    p Bạn chắc chắn muốn khôi phục bản backup mới nhất không? Hành động này sẽ ghi đè dữ liệu hiện tại.
+                .modal-footer
+                    button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
+                    button#restore-backup-link.btn.btn-success(type="button") Khôi phục
+
+
+    //- Form for Create Backup Action
+    form(
+        action="/Library/admin/backup-restore/backup"
+        method="POST"
+        id="create-backup-form"
+    )
+
+    //- Form for Restore Backup Action
+    form(
+        action="/Library/admin/backup-restore/restore"
+        method="POST"
+        id="restore-backup-form"
+    )
+
+
+    script.
+        // Handle Create Backup Button in Modal
+        document.getElementById('create-backup-link').addEventListener('click', () => {
+            const form = document.getElementById('create-backup-form');
+            form.submit(); // Submit the form directly to trigger server-side redirect
+        });
+
+        // Handle Restore Backup Button in Modal
+        document.getElementById('restore-backup-link').addEventListener('click', () => {
+            const form = document.getElementById('restore-backup-form');
+            form.submit();
+        });

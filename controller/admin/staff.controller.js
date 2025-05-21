@@ -2,7 +2,7 @@ const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, exec
 const NhanVienRepository = require('../../repositories/NhanVienRepository'); // Giả định bạn sẽ tạo repository tương ứng
 const systemConfig = require('../../configs/system');
 const NhanVien = require('../../models/NhanVien');
-const { pushToUndoStack, popUndoStack } = require('../../public/js/adminjs/staff/staff-undo');
+const { pushToUndoStack, popUndoStack, clearUndoStack } = require('../../public/js/adminjs/staff/staff-undo');
 
 // [GET] /staff
 module.exports.index = async (req, res) => {
@@ -202,6 +202,19 @@ module.exports.undo = async (req, res) => {
     } catch (error) {
         console.error('Error in undo:', error);
         res.json({ success: false, message: 'Không thể thực hiện undo!' });
+    }
+};
+
+
+// [POST] /staff/clear-undo
+module.exports.clearUndo = async (req, res) => {
+    console.log("Clearing staff undo stack ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    try {
+        clearUndoStack();
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error clearing undo stack:', error);
+        res.json({ success: false, message: 'Không thể xóa stack undo!' });
     }
 };
 

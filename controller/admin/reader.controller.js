@@ -6,7 +6,7 @@ const DocGiaRepository = require('../../repositories/DocGiaRepository');
 
 const systemConfig = require('../../configs/system');
 const DocGia = require('../../models/DocGia');
-const { pushToUndoStack, popUndoStack } = require('../../public/js/adminjs/reader/reader-undo');
+const { pushToUndoStack, popUndoStack, clearUndoStack } = require('../../public/js/adminjs/reader/reader-undo');
 
 // [GET] /admin/reader
 module.exports.index = async (req, res) => {
@@ -425,3 +425,14 @@ module.exports.downloadReport = async (req, res) => {
     }
 };
     
+// [POST] /reader/clear-undo
+module.exports.clearUndo = async (req, res) => {
+    console.log("Clearing reader undo stack ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    try {
+        clearUndoStack();
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error clearing undo stack:', error);
+        res.json({ success: false, message: 'Không thể xóa stack undo!' });
+    }
+};

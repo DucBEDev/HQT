@@ -54,7 +54,7 @@ const createUserConnection = async (username, password, sessionId) => {
 
 // Hàm lấy pool từ sessionId
 const getUserPool = (sessionId) => {
-    console.log(userPools)
+    //console.log(userPools)
     return userPools.get(sessionId);
 };
 
@@ -64,6 +64,19 @@ const closeUserPool = async (sessionId) => {
     if (pool) {
         await pool.close();
         userPools.delete(sessionId);
+    }
+};
+
+// New function to reset the pool after restore
+const resetUserPool = async (sessionId) => {
+    const pool = userPools.get(sessionId);
+     const userPool = new sql.ConnectionPool(pool.config);
+    try {
+        await userPool.connect();
+        userPools.set(sessionId, userPool);
+    } catch (err) {
+        console.error('Error recreating user pool:', err);
+        throw err;
     }
 };
 
@@ -157,5 +170,6 @@ module.exports = {
     executeStoredProcedure,
     executeStoredProcedureWithTransaction,
     executeStoredProcedureWithTransactionAndReturnCode, 
-    recreateUserPool
+    recreateUserPool, 
+    resetUserPool
 };

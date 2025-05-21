@@ -18,4 +18,9 @@ function popUndoStack() {
     return undoStack.pop();
 }
 
-module.exports = { pushToUndoStack, popUndoStack, undoStack };
+function clearUndoStack() {
+    undoStack.length = 0;
+    console.log('Undo stack đã được xóa.');
+}
+
+module.exports = { pushToUndoStack, popUndoStack, clearUndoStack, undoStack };

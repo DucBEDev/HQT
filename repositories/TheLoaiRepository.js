@@ -6,7 +6,7 @@ class TheLoaiRepository {
     static async getAll(pool) {
         try {
             console.log("Getting all TheLoai ----------------------------------------------------------------------------------------------------------------------------------------------------------")
-            console.log(pool)
+            // console.log(pool)
             //const userPool = await recreateUserPool(pool.config);  Tạo lại pool với thông tin đăng nhập người dùng
             //await userPool.connect(); // Kết nối đến DB
             //console.log(defaultPool)

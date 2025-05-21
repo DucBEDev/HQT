@@ -37,6 +37,10 @@ ul.navbar-nav.sidebar.sidebar-light.accordion#accordionSidebar
         a.nav-link(href=`${prefixAdmin}/phieumuon`)
             i.fa-solid.fa-file-lines
             span Danh sách phiếu mượn
+    li.nav-item
+        a.nav-link(href=`${prefixAdmin}/backup-restore`)
+            i.fa-solid.fa-file-lines
+            span Danh sách bản backup
 
     script(src="/vendor/jquery/jquery.min.js")
 
@@ -57,32 +61,87 @@ ul.navbar-nav.sidebar.sidebar-light.accordion#accordionSidebar
             });
         });
 
-    //-     $('.nav-link').on('click', function(e) {
+        $('.nav-link').on('click', function(e) {
 
-    //-         console.log("Test")
-    //-         const href = $(this).attr('href');
-    //-         const type = $(this).attr('type');
-    //-         console.log(type)
-    //-         console.log(href)
+            console.log("Test")
+            const href = $(this).attr('href');
+            const type = $(this).attr('type');
+            console.log(type)
+            console.log(href)
             
             
-    //-         if (!href.includes(`/${type}`)) {
-    //-             e.preventDefault();
-    //-             $.ajax({
-    //-                 url: `/Library/admin/${type}/clear-undo`,
-    //-                 method: 'POST',
-    //-                 success: function(response) {
-    //-                     if (response.success) {
-    //-                         console.log('Undo stack cleared for type');
-    //-                         window.location.href = href;
-    //-                     } else {
-    //-                         alert('Không thể xóa stack undo: ' + response.message);
-    //-                     }
-    //-                 },
-    //-                     error: function() {
-    //-                     alert('Có lỗi xảy ra khi xóa stack undo!');
-    //-                     }
-    //-             });
-    //-         }
-    //-   });
+            if (!href.includes(`/type`)) {
+                e.preventDefault();
+                $.ajax({
+                    url: `/Library/admin/type/clear-undo`,
+                    method: 'POST',
+                    success: function(response) {
+                        if (response.success) {
+                            console.log('Undo stack cleared for type');
+                            window.location.href = href;
+                        } else {
+                            alert('Không thể xóa stack undo: ' + response.message);
+                        }
+                    },
+                        error: function() {
+                        alert('Có lỗi xảy ra khi xóa stack undo!');
+                        }
+                });
+            }
+             if (!href.includes(`/staff`)) {
+                e.preventDefault();
+                $.ajax({
+                    url: `/Library/admin/staff/clear-undo`,
+                    method: 'POST',
+                    success: function(response) {
+                        if (response.success) {
+                            console.log('Undo stack cleared for staff');
+                            window.location.href = href;
+                        } else {
+                            alert('Không thể xóa stack undo: ' + response.message);
+                        }
+                    },
+                        error: function() {
+                        alert('Có lỗi xảy ra khi xóa stack undo!');
+                        }
+                });
+            }
+             if (!href.includes(`/author`)) {
+                e.preventDefault();
+                $.ajax({
+                    url: `/Library/admin/author/clear-undo`,
+                    method: 'POST',
+                    success: function(response) {
+                        if (response.success) {
+                            console.log('Undo stack cleared for author');
+                            window.location.href = href;
+                        } else {
+                            alert('Không thể xóa stack undo: ' + response.message);
+                        }
+                    },
+                        error: function() {
+                        alert('Có lỗi xảy ra khi xóa stack undo!');
+                        }
+                });
+            }
+             if (!href.includes(`/reader`)) {
+                e.preventDefault();
+                $.ajax({
+                    url: `/Library/admin/reader/clear-undo`,
+                    method: 'POST',
+                    success: function(response) {
+                        if (response.success) {
+                            console.log('Undo stack cleared for reader');
+                            window.location.href = href;
+                        } else {
+                            alert('Không thể xóa stack undo: ' + response.message);
+                        }
+                    },
+                        error: function() {
+                        alert('Có lỗi xảy ra khi xóa stack undo!');
+                        }
+                });
+            }
+
+      });
 

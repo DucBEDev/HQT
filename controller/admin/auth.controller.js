@@ -26,7 +26,7 @@ module.exports.logIn = async (req, res) => {
         req.session.username = username;
         console.log('User pool created successfully!');
 
-        console.log(userPool);
+        // console.log(userPool);
 
         res.redirect(`${systemConfig.prefixAdmin}/type`);
     } catch (err) {
@@ -106,3 +106,4 @@ module.exports.changePassword = async (req, res) => {
     }
 
 };
+

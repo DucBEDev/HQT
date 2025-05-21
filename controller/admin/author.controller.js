@@ -2,7 +2,7 @@ const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, exec
 const TacGiaRepository = require('../../repositories/TacGiaRepository'); // Giả định bạn sẽ tạo repository tương ứng
 const systemConfig = require('../../configs/system');
 const TacGia = require('../../models/TacGia');
-const { pushToUndoStack, popUndoStack } = require('../../public/js/adminjs/author/author-undo');
+const { pushToUndoStack, popUndoStack, clearUndoStack } = require('../../public/js/adminjs/author/author-undo');
 
 
 // [GET] /author
@@ -194,6 +194,19 @@ module.exports.undo = async (req, res) => {
     } catch (error) {
         console.error('Error in undo:', error);
         res.json({ success: false, message: 'Không thể thực hiện undo!' });
+    }
+};
+
+
+// [POST] /author/clear-undo
+module.exports.clearUndo = async (req, res) => {
+    console.log("Clearing author undo stack ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    try {
+        clearUndoStack();
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error clearing undo stack:', error);
+        res.json({ success: false, message: 'Không thể xóa stack undo!' });
     }
 };
 
