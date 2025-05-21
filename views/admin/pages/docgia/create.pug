@@ -94,42 +94,27 @@ block main
                             th Thao tác
                     tbody#danhSachDocGia
 
+    script(src="https://cdn.jsdelivr.net/npm/flatpickr")
     script(src="/vendor/jquery/jquery.min.js")
     script(src="/js/validation.js")
     script(src="/js/adminjs/reader/reader.js")
-    script(src="https://cdn.jsdelivr.net/npm/flatpickr")
 
     script.
         flatpickr('#ngaySinh', {
             dateFormat: 'd/m/Y',
             allowInput: false,
-            maxDate: "today",
-            onClose: function(selectedDates, dateStr, instance) {
-                if (!dateStr) { 
-                    alert('Vui lòng chọn ngày');
-                }
-            }
+            maxDate: "today"
         });
 
         flatpickr('#ngayLamThe', {
             dateFormat: 'd/m/Y',
             allowInput: false,
-            minDate: "today",
-            onClose: function(selectedDates, dateStr, instance) {
-                if (!dateStr) { 
-                    alert('Vui lòng chọn ngày');
-                }
-            }
+            minDate: "today"
         });
 
         flatpickr('#ngayHetHan', {
             dateFormat: 'd/m/Y',
             allowInput: false,  
-            minDate: "today",
-            onClose: function(selectedDates, dateStr, instance) {
-                if (!dateStr) { 
-                    alert('Vui lòng chọn ngày');
-                }
-            }
+            minDate: "today"
         });
 

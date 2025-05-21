@@ -54,7 +54,6 @@ const createUserConnection = async (username, password, sessionId) => {
 
 // Hàm lấy pool từ sessionId
 const getUserPool = (sessionId) => {
-    console.log(userPools)
     return userPools.get(sessionId);
 };
 

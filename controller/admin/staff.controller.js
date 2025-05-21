@@ -118,23 +118,29 @@ module.exports.editPost = async (req, res) => {
     const { maNV } = req.params;
     const { hoNV, tenNV, diaChi, dienThoai, gioiTinh, email } = req.body;
 
+    const cleanHoNV = hoNV.trim().replace(/\s+/g, ' ');
+    const cleanTenNV = tenNV.trim().replace(/\s+/g, ' ');
+    const cleanDiaChi = diaChi.trim().replace(/\s+/g, ' ');
+
     const oldStaff = await NhanVienRepository.getById(pool, maNV);
     const staff = new NhanVien(maNV, hoNV, tenNV, diaChi, dienThoai, gioiTinh, email)
 
     const params = [
-        { name: 'MANV', type: sql.Int, value: maNV },
-        { name: 'HONV', type: sql.NVarChar, value: hoNV },
-        { name: 'TENNV', type: sql.NVarChar, value: tenNV },
-        { name: 'DIACHI', type: sql.NVarChar, value: diaChi },
+        { name: 'MANV', type: sql.Int, value: maNV.trim() },
+        { name: 'HONV', type: sql.NVarChar, value: cleanHoNV },
+        { name: 'TENNV', type: sql.NVarChar, value: cleanTenNV },
+        { name: 'DIACHI', type: sql.NVarChar, value: cleanDiaChi },
         { name: 'DIENTHOAI', type: sql.NVarChar, value: dienThoai },
         { name: 'GIOITINH', type: sql.Bit, value: gioiTinh === '1' },
-        { name: 'EMAIL', type: sql.NVarChar, value: email }
+        { name: 'EMAIL', type: sql.NVarChar, value: email.trim() }
     ];
 
     try {
         await executeStoredProcedureWithTransaction(pool,'sp_SuaNhanVien', params);
         pushToUndoStack('edit', oldStaff);
-        res.redirect(`${systemConfig.prefixAdmin}/staff`)
+        res.status(200).json({
+            success: true
+        })
     } catch (error) {
         console.error('Error updating staff:', error);
         res.status(500).send('Có lỗi xảy ra khi cập nhật nhân viên!');

@@ -133,15 +133,15 @@ function hienThiDanhSachTacGia() {
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('addAuthorForm');
     const hoTenTGInput = document.getElementById('hoTenTG');
+    const diaChiTGInput = document.getElementById('diaChiTG');
     const dienThoaiTGInput = document.getElementById('dienThoaiTG');
 
     // Chặn nhập số và ký tự đặc biệt cho họ tên
     window.restrictNameInput(hoTenTGInput);
 
-    // Kiểm tra định dạng điện thoại (giả định validation.js có hàm này)
-    dienThoaiTGInput.addEventListener('input', function() {
-        this.value = this.value.replace(/[^0-9]/g, ''); // Chỉ cho phép số
-    });
+    window.restrictSpecialCharInput(diaChiTGInput);
+    // Kiểm tra định dạng điện thoại 
+    window.restrictNumberInput(dienThoaiTGInput, 10);
 
     // Form submission validation
     form.addEventListener('submit', function(event) {

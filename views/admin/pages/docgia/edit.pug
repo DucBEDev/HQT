@@ -43,7 +43,7 @@ block main
                     .col-lg-6
                         .form-group
                             label(for="ngaySinh") Ngày sinh <span class="required-text">*</span>
-                            input.form-control(type="date" id="ngaySinh" name="ngaySinh" value=`${docgia.ngaySinh}` required)
+                            input.form-control(type="text" id="ngaySinh" name="ngaySinh" data-ngaySinh=docgia.ngaySinh required)
                             .invalid-feedback#ngaySinhError Ngày sinh không hợp lệ hoặc lớn hơn ngày hiện tại.
                         .form-group
                             label(for="diaChiDG") Địa chỉ <span class="required-text">*</span>
@@ -55,11 +55,11 @@ block main
                             .invalid-feedback#dienThoaiError Số điện thoại phải đúng 10 chữ số.
                         .form-group
                             label(for="ngayLamThe") Ngày làm thẻ <span class="required-text">*</span>
-                            input.form-control(type="date" id="ngayLamThe" name="ngayLamThe" value=`${docgia.ngayLamThe}` required readonly)
+                            input.form-control(type="text" id="ngayLamThe" name="ngayLamThe" data-ngayLamThe=docgia.ngayLamThe required)
                             .invalid-feedback#ngayLamTheError Ngày làm thẻ không hợp lệ hoặc nhỏ hơn ngày hiện tại.
                         .form-group
                             label(for="ngayHetHan") Ngày hết hạn <span class="required-text">*</span>
-                            input.form-control(type="date" id="ngayHetHan" name="ngayHetHan" value=`${docgia.ngayHetHan}` required)
+                            input.form-control(type="text" id="ngayHetHan" name="ngayHetHan" data-ngayHetHan=docgia.ngayHetHan required)
                             .invalid-feedback#ngayHetHanError Ngày hết hạn phải lớn hơn ngày làm thẻ.
                         .form-group.d-flex
                             label.mr-4(for="hoatDong") Trạng thái hoạt động <span class="required-text">*</span>
@@ -73,6 +73,56 @@ block main
                     a.btn.btn-secondary.mr-2(href=`${prefixAdmin}/docgia`) Thoát
                     button.btn.btn-primary(type="submit" id="btnLuu") Lưu
 
+    script(src="https://cdn.jsdelivr.net/npm/flatpickr")
     script(src="/vendor/jquery/jquery.min.js")
     script(src="/js/validation.js")
     script(src="/js/adminjs/reader/reader-edit.js")
+
+    script.
+        document.addEventListener("DOMContentLoaded", function () {
+            // Ngày sinh
+            const rawNgaySinhStr = document.querySelector("#ngaySinh").getAttribute("data-ngaySinh"); 
+            const ngaySinhObj = new Date(rawNgaySinhStr);
+            const day1 = String(ngaySinhObj.getDate()).padStart(2, '0');
+            const month1 = String(ngaySinhObj.getMonth() + 1).padStart(2, '0');
+            const year1 = ngaySinhObj.getFullYear();
+            const ngaySinhFormattedDate = `${day1}/${month1}/${year1}`;
+
+            // Ngày làm thẻ
+            const rawNgayLamTheStr = document.querySelector("#ngayLamThe").getAttribute("data-ngayLamThe"); 
+            const ngayLamTheObj = new Date(rawNgayLamTheStr);
+            const day2 = String(ngayLamTheObj.getDate()).padStart(2, '0');
+            const month2 = String(ngayLamTheObj.getMonth() + 1).padStart(2, '0');
+            const year2 = ngayLamTheObj.getFullYear();
+            const ngayLamTheFormattedDate = `${day2}/${month2}/${year2}`;
+
+            // Ngày hết hạn
+            const rawNgayHetHanStr = document.querySelector("#ngayHetHan").getAttribute("data-ngayHetHan"); 
+            const ngayHetHanObj = new Date(rawNgayHetHanStr);
+            const day3 = String(ngayHetHanObj.getDate()).padStart(2, '0');
+            const month3 = String(ngayHetHanObj.getMonth() + 1).padStart(2, '0');
+            const year3 = ngayHetHanObj.getFullYear();
+            const ngayHetHanFormattedDate = `${day3}/${month3}/${year3}`;
+
+            // Khởi tạo flatpickr
+            flatpickr('#ngaySinh', {
+                dateFormat: 'd/m/Y',
+                allowInput: false,
+                maxDate: "today",
+                defaultDate: ngaySinhFormattedDate
+            });
+
+            flatpickr('#ngayLamThe', {
+                dateFormat: 'd/m/Y',
+                allowInput: false,
+                minDate: "today",
+                defaultDate: ngayLamTheFormattedDate
+            });
+
+            flatpickr('#ngayHetHan', {
+                dateFormat: 'd/m/Y',
+                allowInput: false,
+                minDate: "today", 
+                defaultDate: ngayHetHanFormattedDate
+            });
+        });

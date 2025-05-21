@@ -47,7 +47,7 @@ block main
                             label(for="email") Email <span class="required-text">*</span>
                             - const updateEmail = staff.email.split("@")[0];
                             .input-group.mb-3 
-                                input.form-control(type="email" id="email" name="email" value=`${updateEmail}` placeholder="Nhập email" required)
+                                input.form-control(type="text" id="email" name="email" value=`${updateEmail}` placeholder="Nhập email" required)
                                 .input-group-append 
                                     span.input-group-text @gmail.com
                             .invalid-feedback#emailError Email không được chứa ký tự đặc biệt

@@ -18,6 +18,7 @@ block main
                         .form-group
                             label(for="tenTL") Tên thể loại <span class="required-text">*</span>
                             input.form-control(type="text" id="tenTL" name="tenTL" value=`${type.tenTL}` placeholder="Nhập tên thể loại" required)
+                            .invalid-feedback#tenTLError Tên thể loại không được chứa ký tự đặc biệt
                 .d-flex.justify-content-end.mt-3
                     a.btn.btn-secondary.mr-2(href=`${prefixAdmin}/type`) Thoát
                     button.btn.btn-primary(type="submit" id="btnLuu") Lưu

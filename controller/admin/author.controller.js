@@ -7,7 +7,7 @@ const { pushToUndoStack, popUndoStack } = require('../../public/js/adminjs/autho
 
 // [GET] /author
 module.exports.index = async (req, res) => {
-     const pool = getUserPool(req.session.id);
+    const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
@@ -22,25 +22,23 @@ module.exports.index = async (req, res) => {
 
 // [DELETE] /author/delete/:maTacGia
 module.exports.delete = async (req, res) => {
-    console.log("Deletiing author ----------------------------------------------------------------------------------------------------------------------------------------------------------");
     const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
-    const { maTacGia } = req.params; // Lấy giá trị maTacGia từ req.params
-    const author = await TacGiaRepository.getById(pool, maTacGia); // Lấy thông tin tác giả trước khi xóa
+    const { maTacGia } = req.params; 
+    const author = await TacGiaRepository.getById(pool, maTacGia); 
 
-    console.log(maTacGia);
-
-    // Định dạng params thành mảng chứa một đối tượng
     const params = [
         { name: 'MATACGIA', type: sql.Int, value: maTacGia }
     ];
 
     try {
-        await executeStoredProcedureWithTransaction('sp_XoaTacGia', params);
+        await executeStoredProcedureWithTransaction(pool, 'sp_XoaTacGia', params);
         pushToUndoStack('delete', author);
+
+        req.flash("success", "Xóa tác giả thành công!");
         res.redirect(`${systemConfig.prefixAdmin}/author`);
     } catch (error) {
         console.error('Error deleting author:', error);
@@ -57,7 +55,6 @@ module.exports.create = async (req, res) => {
 
 // [POST] /author/create
 module.exports.createPost = async (req, res) => {
-    console.log("Creating author ----------------------------------------------------------------------------------------------------------------------------------------------------------");
     const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
@@ -77,23 +74,17 @@ module.exports.createPost = async (req, res) => {
         ];
         const maTacGia = await executeStoredProcedureWithTransactionAndReturnCode(pool,'sp_ThemTacGia', params);
         savedAuthors.push({
-            maTacGia: maTacGia, // Giả định bạn có maTacGia trong author
+            maTacGia: maTacGia, 
             hoTenTG: cleanHoTenTG,
             diaChiTG: cleanDiaChiTG,
             dienThoaiTG: author.dienThoaiTG
         });
-
-        
-        
     }
 
-
-    console.log(savedAuthors)
     pushToUndoStack('create', savedAuthors);
 
     res.json({ success: true });
 };
-
 
 // [GET] /author/edit/:maTacGia
 module.exports.edit = async (req, res) => {
@@ -114,7 +105,6 @@ module.exports.edit = async (req, res) => {
 
 // [POST] /author/edit/:maTacGia
 module.exports.editPost = async (req, res) => {
-    console.log("Editing author ----------------------------------------------------------------------------------------------------------------------------------------------------------");
     const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
@@ -124,28 +114,30 @@ module.exports.editPost = async (req, res) => {
     const { hoTenTG, diaChiTG, dienThoaiTG } = req.body;
 
     const oldAuthor = await TacGiaRepository.getById(pool,maTacGia);
-    const author = new TacGia(maTacGia, hoTenTG, diaChiTG, dienThoaiTG)
+    const author = new TacGia(maTacGia, hoTenTG, diaChiTG, dienThoaiTG);
+
+    const cleanHoTenTG = hoTenTG.trim().replace(/\s+/g, ' ');
+    const cleanDiaChiTG = diaChiTG.trim().replace(/\s+/g, ' ');
 
     const params = [
         { name: 'MATACGIA', type: sql.Int, value: maTacGia },
-        { name: 'HOTENTG', type: sql.NVarChar, value: hoTenTG },
-        { name: 'DIACHITG', type: sql.NVarChar, value: diaChiTG },
+        { name: 'HOTENTG', type: sql.NVarChar, value: cleanHoTenTG },
+        { name: 'DIACHITG', type: sql.NVarChar, value: cleanDiaChiTG },
         { name: 'DIENTHOAITG', type: sql.NVarChar, value: dienThoaiTG }
     ];
 
     try {
         await executeStoredProcedureWithTransaction(pool,'sp_SuaTacGia', params);
         pushToUndoStack('edit', oldAuthor);
-        res.render('admin/pages/tacgia/edit', {
-            author: author,
-            pageTitle: 'Chỉnh sửa tác giả',
-        });
+        
+        res.status(200).json({
+            success: true
+        })
     } catch (error) {
         console.error('Error updating author:', error);
         res.status(500).send('Có lỗi xảy ra khi cập nhật tác giả!');
     }
 };
-
 
 // [POST] /author/undo
 module.exports.undo = async (req, res) => {
@@ -204,7 +196,7 @@ module.exports.getNextId = async (req, res) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
-    const nextId = await TacGiaRepository.getNextId();
+    const nextId = await TacGiaRepository.getNextId(pool);
     res.json({ success: true, nextId });
 };
 
