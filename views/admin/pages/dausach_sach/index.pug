@@ -1,5 +1,6 @@
 extends ../../layouts/default.pug
 include ../../mixins/alert.pug
+include ../../mixins/currency.pug
 
 block main 
     link(rel="stylesheet", href="/css/admincss/dausach_sach.css")
@@ -29,7 +30,8 @@ block main
                                 td.align-middle #{dauSach.tenSach}
                                 td.align-middle #{dauSach.khoSach}
                                 td.align-middle #{dauSach.nhaXB}
-                                td.align-middle #{dauSach.gia}
+                                td.align-middle 
+                                    +formatCurrency(dauSach.gia)
                                 td.align-middle #{dauSach.ngayXuatBan ? new Date(dauSach.ngayXuatBan).toLocaleDateString('vi-VN') : ''}
                                 td.align-middle
                                     a.btn.btn-sm.btn-dark.select-dau-sach.mr-1(href=`javascript:void(0);` data-isbn=`${dauSach.isbn}`) Chọn
@@ -179,17 +181,17 @@ block main
                     button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
                     button#delete-sach-link.btn.btn-primary(type="button") Xóa
 
-    form(
-        action=""
-        method="post"
-        id="delete-sach-form"
-    )
+    //- form(
+    //-     action=""
+    //-     method="post"
+    //-     id="delete-sach-form"
+    //- )
 
-    form(
-        action=""
-        method="post"
-        id="delete-dauSach-form"
-    )
+    //- form(
+    //-     action=""
+    //-     method="post"
+    //-     id="delete-dauSach-form"
+    //- )
 
     script(src="/vendor/jquery/jquery.min.js")
     script(src="/js/validation.js")
