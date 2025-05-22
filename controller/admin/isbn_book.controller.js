@@ -11,12 +11,24 @@ const NganTuRepository = require('../../repositories/NganTuRepository');
 
 const systemConfig = require('../../configs/system');
 
+// Hàm chuyển đổi chuỗi DD/MM/YYYY thành đối tượng Date
+function parseDate(dateStr) {
+    if (!dateStr || !/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) {
+        throw new Error(`Định dạng ngày không hợp lệ: ${dateStr}. Yêu cầu: DD/MM/YYYY`);
+    }
+    const [day, month, year] = dateStr.split("/").map(Number);
+
+    // Tạo Date sử dụng UTC để không bị lệch múi giờ
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return date;
+}
+
 // [GET] /admin/isbn_book
 module.exports.index = async (req, res) => {
     const pool = getUserPool(req.session.id);
-        if (!pool) {
-            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
-        }
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
 
     const dauSachList = await DauSachRepository.getAll(pool); 
     const ngonNguList = await NgonNguRepository.getAll(pool);
@@ -71,27 +83,25 @@ module.exports.getBooks = async (req, res) => {
     });
 };
 
-// [DELETE] /admin/isbn_book/book/delete/:maSach
+// [POST] /admin/isbn_book/book/delete
 module.exports.deleteBook = async (req, res) => {
-    console.log("Deleting book ----------------------------------------------------------------------------------------------------------------------------------------------------------");
     const pool = getUserPool(req.session.id);
-        if (!pool) {
-            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
-        }
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
 
-
-    const { maSach } = req.params;
-
+    const { maSach } = req.body;
     console.log(maSach)
-
     const params = [
         { name: 'MASACH', type: sql.NChar, value: maSach }
     ];
 
     try {
         await executeStoredProcedureWithTransaction(pool, 'sp_XoaSach', params);
-        req.flash('success', 'Xóa sách thành công!');
-        res.redirect(`${systemConfig.prefixAdmin}/isbn_book`);
+        
+        res.status(200).json({
+            success: true
+        })
     } catch (error) {
         req.flash('error', error);
         console.error('Error deleting type:', error);
@@ -99,19 +109,71 @@ module.exports.deleteBook = async (req, res) => {
     }
 };
 
-// [POST] /admin/isbn_book/book/create
+// [POST] /admin/isbn_book/book/update
+module.exports.update = async (req, res) => {
+    console.log("Updating book ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+    const { oldMaSach, newMaSach, tinhTrang, choMuon, maNganTu, isbn } = req.body;
+    console.log(oldMaSach)
+    console.log(newMaSach)
+    console.log(tinhTrang)
+    console.log(choMuon)
+    console.log(maNganTu)
+    console.log(isbn)
+
+    try {
+
+            const cleanMaSachCu = oldMaSach.trim();
+            const cleanMaSachMoi = newMaSach.trim();
+
+            const cleanISBN = isbn.trim();
+
+            // Chuẩn bị tham số cho stored procedure
+            const params = [
+                { name: 'MASACHCU', type: sql.NChar, value: cleanMaSachCu },
+                { name: 'MASACHMOI', type: sql.NChar, value: cleanMaSachMoi },
+                { name: 'ISBN', type: sql.NChar, value: cleanISBN },
+                { name: 'TINHTRANG', type: sql.Bit, value: tinhTrang },
+                { name: 'CHOMUON', type: sql.Bit, value: choMuon },
+                { name: 'MANGANTU', type: sql.Int, value: maNganTu || null }
+            ];
+
+            console.log("params ", params)
+
+
+        await executeStoredProcedureWithTransaction(pool, 'sp_SuaSach', params);
+        
+        res.status(200).json({
+            success: true
+        })
+    } catch (error) {
+        req.flash('error', error);
+        console.error('Error deleting type:', error);
+        res.status(500).send('Có lỗi xảy ra khi xóa sách!');
+    }
+};
+
+// [POST] /admin/isbn_book/book/write
 module.exports.write = async (req, res) => {
     console.log("Creating book ----------------------------------------------------------------------------------------------------------------------------------------------------------");
     const pool = getUserPool(req.session.id);
-        if (!pool) {
-            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
-        }
-
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
 
     const sachList = req.body;
+    console.log(sachList)
+
+    // Nhớ parse thằng ngày xuất bản cho đúng định dạng SQL theo câu lệnh sau
+    // const ngayXuatBan = parseDate(...); truyền tham số vào
 
     try {
         for (const sach of sachList) {
+            console.log("sach ", sach)
             // Làm sạch dữ liệu
             const cleanMaSach = sach.maSach.trim();
             const cleanISBN = sach.isbn.trim();
@@ -125,11 +187,15 @@ module.exports.write = async (req, res) => {
                 { name: 'MANGANTU', type: sql.Int, value: sach.maNganTu || null }
             ];
 
+            console.log("params ", params)
+
             // Gọi stored procedure để thêm sách
-            await executeStoredProcedureWithTransaction(pool, 'sp_ThemSach', params);
+            await executeStoredProcedure(pool, 'sp_ThemSach', params);
+            // req.flash('success', 'Thêm sách thành công!');
+            res.status(200).json({ success: true });
+            //  res.redirect(`${systemConfig.prefixAdmin}/isbn_book`);
         }
 
-        res.json({ success: true });
     } catch (error) {
         console.error('Error creating sach:', error);
         res.json({ success: false, message: error.message });
@@ -140,10 +206,11 @@ module.exports.write = async (req, res) => {
 module.exports.createDauSach = async (req, res) => {
     console.log("Creating dauSach ----------------------------------------------------------------------------------------------------------------------------------------------------------");
     const pool = getUserPool(req.session.id);
-        if (!pool) {
-            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
-        }
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
 
+    console.log("req.body ", req.body)
 
     const dauSachList = Object.values(req.body.dauSach || []).map((ds, index) => ({
         ...ds,
@@ -152,10 +219,56 @@ module.exports.createDauSach = async (req, res) => {
 
     console.log("dauSachList to save: ", dauSachList);
 
-    // Lưu dauSachList vào DB (giả sử bạn dùng một ORM như Mongoose hoặc Sequelize)
-    // await DauSachModel.create(dauSachList);
+    try
+    {
+        for (const dauSach of dauSachList) {
+            // Làm sạch dữ liệu
+            const cleanISBN = dauSach.isbn.trim();
+            const cleanTenSach = dauSach.tenSach.trim();
+            const cleanKhoSach = dauSach.khoSach ? dauSach.khoSach.trim() : null;
+            const cleanNoiDung = dauSach.noiDung ? dauSach.noiDung.trim() : null;
+            const cleanHinhAnhPath = dauSach.hinhAnhPath ? dauSach.hinhAnhPath.trim() : null;
+            const cleanNhaXB = dauSach.nhaXB ? dauSach.nhaXB.trim() : null;
+            const cleanMaTL = dauSach.maTL.trim();
 
-    res.json({ success: true });
+            // Xử lý ngày xuất bản (chuyển đổi sang định dạng SQL Server: YYYY-MM-DD)
+            
+            const date = parseDate(dauSach.ngayXuatBan);
+                
+            
+
+            // Chuẩn bị tham số cho stored procedure
+            const params = [
+                { name: 'ISBN', type: sql.NChar, value: cleanISBN },
+                { name: 'TENSACH', type: sql.NVarChar, value: cleanTenSach },
+                { name: 'KHOSACH', type: sql.NVarChar, value: cleanKhoSach },
+                { name: 'NOIDUNG', type: sql.NVarChar, value: cleanNoiDung },
+                { name: 'HINHANHPATH', type: sql.NVarChar, value: cleanHinhAnhPath },
+                { name: 'NGAYXUATBAN', type: sql.SmallDateTime, value: date },
+                { name: 'LANXUATBAN', type: sql.Int, value: dauSach.lanXuatBan ? parseInt(dauSach.lanXuatBan) : null },
+                { name: 'SOTRANG', type: sql.Int, value: dauSach.soTrang ? parseInt(dauSach.soTrang) : null },
+                { name: 'GIA', type: sql.BigInt, value: dauSach.gia ? parseInt(dauSach.gia) : null },
+                { name: 'NHAXB', type: sql.NVarChar, value: cleanNhaXB },
+                { name: 'MANGONNGU', type: sql.Int, value: dauSach.maNgonNgu ? parseInt(dauSach.maNgonNgu) : null },
+                { name: 'MATL', type: sql.NChar, value: cleanMaTL },
+                { name: 'MATACGIA', type: sql.Int, value: parseInt(dauSach.maTacGia) }
+            ];
+
+            console.log("params ", params);
+
+            // Gọi stored procedure để thêm đầu sách
+            await executeStoredProcedure(pool, 'sp_ThemDauSach', params);
+        }
+
+        res.json({ success: true });
+    }
+    catch 
+    (error) 
+    {
+        console.error('Error creating dauSach:', error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+
 };
 
 
@@ -206,7 +319,7 @@ module.exports.getReport = async (req, res) => {
     const type = req.query.type;
 
     if (type == 'list') {
-        const typeList = await TheLoaiRepository.getAll(pool);
+        const typeList = await TheLoaiRepository.getAll(pool);  
         const dauSachList = [];
 
         for (const type of typeList) {

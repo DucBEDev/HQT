@@ -21,7 +21,6 @@ block main
                             th Thời Điểm Kết Thúc
                             th Kích Thước (MB)
                             th Chế Độ Backup
-                            th Đường Dẫn File
                             th Người Thực Hiện
                             th Mô Tả
                     tbody#backupTableBody
@@ -32,7 +31,6 @@ block main
                                 td.align-middle #{backup.backup_finish_date}
                                 td.align-middle #{backup.BackupSizeMB.toFixed(2)}
                                 td.align-middle #{backup.BackupType}
-                                td.align-middle #{backup.physical_device_name}
                                 td.align-middle #{backup.BackupUser}
                                 td.align-middle #{backup.BackupDescription}
 
