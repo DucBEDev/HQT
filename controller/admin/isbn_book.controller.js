@@ -58,6 +58,18 @@ module.exports.getData = async (req, res) => {
     res.json({ ngonNguList, theLoaiList, tacGiaList });
 };
 
+// [GET] /admin/isbn_book/dauSach   
+module.exports.getDauSach = async (req, res) => {
+    const pool = getUserPool(req.session.id);
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
+    const dauSach = await DauSachRepository.getDauSach(pool, req.query.isbn);
+
+    res.json({ success: true, dauSach });
+};
+
 // [GET] /admin/isbn_book/book
 module.exports.getBooks = async (req, res) => {
     const pool = getUserPool(req.session.id);
@@ -200,6 +212,28 @@ module.exports.createDauSach = async (req, res) => {
     res.json({ success: true });
 };
 
+// [POST] /admin/isbn_book/update
+module.exports.updateDauSach = async (req, res) => {
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+    console.log("req.body ", req.body)
+
+    // const dauSachList = Object.values(req.body.dauSach || []).map((ds, index) => ({
+    //     ...ds,
+    //     hinhAnhPath: req.body.hinhAnhUrls ? req.body.hinhAnhUrls[index] : null
+    // }));
+
+    // console.log("dauSachList to save: ", dauSachList);
+
+    // Lưu dauSachList vào DB (giả sử bạn dùng một ORM như Mongoose hoặc Sequelize)
+    // await DauSachModel.create(dauSachList);
+
+    res.json({ success: true });
+};
+
 
 // [DELETE] /admin/isbn_book/delete/:isbn
 module.exports.deleteTitle = async (req, res) => {
@@ -210,16 +244,19 @@ module.exports.deleteTitle = async (req, res) => {
         }
 
 
-    const { isbn } = req.params;
+    const { isbn } = req.body;
+    console.log("req.body ", req.body)
 
     const params = [
         { name: 'ISBN', type: sql.NChar, value: isbn }
     ];
 
     try {
-        await executeStoredProcedureWithTransaction(pool, 'sp_XoaDauSach', params);
-        req.flash('success', 'Xóa đầu sách thành công!');
-        res.redirect(`${systemConfig.prefixAdmin}/isbn_book`);
+        // await executeStoredProcedureWithTransaction(pool, 'sp_XoaDauSach', params);
+        
+        res.status(200).json({
+            success: true
+        })
     } catch (error) {
         req.flash('error', error);
         console.error('Error deleting type:', error);
