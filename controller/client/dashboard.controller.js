@@ -1,4 +1,4 @@
-const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, getUserPool } = require('../../configs/database');
+const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, getUserPool, defaultPool} = require('../../configs/database');
 
 const DauSachRepository = require('../../repositories/DauSachRepository');
 

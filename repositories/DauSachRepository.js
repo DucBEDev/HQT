@@ -191,7 +191,7 @@ class DauSachRepository {
         }
     }
 
-    static async getBookDetailByISBN(isbn) {
+    static async getBookDetailByISBN(pool, isbn) {
         await pool.connect();
         
         const bookResult = await pool.request()
