@@ -150,7 +150,7 @@ class DauSachRepository {
         }
     }
 
-    static async getAllWithStatus() {
+    static async getAllWithStatus(pool) {
         try {
             await pool.connect();
             const result = await pool.request().query(`
@@ -191,7 +191,7 @@ class DauSachRepository {
         }
     }
 
-    static async getBookDetailByISBN(isbn) {
+    static async getBookDetailByISBN(pool, isbn) {
         await pool.connect();
         
         const bookResult = await pool.request()

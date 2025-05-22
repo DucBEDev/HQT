@@ -1,4 +1,4 @@
-const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction } = require('../../configs/database');
+const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, createUserConnection, defaultPool} = require('../../configs/database');
 
 const systemConfig = require('../../configs/system');
 
@@ -58,16 +58,17 @@ module.exports.showLogIn = async (req, res) => {
 
 // [POST] /auth/login
 module.exports.logIn = async (req, res) => {
-    const { email, password } = req.body;
-    // const params = [
-    //     { name: 'LGNAME', type: sql.VarChar, value: email },
-    //     { name: 'PASS', type: sql.VarChar, value: password }
-    // ];
+    const { username, password } = req.body;
 
     try {
-        // const result = await executeStoredProcedure('sp_DangNhap', params);
+        const userPool = await createUserConnection(username, password, req.session.id);
+        userPool.on('error', err => {
+            console.error(`UserPool (${username}) Connection Error:`, err);
+        });
 
-        res.cookie('user', '1234567890');
+        // Lưu pool vào session
+        req.session.username = username;
+
         res.redirect(`${systemConfig.prefixUrl}/dashboard`)
         
     } catch (error) {
