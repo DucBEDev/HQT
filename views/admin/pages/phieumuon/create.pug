@@ -38,32 +38,23 @@ block main
                         .col-lg-12
                             h5 Thông Tin Phiếu Mượn
                             .form-group
-                                label(for="maPhieu") Mã phiếu mượn
-                                input.form-control(type="text" id="maPhieu" name="maPhieu" readonly value=`${nextPhieuMuonId}`)
-                            .form-group
                                 label(for="maDG") Mã độc giả <span class="required-text">*</span>
-                                select.form-control(id="maDG" name="maDG" required)
-                                    option(value="") -- Chọn độc giả --
-                                    each docGia in docGiaList
-                                        option(value=`${docGia.maDG}`) #{docGia.maDG} - #{docGia.hoDG} #{docGia.tenDG}
+                                input.form-control(type="text" id="maDG" name="maDG" required)
                             .form-group
                                 label(for="hinhThuc") Hình thức mượn <span class="required-text">*</span>
                                 select.form-control(id="hinhThuc" name="hinhThuc" required)
-                                    option(value="") -- Chọn hình thức --
-                                    option(value="1") Mang về
+                                    option(value="1" selected) Mang về
                                     option(value="0") Tại chỗ
                             .form-group
                                 label(for="ngayMuon") Ngày mượn <span class="required-text">*</span>
-                                input.form-control(type="date" id="ngayMuon" name="ngayMuon" required readonly)
+                                input.form-control(type="text" id="ngayMuon" name="ngayMuon" required readonly)
                             .form-group
                                 label(for="ngayTra") Ngày trả <span class="required-text">*</span>
-                                input.form-control(type="date" id="ngayTra" name="ngayTra" readonly required)
+                                input.form-control(type="text" id="ngayTra" name="ngayTra" required)
                             .form-group
                                 label(for="maNV") Mã nhân viên tạo phiếu <span class="required-text">*</span>
-                                select.form-control(id="maNV" name="maNV" required)
-                                    option(value="") -- Chọn nhân viên --
-                                    each nhanVien in nhanVienList
-                                        option(value=`${nhanVien.maNV}`) #{nhanVien.maNV} - #{nhanVien.hoNV} #{nhanVien.tenNV}
+                                input.form-control(type="text" value=`${empName}` readonly)
+                                input.form-control(type="text" id="maNV" name="maNV" value=`${empId}` hidden readonly)
                     .row
                         .col-lg-12
                             #selectedBooksInputs
@@ -71,6 +62,7 @@ block main
                         button.btn.btn-primary(type="submit") Lưu Phiếu Mượn
 
     script(src="/vendor/jquery/jquery.min.js")
+    script(src="https://cdn.jsdelivr.net/npm/fuse.js@7")
     script(src="/js/validation.js")
     script(src="/js/adminjs/phieumuon.js")
     script(src="https://cdn.jsdelivr.net/npm/flatpickr")
@@ -78,24 +70,15 @@ block main
     script.
         // Khởi tạo Flatpickr cho ngày mượn
         flatpickr('#ngayMuon', {
-            dateFormat: 'Y-m-d', // Định dạng phù hợp với input type="date"
+            dateFormat: 'd/m/Y', 
             defaultDate: 'today',
             allowInput: false,
             clickOpens: false
         });
 
-        // Tính và đặt giá trị ngày trả (ngày hiện tại + 15 ngày)
-        function setNgayTra() {
-            const today = new Date();
-            const ngayTra = new Date(today);
-            ngayTra.setDate(today.getDate() + 15);
-            
-            // Định dạng ngày trả thành YYYY-MM-DD
-            const formattedNgayTra = ngayTra.toISOString().split('T')[0];
-            document.getElementById('ngayTra').value = formattedNgayTra;
-        }
-
-        // Gọi hàm setNgayTra khi trang tải
-        document.addEventListener('DOMContentLoaded', function() {
-            setNgayTra();
+        flatpickr('#ngayTra', {
+            dateFormat: 'd/m/Y', 
+            defaultDate: 'today',
+            minDate: 'today',
+            maxDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
         });

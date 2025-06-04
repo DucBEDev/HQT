@@ -35,22 +35,7 @@ block main
                                 td.align-middle #{phieu.maNV}
                                 td.align-middle
                                     a.btn.btn-sm.btn-danger.edit-type-btn.mr-1(href=`${prefixAdmin}/phieumuon/detail/${phieu.maPhieu}`) Chi tiết
-                                    a.btn.btn-sm.btn-danger.delete-phieu-btn.mr-1(href="javascript:void(0);" data-phieu-id=`${phieu.maPhieu}` data-toggle="modal" data-target="#DeleteModal") Xóa
                                     a.btn.btn-sm.btn-primary.tra-sach-btn.mr-1(href="javascript:void(0);" data-phieu-id=`${phieu.maPhieu}` data-toggle="modal" data-target="#TraSachModal") Trả sách
-
-    //- Modal Delete Item
-    #DeleteModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="DeleteModal" aria-hidden="true")
-        .modal-dialog(role="document")
-            .modal-content
-                .modal-header
-                    h5#exampleModalLabelLogout.modal-title Xóa phiếu mượn
-                    button.close(type="button" data-dismiss="modal" aria-label="Close")
-                        span(aria-hidden="true") ×
-                .modal-body
-                    p Bạn chắc chắn muốn xóa phiếu mượn này không?
-                .modal-footer
-                    button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
-                    button#delete-link.btn.btn-primary(type="button") Xóa
 
     //- Modal Tra Sach
     #TraSachModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="TraSachModal" aria-hidden="true")
@@ -69,29 +54,12 @@ block main
     form(
         action=""
         method="POST"
-        id="delete-phieu-item"
-    )
-
-    form(
-        action=""
-        method="POST"
         id="tra-sach-item"
     )
 
     script(src="/vendor/jquery/jquery.min.js")
     script.
         $(document).ready(function() {
-            // Xử lý sự kiện click nút Xóa trong modal
-            $('#phieuMuonTableBody').on('click', '.delete-phieu-btn', function() {
-                const phieuId = $(this).data('phieu-id');
-
-                $('#delete-link').on('click', function(e) {
-                    e.preventDefault();
-                    $('#delete-phieu-item').attr('action', `/Library/admin/phieumuon/delete/${phieuId}?_method=DELETE`);
-                    $('#delete-phieu-item').submit();
-                });
-            });
-
             $('#phieuMuonTableBody').on('click', '.tra-sach-btn', function() {
                 const phieuId = $(this).data('phieu-id');
 

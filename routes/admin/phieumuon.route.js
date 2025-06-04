@@ -11,6 +11,5 @@ router.get('/detail/:maPhieu', controller.detail);
 router.patch('/edit/:maPhieu', controller.edit);
 router.patch('/lostBook/:maPhieu', controller.lostBook);
 router.post('/returnBook/:maPhieu', controller.returnBook);
-router.delete('/delete/:maPhieu', controller.delete);
 
 module.exports = router;
