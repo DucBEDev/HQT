@@ -35,7 +35,7 @@ module.exports.delete = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedureWithTransaction(pool, 'sp_XoaTacGia', params);
+        await executeStoredProcedureWithTransaction(pool, 'sp_XoaMemTacGia', params);
         pushToUndoStack('delete', author);
 
         req.flash("success", "Xóa tác giả thành công!");
@@ -162,7 +162,7 @@ module.exports.undo = async (req, res) => {
                 const params = [
                     { name: 'MATACGIA', type: sql.Int, value: author.maTacGia }
                 ];
-                await executeStoredProcedureWithTransaction(pool, 'sp_XoaTacGia', params);
+                await executeStoredProcedureWithTransaction(pool, 'sp_XoaMemTacGia', params);
             }
         } else if (action === 'delete') {
             // Undo delete: Thêm lại tác giả đã xóa

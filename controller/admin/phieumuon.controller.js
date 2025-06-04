@@ -83,54 +83,16 @@ module.exports.createPost = async (req, res) => {
 
 
         ];
-        await executeStoredProcedureWithTransaction(pool, 'sp_LapPhieuMuon', paramsPhieu);
-
+        await executeStoredProcedure(pool, 'sp_LapPhieuMuon', paramsPhieu);
+        req.flash('success', 'Tạo phiếu mượn thành công!');
         res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
     } 
-    catch (error) {
-        const errorMessage = error.message || 'Đã xảy ra lỗi không xác định';
-        const errorNumber = error.number || 50000;
-
-        // Ánh xạ mã lỗi
-        let customMessage;
-        switch (errorNumber) {
-            case 50001:
-                customMessage = 'Độc giả không tồn tại hoặc thẻ không hoạt động!';
-                break;
-            case 50002:
-                customMessage = 'Độc giả có sách mượn quá hạn, không thể mượn thêm!';
-                break;
-            case 50003:
-                customMessage = 'Độc giả chỉ được mượn tối đa 3 cuốn sách!';
-                break;
-            case 50004:
-                customMessage = 'Sách 1 không tồn tại hoặc không thể mượn!';
-                break;
-            case 50005:
-                customMessage = 'Sách 2 không tồn tại hoặc không thể mượn!';
-                break;
-            case 50006:
-                customMessage = 'Sách 3 không tồn tại hoặc không thể mượn!';
-                break;
-            case 50007:
-                customMessage = 'Nhân viên không tồn tại!';
-                break;
-            case 50008:
-                customMessage = 'Phải mượn ít nhất một cuốn sách!';
-                break;
-            case 50009:
-                customMessage = 'Các mã sách không được trùng lặp!';
-                break;
-            default:
-                customMessage = errorMessage;
-        }
-
-        console.error('SQL Error:', error);
-        res.status(400).json({
-            success: false,
-            message: customMessage,
-            errorCode: errorNumber
-        });
+    catch (error) 
+    {
+        console.error('Error creating phieu muon:', error);
+        req.flash('error', error.message || 'Lỗi khi tạo phiếu mượn!');
+        res.redirect('back');
+        
     }
 };
 
@@ -312,11 +274,21 @@ module.exports.delete = async (req, res) => {
         }
 
     console.log(req.params.maPhieu)
-    const params = 
-    [
-        { name: 'MAPHIEU', type: sql.BigInt, value: req.params.maPhieu }
-    ]
-    await executeStoredProcedureWithTransaction(pool, 'sp_XoaPhieuMuon', params);
-    res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+    try
+    {
+            const params = 
+        [
+            { name: 'MAPHIEU', type: sql.BigInt, value: req.params.maPhieu }
+        ]
+        await executeStoredProcedure(pool, 'sp_XoaPhieuMuon', params);
+        req.flash('success', 'Xóa phiếu mượn thành công!');
+        res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+    }
+    catch (error) {
+        console.error('Error deleting borrowing slip:', error);
+        req.flash('error', error.message || 'Lỗi khi xóa phiếu mượn!');
+        res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+    }
+    
 };
 

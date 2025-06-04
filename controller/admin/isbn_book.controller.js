@@ -97,7 +97,7 @@ module.exports.deleteBook = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedureWithTransaction(pool, 'sp_XoaSach', params);
+        await executeStoredProcedureWithTransaction(pool, 'sp_XoaMemSach', params);
         
         res.status(200).json({
             success: true
@@ -288,7 +288,7 @@ module.exports.deleteTitle = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedureWithTransaction(pool, 'sp_XoaDauSach', params);
+        await executeStoredProcedureWithTransaction(pool, 'sp_XoaMemDauSach', params);
         req.flash('success', 'Xóa đầu sách thành công!');
         res.redirect(`${systemConfig.prefixAdmin}/isbn_book`);
     } catch (error) {

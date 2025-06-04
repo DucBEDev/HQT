@@ -51,7 +51,7 @@ module.exports.delete = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedureWithTransaction(pool, 'sp_XoaDocGia', params);
+        await executeStoredProcedureWithTransaction(pool, 'sp_XoaMemDocGia', params);
         pushToUndoStack('delete', reader);
         res.redirect(`${systemConfig.prefixAdmin}/reader`);
     } catch (error) {
@@ -233,7 +233,7 @@ module.exports.undo = async (req, res) => {
                     { name: 'HODG', type: sql.NVarChar, value: reader.hoDG },
                     { name: 'TENDG', type: sql.NVarChar, value: reader.tenDG }
                 ];
-                await executeStoredProcedureWithTransaction(pool, 'sp_XoaDocGiaByHoTen', params);
+                await executeStoredProcedureWithTransaction(pool, 'sp_XoaMemDocGia', params);
             }
         } else if (action === 'delete') {
             // Undo delete: Thêm lại độc giả đã xóa
