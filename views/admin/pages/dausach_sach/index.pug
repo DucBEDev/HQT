@@ -12,6 +12,7 @@ block main
         .card.mb-4
             .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
                 h6.m-0.font-weight-bold.text-primary Danh Sách Đầu Sách
+                button.btn.btn-warning#btnUndoTitleBook Hoàn tác
             .table-responsive.p-3
                 table#dataTable.table.align-items-center.table-flush
                     thead.thead-light
@@ -62,7 +63,8 @@ block main
 
         .card.mb-4
             .card-header.py-3
-                h6.font-weight-bold.text-primary Thêm Đầu Sách Mới
+                h6.font-weight-bold.text-primary(id="addTitle") Thêm Đầu Sách Mới
+                h6.font-weight-bold.text-primary(id="editTitle" style="display: none;") Chỉnh Sửa Đầu Sách
             .card-body
                 form#addDauSachForm(action='' method="post" enctype="multipart/form-data")
                     .row
@@ -126,8 +128,10 @@ block main
                     .d-flex.justify-content-end.mt-3
                         button.btn.btn-primary.mr-2(type="button" id="addDauSachBtn") Thêm
                         button.btn.btn-success(type="button" id="ghiDauSachBtn") Ghi
+                        button.btn.btn-warning.mr-2(type="button" id="confirmEditDauSachBtn" style="display: none;") Xác nhận
+                        button.btn.btn-secondary(type="button" id="cancelEditDauSachBtn" style="display: none;") Hủy
 
-        .card.mb-4
+        .card.mb-4(id="dauSachTempList")
             .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
                 h6.m-0.font-weight-bold.text-primary Danh Sách Đầu Sách Đã Thêm
             .card-body

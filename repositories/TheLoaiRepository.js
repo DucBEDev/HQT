@@ -5,8 +5,6 @@ const TheLoai = require('../models/TheLoai');
 class TheLoaiRepository {
     static async getAll(pool) {
         try {
-            console.log("Getting all TheLoai ----------------------------------------------------------------------------------------------------------------------------------------------------------")
-            // console.log(pool)
             //const userPool = await recreateUserPool(pool.config);  Tạo lại pool với thông tin đăng nhập người dùng
             //await userPool.connect(); // Kết nối đến DB
             //console.log(defaultPool)
@@ -29,7 +27,6 @@ class TheLoaiRepository {
             const request = pool.request(); // Tạo request
             request.input('MATL', sql.NVarChar, maTL); // Thêm tham số MATL
             const result = await request.query('SELECT * FROM THELOAI WHERE MATL = @MATL'); // Truy vấn với tham số
-            console.log(result.recordset)
             return new TheLoai(result.recordset[0].MATL, result.recordset[0].TENTL)
 
             

@@ -3,11 +3,139 @@ let dauSachList = [];
 let sachList = [];
 let nganTuList = [];
 let selectedISBN = null;
+let isEditingDauSach = false;
+let originalDauSachData = null;
 
 // Reference data
 let ngonNguList = [];
 let theLoaiList = [];
 let tacGiaList = [];
+
+function loadDauSachForEdit(dauSach) {
+    isEditingDauSach = true;
+    originalDauSachData = { ...dauSach };
+    
+    let ngayXuatBan = dauSach.NGAYXUATBAN;
+    if (ngayXuatBan) {
+        const date = new Date(ngayXuatBan);
+        if (!isNaN(date.getTime())) {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            ngayXuatBan = `${day}/${month}/${year}`;
+        }
+    }
+    
+    document.getElementById('isbn').value = dauSach.ISBN;
+    document.getElementById('tenSach').value = dauSach.TENSACH;
+    document.getElementById('khoSach').value = dauSach.KHOSACH;
+    document.getElementById('nhaXB').value = dauSach.NHAXB;
+    document.getElementById('gia').value = dauSach.GIA;
+    document.getElementById('noiDung').value = dauSach.NOIDUNG;
+    document.getElementById('ngayXuatBan').value = ngayXuatBan;
+    document.getElementById('lanXuatBan').value = dauSach.LANXUATBAN;
+    document.getElementById('soTrang').value = dauSach.SOTRANG;
+    document.getElementById('maNgonNgu').value = dauSach.MANGONNGU;
+    document.getElementById('maTL').value = dauSach.MATL;
+    document.getElementById('maTacGia').value = dauSach.MATACGIA;
+
+    const hinhAnhInput = document.getElementById('hinhAnhPath');
+    if (dauSach.HINHANHPATH) {
+        let previewDiv = document.getElementById('imagePreview');
+        if (!previewDiv) {
+            previewDiv = document.createElement('div');
+            previewDiv.id = 'imagePreview';
+            previewDiv.style.marginTop = '10px';
+            hinhAnhInput.parentNode.appendChild(previewDiv);
+        }
+        
+        previewDiv.innerHTML = `
+            <img src="${dauSach.HINHANHPATH}" alt="Hình ảnh hiện tại" 
+                 style="max-width: 200px; max-height: 200px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px;">
+            <p style="margin-top: 5px; font-size: 0.9em; color: #666;">
+                Hình ảnh hiện tại - Chọn file mới để thay đổi
+            </p>
+        `;
+        
+        hinhAnhInput.removeAttribute('required');
+    }
+    
+    // Ẩn nút thêm/ghi, hiện nút xác nhận/hủy
+    $('#addDauSachBtn, #ghiDauSachBtn').hide();
+    $('#confirmEditDauSachBtn, #cancelEditDauSachBtn').show();
+    $('#addTitle').hide();
+    $('#editTitle').show();
+    $('#dauSachTempList').hide();
+    
+    // Disable ISBN input
+    document.getElementById('isbn').disabled = false;
+}
+
+function resetDauSachForm() {
+    isEditingDauSach = false;
+    originalDauSachData = null;
+    
+    // Reset form
+    document.getElementById('addDauSachForm').reset();
+    document.getElementById('addDauSachForm').classList.remove('was-validated');
+    
+    // Hiện nút thêm/ghi, ẩn nút xác nhận/hủy
+    $('#addDauSachBtn, #ghiDauSachBtn').show();
+    $('#confirmEditDauSachBtn, #cancelEditDauSachBtn').hide();
+    $('#addTitle').show();
+    $('#editTitle').hide();
+    $('#dauSachTempList').show();
+
+    // Xóa preview image nếu có
+    const previewDiv = document.getElementById('imagePreview');
+    if (previewDiv) {
+        previewDiv.remove();
+    }
+    
+    // Làm input hình ảnh required trở lại
+    document.getElementById('hinhAnhPath').setAttribute('required', 'required');
+    
+
+    // Enable ISBN input
+    document.getElementById('isbn').disabled = false;
+}
+
+function updateSachTable() {
+    const tbody = document.getElementById('sachList');
+    tbody.innerHTML = '';
+    console.log("Chay vao day")
+
+    // Only show non-deleted books
+    sachList.filter(sach => sach.state !== 'deleted').forEach(sach => {
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-ma-sach', sach.maSach);
+
+        // Get shelf information for display
+        const keDisplay = sach.maNganTu ? 
+            nganTuList.find(nt => nt.maNganTu == sach.maNganTu)?.ke || 'Không tìm thấy' :
+            'Chưa gán';
+
+        tr.innerHTML = `
+            <td class="align-middle" name="maSach">${sach.maSach}</td>
+            <td class="align-middle" name="tinhTrang">${sach.tinhTrang ? 'Tốt' : 'Hỏng'}</td>
+            <td class="align-middle" name="choMuon">${sach.choMuon ? 'Có' : 'Không'}</td>
+            <td class="align-middle" name="maNganTu">${keDisplay}</td>
+            <td class="align-middle">
+                <button type="button" class="btn btn-sm btn-dark btn-small edit-sach-btn">Sửa</button>
+                <button type="button" class="btn btn-sm btn-danger btn-small delete-sach-btn" data-ma-sach="${sach.maSach}" data-toggle="modal" data-target="#DeleteSachModal">Xóa</button>
+            </td>`;
+        tbody.appendChild(tr);
+    });
+
+    // Add a visual indicator for changes
+    sachList.filter(sach => sach.state === 'added').forEach(sach => {
+        const row = $(`#sachList tr[data-ma-sach="${sach.maSach}"]`);
+        if (row.length) {
+            row.addClass('table-success');
+        }
+    });
+}
+
 
 $(document).ready(function () {
     $('#dataSachTable').DataTable({
@@ -37,21 +165,37 @@ $(document).ready(function () {
         selectedISBN = $(this).data('isbn');
         $('#selectedDauSach').text(selectedISBN);
         
-        fetch(`/Library/admin/isbn_book/book?selectedISBN=${selectedISBN}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    sachList = data.sachList.map(dt => {
-                        dt.maSach = dt.maSach.trim();
-                        dt.isbn = dt.isbn.trim();
-                        dt.original = { ...dt }; // Store original state for restoring after canceled edits
-                        dt.state = 'unchanged'; // Track state: 'unchanged', 'added', 'edited'
-                        return dt;
-                    });
-                    nganTuList = data.nganTuList;
-                    updateSachTable();
-                }
-            });
+        Promise.all([
+            fetch(`/Library/admin/isbn_book/book?selectedISBN=${selectedISBN}`).then(res => res.json()),
+            fetch(`/Library/admin/isbn_book/dauSach?isbn=${selectedISBN}`).then(res => res.json())
+        ])
+        .then(([sachData, dauSachData]) => {
+            console.log('Sách data:', sachData);
+            console.log('Đầu sách data:', dauSachData);
+            console.log('Type of loadDauSachForEdit:', typeof loadDauSachForEdit);  
+            
+            // Xử lý dữ liệu sách
+            if (sachData.success) {
+                sachList = sachData.sachList.map(dt => {
+                    dt.maSach = dt.maSach.trim();
+                    dt.isbn = dt.isbn.trim();
+                    dt.original = { ...dt };
+                    dt.state = 'unchanged';
+                    return dt;
+                });
+                nganTuList = sachData.nganTuList;
+                updateSachTable();
+            }
+            
+            // Xử lý dữ liệu đầu sách
+            if (dauSachData.success) {
+                loadDauSachForEdit(dauSachData.dauSach);
+            }
+        })
+        .catch(error => {
+            console.error('Lỗi khi load dữ liệu:', error);
+            alert('Có lỗi xảy ra khi tải dữ liệu: ' + error.message);
+        });
     });
 
     // Add book category to temporary list
@@ -329,6 +473,106 @@ $(document).ready(function () {
             alert('Có lỗi xảy ra khi ghi dữ liệu!');
         });
     });
+
+    // Xác nhận chỉnh sửa đầu sách
+    $('#confirmEditDauSachBtn').on('click', function() {
+        const form = document.getElementById('addDauSachForm');
+        if (!form.checkValidity()) {
+            form.classList.add('was-validated');
+            form.reportValidity();
+            return;
+        }
+        
+        const hinhAnhInput = document.getElementById('hinhAnhPath');
+        
+        // Tạo FormData để gửi kèm file (nếu có)
+        const formData = new FormData();
+        formData.append('oldisbn', originalDauSachData.ISBN);
+        formData.append('isbn', document.getElementById('isbn').value);
+        formData.append('tenSach', document.getElementById('tenSach').value);
+        formData.append('khoSach', document.getElementById('khoSach').value);
+        formData.append('nhaXB', document.getElementById('nhaXB').value);
+        formData.append('gia', parseFloat(document.getElementById('gia').value));
+        formData.append('noiDung', document.getElementById('noiDung').value);
+        formData.append('ngayXuatBan', document.getElementById('ngayXuatBan').value);
+        formData.append('lanXuatBan', parseInt(document.getElementById('lanXuatBan').value));
+        formData.append('soTrang', parseInt(document.getElementById('soTrang').value));
+        formData.append('maNgonNgu', document.getElementById('maNgonNgu').value);
+        formData.append('maTL', document.getElementById('maTL').value);
+        formData.append('maTacGia', document.getElementById('maTacGia').value);
+        
+        // Kiểm tra xem có file mới được chọn không
+        if (hinhAnhInput.files && hinhAnhInput.files.length > 0) {
+            // Có file mới - gửi file
+            formData.append('hinhAnhPath', hinhAnhInput.files[0]);
+            formData.append('hasNewImage', 'true');
+        } else {
+            // Không có file mới - giữ nguyên ảnh cũ
+            formData.append('hasNewImage', 'false');
+            // Có thể thêm thông tin về ảnh hiện tại nếu cần
+            if (originalDauSachData && originalDauSachData.HINHANHPATH) {
+                formData.append('currentImagePath', originalDauSachData.HINHANHPATH);
+            }
+        }
+        
+        // Gửi request cập nhật đầu sách
+        fetch('/Library/admin/isbn_book/update', {
+            method: 'POST',
+            body: formData // Sử dụng FormData thay vì JSON
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Cập nhật đầu sách thành công!');
+                resetDauSachForm();
+                // Reload trang để cập nhật danh sách
+                window.location.reload();
+            } else {
+                alert('Lỗi khi cập nhật đầu sách: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi cập nhật đầu sách!');
+        });
+    });
+
+    // Hủy chỉnh sửa đầu sách
+    $('#cancelEditDauSachBtn').on('click', function() {
+        resetDauSachForm();
+    });
+
+    $('#DeleteDauSachModal').on('show.bs.modal', function (event) {
+        const button = $(event.relatedTarget);
+        const isbn = button.data('isbn');
+        $(this).find('#delete-dauSach-link').data('isbn', isbn);
+    });
+    
+    // Confirm delete đầu sách
+    $('#delete-dauSach-link').on('click', function() {
+        const isbn = $(this).data('isbn');
+        
+        fetch('/Library/admin/isbn_book/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+            body: JSON.stringify({ isbn: isbn })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Xóa đầu sách thành công!');
+                window.location.reload();
+            } else {
+                alert('Lỗi khi xóa đầu sách: ' + data.message);
+            }
+            $('#DeleteDauSachModal').modal('hide');
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi xóa đầu sách!');
+            $('#DeleteDauSachModal').modal('hide');
+        });
+    });
 });
 
 function addDauSach() {
@@ -490,41 +734,6 @@ function addSach() {
         
         // Update the table
         updateSachTable();
-    });
-}
-
-function updateSachTable() {
-    const tbody = document.getElementById('sachList');
-    tbody.innerHTML = '';
-
-    // Only show non-deleted books
-    sachList.filter(sach => sach.state !== 'deleted').forEach(sach => {
-        const tr = document.createElement('tr');
-        tr.setAttribute('data-ma-sach', sach.maSach);
-
-        // Get shelf information for display
-        const keDisplay = sach.maNganTu ? 
-            nganTuList.find(nt => nt.maNganTu == sach.maNganTu)?.ke || 'Không tìm thấy' :
-            'Chưa gán';
-
-        tr.innerHTML = `
-            <td class="align-middle" name="maSach">${sach.maSach}</td>
-            <td class="align-middle" name="tinhTrang">${sach.tinhTrang ? 'Tốt' : 'Hỏng'}</td>
-            <td class="align-middle" name="choMuon">${sach.choMuon ? 'Có' : 'Không'}</td>
-            <td class="align-middle" name="maNganTu">${keDisplay}</td>
-            <td class="align-middle">
-                <button type="button" class="btn btn-sm btn-dark btn-small edit-sach-btn">Sửa</button>
-                <button type="button" class="btn btn-sm btn-danger btn-small delete-sach-btn" data-ma-sach="${sach.maSach}" data-toggle="modal" data-target="#DeleteSachModal">Xóa</button>
-            </td>`;
-        tbody.appendChild(tr);
-    });
-
-    // Add a visual indicator for changes
-    sachList.filter(sach => sach.state === 'added').forEach(sach => {
-        const row = $(`#sachList tr[data-ma-sach="${sach.maSach}"]`);
-        if (row.length) {
-            row.addClass('table-success');
-        }
     });
 }
 

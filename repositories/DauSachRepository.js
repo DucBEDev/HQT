@@ -250,6 +250,24 @@ class DauSachRepository {
     
         return book;
     }
+
+    static async getDauSach(pool, isbn) {
+        await pool.connect();
+        const result = await pool.request()
+            .input('isbn', sql.NVarChar, isbn)
+            .query(`
+                SELECT d.*,
+                tg.MATACGIA,
+                tg.HOTENTG
+                FROM DAUSACH d
+                LEFT JOIN TACGIA_SACH ts ON ts.ISBN = d.ISBN
+                LEFT JOIN TACGIA tg ON tg.MATACGIA = ts.MATACGIA
+                WHERE d.ISBN = @isbn
+            `);
+        return result.recordset[0];
+    }
 }
+
+
 
 module.exports = DauSachRepository;

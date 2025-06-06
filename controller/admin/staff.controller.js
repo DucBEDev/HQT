@@ -35,7 +35,7 @@ module.exports.delete = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedureWithTransaction(pool,'sp_XoaNhanVien', params);
+        await executeStoredProcedure(pool,'sp_XoaMemNhanVien', params);
         pushToUndoStack('delete', staff);
         res.redirect(`${systemConfig.prefixAdmin}/staff`);
     } catch (error) {
@@ -59,6 +59,7 @@ module.exports.createPost = async (req, res) => {
     }
     
     const staffList = req.body;
+    console.log(staffList)
 
     const savedStaff = [];
     for (const staff of staffList) {
@@ -67,16 +68,20 @@ module.exports.createPost = async (req, res) => {
         const cleanDiaChi = staff.diaChi.trim().replace(/\s+/g, ' ');
 
         const params = [
+            { name: 'MANV', type: sql.Int, value: staff.maNV },
             { name: 'HONV', type: sql.NVarChar, value: cleanHoNV },
             { name: 'TENNV', type: sql.NVarChar, value: cleanTenNV },
             { name: 'GIOITINH', type: sql.Bit, value: staff.gioiTinh == '1' },
             { name: 'DIACHI', type: sql.NVarChar, value: cleanDiaChi },
             { name: 'DIENTHOAI', type: sql.NVarChar, value: staff.dienThoai },
-            { name: 'EMAIL', type: sql.NVarChar, value: staff.email }
+            { name: 'EMAIL', type: sql.NVarChar, value: staff.email },
+            { name: 'PASS', type: sql.NVarChar, value: "1111" }
+
         ];
-        const maNV = await executeStoredProcedureWithTransactionAndReturnCode(pool, 'sp_ThemNhanVien', params);
+        console.log(params)
+        const maNV = await executeStoredProcedure(pool, 'sp_ThemNhanVien', params);
         savedStaff.push({
-            maNV: maNV,
+            maNV: staff.maNV,
             hoNV: cleanHoNV,
             tenNV: cleanTenNV,
             gioiTinh: staff.gioiTinh == '1',
@@ -170,19 +175,21 @@ module.exports.undo = async (req, res) => {
                 const params = [
                     { name: 'MANV', type: sql.Int, value: staff.maNV }
                 ];
-                await executeStoredProcedureWithTransaction(pool, 'sp_XoaNhanVien', params);
+                await executeStoredProcedure(pool, 'sp_XoaMemNhanVien', params);
             }
         } else if (action === 'delete') {
             // Undo delete: Thêm lại nhân viên đã xóa
             const params = [
+                { name: 'MANV', type: sql.Int, value: data.maNV },
                 { name: 'HONV', type: sql.NVarChar, value: data.hoNV },
                 { name: 'TENNV', type: sql.NVarChar, value: data.tenNV },
                 { name: 'GIOITINH', type: sql.Bit, value: data.gioiTinh },
                 { name: 'DIACHI', type: sql.NVarChar, value: data.diaChi },
                 { name: 'DIENTHOAI', type: sql.NVarChar, value: data.dienThoai },
-                { name: 'EMAIL', type: sql.NVarChar, value: data.email }
+                { name: 'EMAIL', type: sql.NVarChar, value: data.email },
+                { name: 'PASS', type: sql.NVarChar, value: "1111" } // Mật khẩu mặc định
             ];
-            await executeStoredProcedureWithTransaction(pool, 'sp_ThemNhanVien', params);
+            await executeStoredProcedure(pool, 'sp_ThemNhanVien', params);
         } else if (action === 'edit') {
             // Undo edit: Khôi phục thông tin cũ
             const params = [

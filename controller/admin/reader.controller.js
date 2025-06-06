@@ -51,7 +51,7 @@ module.exports.delete = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedureWithTransaction(pool, 'sp_XoaMemDocGia', params);
+        await executeStoredProcedure(pool, 'sp_XoaMemDocGia', params);
         pushToUndoStack('delete', reader);
         res.redirect(`${systemConfig.prefixAdmin}/reader`);
     } catch (error) {
@@ -102,6 +102,7 @@ module.exports.createPost = async (req, res) => {
         const ngayHetHan = parseDate(reader.ngayHetHan);
 
         const params = [
+            { name: 'MADG', type: sql.NVarChar, value: reader.maDG },
             { name: 'HODG', type: sql.NVarChar, value: cleanHoDG },
             { name: 'TENDG', type: sql.NVarChar, value: cleanTenDG },
             { name: 'EMAILDG', type: sql.NVarChar, value: cleanEmailDG + '@gmail.com' },
@@ -112,11 +113,15 @@ module.exports.createPost = async (req, res) => {
             { name: 'DIENTHOAI', type: sql.NVarChar, value: reader.dienThoai },
             { name: 'NGAYLAMTHE', type: sql.DateTime, value: ngayLamThe },
             { name: 'NGAYHETHAN', type: sql.DateTime, value: ngayHetHan },
-            { name: 'HOATDONG', type: sql.Bit, value: reader.hoatDong == '1' }
+            { name: 'HOATDONG', type: sql.Bit, value: reader.hoatDong == '1' },
+            { name: 'PASS', type: sql.NVarChar, value: "1111" },
+
         ];
-        const maDG = await executeStoredProcedureWithTransactionAndReturnCode(pool, 'sp_ThemDocGia', params);
+
+        console.log(params)
+        const maDG = await executeStoredProcedure(pool, 'sp_ThemDocGia', params);
         savedReaders.push({
-            maDG: maDG,
+            maDG: reader.maDG,
             hoDG: cleanHoDG,
             tenDG: cleanTenDG,
             emailDG: cleanEmailDG + '@gmail.com',
@@ -230,14 +235,16 @@ module.exports.undo = async (req, res) => {
             // Undo create: Xóa từng độc giả đã thêm
             for (const reader of data) {
                 const params = [
-                    { name: 'HODG', type: sql.NVarChar, value: reader.hoDG },
-                    { name: 'TENDG', type: sql.NVarChar, value: reader.tenDG }
+                    { name: 'MADG', type: sql.BigInt, value: reader.maDG }
+
                 ];
-                await executeStoredProcedureWithTransaction(pool, 'sp_XoaMemDocGia', params);
+                console.log("Undo create reader: ", params);
+                await executeStoredProcedure(pool, 'sp_XoaMemDocGia', params);
             }
         } else if (action === 'delete') {
             // Undo delete: Thêm lại độc giả đã xóa
             const params = [
+                { name: 'MADG', type: sql.NVarChar, value: data.maDG },
                 { name: 'HODG', type: sql.NVarChar, value: data.hoDG },
                 { name: 'TENDG', type: sql.NVarChar, value: data.tenDG },
                 { name: 'EMAILDG', type: sql.NVarChar, value: data.emailDG },
@@ -248,9 +255,10 @@ module.exports.undo = async (req, res) => {
                 { name: 'DIENTHOAI', type: sql.NVarChar, value: data.dienThoai },
                 { name: 'NGAYLAMTHE', type: sql.DateTime, value: data.ngayLamThe },
                 { name: 'NGAYHETHAN', type: sql.DateTime, value: data.ngayHetHan },
-                { name: 'HOATDONG', type: sql.Bit, value: data.hoatDong }
+                { name: 'HOATDONG', type: sql.Bit, value: data.hoatDong },
+                { name: 'PASS', type: sql.NVarChar, value: "1111" }
             ];
-            await executeStoredProcedureWithTransaction(pool, 'sp_ThemDocGia', params);
+            await executeStoredProcedure(pool, 'sp_ThemDocGia', params);
         } else if (action === 'edit') {
             // Undo edit: Khôi phục thông tin cũ
             const params = [

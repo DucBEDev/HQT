@@ -39,7 +39,6 @@ const createUserConnection = async (username, password, sessionId) => {
             idleTimeoutMillis: 30000
         }
     };
-    console.log(sessionId)
 
     const userPool = new sql.ConnectionPool(userConfig);
     try {

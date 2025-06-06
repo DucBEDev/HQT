@@ -225,3 +225,33 @@ $(document).ready(function () {
         });
     });
 });
+
+
+
+
+//undo DAUSACH_SACH
+$(document).ready(function () {
+    // ... (giữ nguyên các phần khác)
+
+    $('#btnUndoTitleBook').on('click', function() {
+        fetch(`/Library/admin/isbn_book/undo`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Undo thành công!');
+                window.location.reload(); // Cập nhật giao diện
+            } else {
+                alert(data.message || 'Không thể thực hiện undo!');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi thực hiện undo!');
+        });
+    });
+});

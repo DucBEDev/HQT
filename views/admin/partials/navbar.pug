@@ -142,5 +142,24 @@ ul.navbar-nav.sidebar.sidebar-light.accordion#accordionSidebar
                 });
             }
 
+            if (!href.includes(`/isbn_book`)) {
+                e.preventDefault();
+                $.ajax({
+                    url: `/Library/admin/isbn_book/clear-undo`,
+                    method: 'POST',
+                    success: function(response) {
+                        if (response.success) {
+                            console.log('Undo stack cleared for isbn_book');
+                            window.location.href = href;
+                        } else {
+                            alert('Không thể xóa stack undo: ' + response.message);
+                        }
+                    },
+                        error: function() {
+                        alert('Có lỗi xảy ra khi xóa stack undo!');
+                        }
+                });
+            }
+
       });
 
