@@ -37,7 +37,7 @@ module.exports.delete = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedureWithTransaction(pool, 'sp_XoaTheLoai', params);
+        await executeStoredProcedureWithTransaction(pool, 'sp_XoaMemTheLoai', params);
         pushToUndoStack('delete', type);
 
         req.flash("success", "Xóa thể loại thành công!");
@@ -142,7 +142,7 @@ module.exports.undo = async (req, res) => {
             // Undo create: Xóa từng thể loại đã thêm
             for (const tl of data) {
                 const params = [{ name: 'MATL', type: sql.NVarChar, value: tl.maTL }];
-                await executeStoredProcedureWithTransaction(pool,'sp_XoaTheLoai', params);
+                await executeStoredProcedureWithTransaction(pool,'sp_XoaMemTheLoai', params);
             }
         } else if (action === 'delete') {
             // Undo delete: Thêm lại thể loại đã xóa
@@ -169,6 +169,7 @@ module.exports.undo = async (req, res) => {
 
 // [POST] /type/clear-undo
 module.exports.clearUndo = async (req, res) => {
+    //console.log("Clearing type undo stack ----------------------------------------------------------------------------------------------------------------------------------------------------------");
     try {
         clearUndoStack();
         res.json({ success: true });

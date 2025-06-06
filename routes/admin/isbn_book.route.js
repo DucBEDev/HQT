@@ -20,6 +20,10 @@ router.post('/book/update', controller.update);
 router.post('/create', upload.array('hinhAnhPath'), uploadCloud.upload, controller.createDauSach);
 router.post('/update', upload.array('hinhAnhPath'), uploadCloud.upload, controller.updateDauSach);
 router.post('/delete', controller.deleteTitle);
+router.post('/undo', controller.undo);
+router.post('/clear-undo', controller.clearUndo); // Thêm route mới
+
+
 router.get('/next-id', controller.getNextISBN);
 router.get('/report', controller.getReport);
 router.post('/download-report', controller.downloadReport);

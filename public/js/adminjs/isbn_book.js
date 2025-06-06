@@ -68,7 +68,7 @@ function loadDauSachForEdit(dauSach) {
     $('#dauSachTempList').hide();
     
     // Disable ISBN input
-    document.getElementById('isbn').disabled = true;
+    document.getElementById('isbn').disabled = false;
 }
 
 function resetDauSachForm() {
@@ -487,6 +487,7 @@ $(document).ready(function () {
         
         // Tạo FormData để gửi kèm file (nếu có)
         const formData = new FormData();
+        formData.append('oldisbn', originalDauSachData.ISBN);
         formData.append('isbn', document.getElementById('isbn').value);
         formData.append('tenSach', document.getElementById('tenSach').value);
         formData.append('khoSach', document.getElementById('khoSach').value);

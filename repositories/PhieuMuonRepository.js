@@ -21,7 +21,7 @@ class PhieuMuonRepository {
     }
 
     // Lấy phiếu mượn theo mã phiếu
-    static async getById(pool,maPhieu) {
+    static async getById(pool, maPhieu) {
         try {
             await pool.connect();
             const request = pool.request();
@@ -39,6 +39,7 @@ class PhieuMuonRepository {
                                                         ctpm.MASACH AS maSach,
                                                         ctpm.TINHTRANGMUON AS tinhTrangMuon,
                                                         ctpm.NGAYTRA AS ngayTra,
+                                                        ctpm.TRA AS tra,
                                                         ds.TENSACH AS tenSach
                                                 FROM CT_PHIEUMUON ctpm
                                                 LEFT JOIN SACH s ON s.MASACH = ctpm.MASACH

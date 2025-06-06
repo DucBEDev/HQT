@@ -1,8 +1,8 @@
-const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, executeStoredProcedureWithTransactionAndReturnCode, getUserPool } = require('../../configs/database');
+const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, executeStoredProcedureAndReturnCode, getUserPool } = require('../../configs/database');
 const TacGiaRepository = require('../../repositories/TacGiaRepository'); // Giả định bạn sẽ tạo repository tương ứng
 const systemConfig = require('../../configs/system');
 const TacGia = require('../../models/TacGia');
-const { pushToUndoStack, popUndoStack } = require('../../public/js/adminjs/author/author-undo');
+const { pushToUndoStack, popUndoStack, clearUndoStack } = require('../../public/js/adminjs/author/author-undo');
 
 
 // [GET] /author
@@ -35,7 +35,7 @@ module.exports.delete = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedureWithTransaction(pool, 'sp_XoaTacGia', params);
+        await executeStoredProcedureWithTransaction(pool, 'sp_XoaMemTacGia', params);
         pushToUndoStack('delete', author);
 
         req.flash("success", "Xóa tác giả thành công!");
@@ -72,7 +72,7 @@ module.exports.createPost = async (req, res) => {
             { name: 'DIACHITG', type: sql.NVarChar, value: cleanDiaChiTG },
             { name: 'DIENTHOAITG', type: sql.NVarChar, value: author.dienThoaiTG }
         ];
-        const maTacGia = await executeStoredProcedureWithTransactionAndReturnCode(pool,'sp_ThemTacGia', params);
+        const maTacGia = await executeStoredProcedureAndReturnCode(pool,'sp_ThemTacGia', params);
         savedAuthors.push({
             maTacGia: maTacGia, 
             hoTenTG: cleanHoTenTG,
@@ -162,7 +162,7 @@ module.exports.undo = async (req, res) => {
                 const params = [
                     { name: 'MATACGIA', type: sql.Int, value: author.maTacGia }
                 ];
-                await executeStoredProcedureWithTransaction(pool, 'sp_XoaTacGia', params);
+                await executeStoredProcedureWithTransaction(pool, 'sp_XoaMemTacGia', params);
             }
         } else if (action === 'delete') {
             // Undo delete: Thêm lại tác giả đã xóa
@@ -171,7 +171,7 @@ module.exports.undo = async (req, res) => {
                 { name: 'DIACHITG', type: sql.NVarChar, value: data.diaChiTG },
                 { name: 'DIENTHOAITG', type: sql.NVarChar, value: data.dienThoaiTG }
             ];
-            await executeStoredProcedureWithTransaction(pool, 'sp_ThemTacGia', params);
+            await executeStoredProcedure(pool, 'sp_ThemTacGia', params);
         } else if (action === 'edit') {
             // Undo edit: Khôi phục thông tin cũ
             const params = [
@@ -186,6 +186,19 @@ module.exports.undo = async (req, res) => {
     } catch (error) {
         console.error('Error in undo:', error);
         res.json({ success: false, message: 'Không thể thực hiện undo!' });
+    }
+};
+
+
+// [POST] /author/clear-undo
+module.exports.clearUndo = async (req, res) => {
+    console.log("Clearing author undo stack ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    try {
+        clearUndoStack();
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error clearing undo stack:', error);
+        res.json({ success: false, message: 'Không thể xóa stack undo!' });
     }
 };
 

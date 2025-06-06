@@ -9,6 +9,7 @@ const authorRoute = require('./author.route');
 const isbn_bookRoute = require('./isbn_book.route');
 const phieumuonRoute = require('./phieumuon.route');
 const authRoute = require('./auth.route');
+const backupRestoreRoute = require('./backup-restore.route');
 
 module.exports = (app) => {
     const PATH_ADMIN = systemConfig.prefixAdmin;
@@ -20,4 +21,5 @@ module.exports = (app) => {
     app.use(PATH_ADMIN + '/isbn_book', authMiddleware.auth, isbn_bookRoute);
     app.use(PATH_ADMIN + '/phieumuon', authMiddleware.auth, phieumuonRoute);
     app.use(PATH_ADMIN + '/auth', authRoute);
+    app.use(PATH_ADMIN + '/backup-restore', backupRestoreRoute);
 }

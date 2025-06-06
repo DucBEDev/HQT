@@ -93,54 +93,16 @@ module.exports.createPost = async (req, res) => {
 
 
         ];
-        await executeStoredProcedureWithTransaction(pool, 'sp_LapPhieuMuon', paramsPhieu);
-
+        await executeStoredProcedure(pool, 'sp_LapPhieuMuon', paramsPhieu);
+        req.flash('success', 'Tạo phiếu mượn thành công!');
         res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
     } 
-    catch (error) {
-        const errorMessage = error.message || 'Đã xảy ra lỗi không xác định';
-        const errorNumber = error.number || 50000;
-
-        // Ánh xạ mã lỗi
-        let customMessage;
-        switch (errorNumber) {
-            case 50001:
-                customMessage = 'Độc giả không tồn tại hoặc thẻ không hoạt động!';
-                break;
-            case 50002:
-                customMessage = 'Độc giả có sách mượn quá hạn, không thể mượn thêm!';
-                break;
-            case 50003:
-                customMessage = 'Độc giả chỉ được mượn tối đa 3 cuốn sách!';
-                break;
-            case 50004:
-                customMessage = 'Sách 1 không tồn tại hoặc không thể mượn!';
-                break;
-            case 50005:
-                customMessage = 'Sách 2 không tồn tại hoặc không thể mượn!';
-                break;
-            case 50006:
-                customMessage = 'Sách 3 không tồn tại hoặc không thể mượn!';
-                break;
-            case 50007:
-                customMessage = 'Nhân viên không tồn tại!';
-                break;
-            case 50008:
-                customMessage = 'Phải mượn ít nhất một cuốn sách!';
-                break;
-            case 50009:
-                customMessage = 'Các mã sách không được trùng lặp!';
-                break;
-            default:
-                customMessage = errorMessage;
-        }
-
-        console.error('SQL Error:', error);
-        res.status(400).json({
-            success: false,
-            message: customMessage,
-            errorCode: errorNumber
-        });
+    catch (error) 
+    {
+        console.error('Error creating phieu muon:', error);
+        req.flash('error', error.message || 'Lỗi khi tạo phiếu mượn!');
+        res.redirect('back');
+        
     }
 };
 
@@ -177,15 +139,102 @@ module.exports.detail = async (req, res) => {
         pageTitle: 'Chi tiết phiếu mượn',
         sachList,
         ctpmList,
+<<<<<<< HEAD
         dgData,
         empData
+=======
+        ngayTra : ctpmList[0]?.ngayTra.toISOString().split('T')[0] || null,
+        trangThai : ctpmList[0]?.tra,
+
+>>>>>>> long
     });
 };
 
 // [PATCH] /phieumuon/edit/:maPhieu
 module.exports.edit = async (req, res) => {
+    console.log("Editing phieumuon ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    const { maPhieu } = req.params; // MAPHIEU from URL
+    //const { hinhThuc, maSach1, tinhTrangMuon1, maSach2, tinhTrangMuon2, maSach3, tinhTrangMuon3 } = req.body;
+    const nhanvien = req.session.username; // Assuming MADG is stored in session for the logged-in user
+    console.log(nhanvien)
+    const madg = req.body.maDG
+
+    // Phân tích ctPhieuMuonList từ req.body
+        const books = [];
+        Object.keys(req.body).forEach(key => {
+            const match = key.match(/ctPhieuMuonList\[(\d+)\]\.(\w+)/);
+            if (match) {
+                const index = parseInt(match[1], 10);
+                const prop = match[2];
+                if (!books[index]) {
+                    books[index] = {};
+                }
+                books[index][prop] = req.body[key];
+            }
+        });
+
+        // Làm sạch dữ liệu: cắt bỏ khoảng trắng và chuyển đổi tinhTrangMuon
+        books.forEach(book => {
+            if (book.maSach) {
+                book.maSach = book.maSach.trim(); // Loại bỏ khoảng trắng thừa
+            }
+            if (book.tinhTrangMuon) {
+                book.tinhTrangMuon = book.tinhTrangMuon === 'true' ? 1 : 0; // Chuyển 'true'/'false' thành 1/0
+            } else {
+                book.tinhTrangMuon = 1; // Giá trị mặc định nếu không cung cấp
+            }
+        });
+
+        console.log(books)
+
+        // Ánh xạ dữ liệu thành các tham số riêng lẻ
+        const maSach1 = books[0]?.maSach || null;
+        const tinhTrangMuon1 = books[0]?.tinhTrangMuon ?? 1;
+        const maSach2 = books[1]?.maSach || null;
+        const tinhTrangMuon2 = books[1]?.tinhTrangMuon ?? 1;
+        const maSach3 = books[2]?.maSach || null;
+        const tinhTrangMuon3 = books[2]?.tinhTrangMuon ?? 1;
+
+        // Lấy hinhThuc từ req.body
+        const hinhThuc = req.body.hinhThuc;
+
+
     console.log(req.body)
-    res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+
+
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+    try {
+        const params = [
+            { name: 'MAPHIEU', type: sql.BigInt, value: maPhieu },
+            { name: 'MADG', type: sql.BigInt, value: madg },
+            { name: 'HINHTHUC', type: sql.Bit, value: hinhThuc },
+            { name: 'MASACH1', type: sql.NChar(20), value: maSach1 },
+            { name: 'TINHTRANGMUON1', type: sql.Bit, value: tinhTrangMuon1 },
+            { name: 'MASACH2', type: sql.NChar(20), value: maSach2 },
+            { name: 'TINHTRANGMUON2', type: sql.Bit, value: tinhTrangMuon2 },
+            { name: 'MASACH3', type: sql.NChar(20), value: maSach3 },
+            { name: 'TINHTRANGMUON3', type: sql.Bit, value: tinhTrangMuon3 }
+        ];
+
+        // Gọi stored procedure với params
+        const result = await executeStoredProcedure(pool, 'sp_SuaPhieuMuon', params);
+
+        // Check if stored procedure executed successfully
+        if (result.returnValue === 0) {
+            req.flash('success', 'Chỉnh sửa phiếu mượn thành công!');
+            return res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+        } else {
+            throw new Error('Lỗi khi gọi stored procedure');
+        }
+    } catch (error) {
+        console.error('Error editing borrowing slip:', error);
+        req.flash('error', error.message || 'Lỗi khi chỉnh sửa phiếu mượn!');
+        return res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+    }
 };
 
 // [PATCH] /phieumuon/lostBook/:maPhieu/:maSach
@@ -197,15 +246,64 @@ module.exports.lostBook = async (req, res) => {
 
 // [PATCH] /phieumuon/returnBook/:maPhieu/:maSach
 module.exports.returnBook = async (req, res) => {
-    const pool = getUserPool(req.session.id);
-    if (!pool) {
-        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
-    }
+    console.log("Returning book ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    try
+    {
+        const pool = getUserPool(req.session.id);
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
     console.log(req.params.maPhieu)
-    console.log(req.params.maSach)
-    // const kq = await PhieuMuonRepository.bookReturn(pool, req.params.maPhieu);
-    // console.log(kq)
-    res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+    const maPhieu = req.params.maPhieu;
+    const params = [
+            { name: 'MAPHIEU', type: sql.BigInt, value: maPhieu },
+            { name: 'MANVS', type:sql.Int, value: 1}
+        ];
+
+    // Gọi stored procedure với params
+    const result = await executeStoredProcedure(pool, 'sp_TraSach', params);
+
+    // Check if stored procedure executed successfully
+        if (result.returnValue === 0) {
+            req.flash('success', 'Trả sách thành công!');
+            return res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+        } else {
+            throw new Error('Lỗi khi gọi stored procedure');
+        }
+    }
+    catch (error) {
+        console.error('Error return borrowing slip:', error);
+        req.flash('error', error.message || 'Lỗi khi trả sách!');
+        return res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+    }
+ 
 };
 
+// [DELETE] /phieumuon/delete/:maPhieu
+module.exports.delete = async (req, res) => {
+    console.log("Deleting phieumuon ----------------------------------------------------------------------------------------------------------------------------------------------------------");
+    const pool = getUserPool(req.session.id);
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
+    console.log(req.params.maPhieu)
+    try
+    {
+            const params = 
+        [
+            { name: 'MAPHIEU', type: sql.BigInt, value: req.params.maPhieu }
+        ]
+        await executeStoredProcedure(pool, 'sp_XoaPhieuMuon', params);
+        req.flash('success', 'Xóa phiếu mượn thành công!');
+        res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+    }
+    catch (error) {
+        console.error('Error deleting borrowing slip:', error);
+        req.flash('error', error.message || 'Lỗi khi xóa phiếu mượn!');
+        res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+    }
+    
+};
 

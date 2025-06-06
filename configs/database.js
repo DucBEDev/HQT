@@ -53,6 +53,7 @@ const createUserConnection = async (username, password, sessionId) => {
 
 // Hàm lấy pool từ sessionId
 const getUserPool = (sessionId) => {
+    //console.log(userPools)
     return userPools.get(sessionId);
 };
 
@@ -62,6 +63,19 @@ const closeUserPool = async (sessionId) => {
     if (pool) {
         await pool.close();
         userPools.delete(sessionId);
+    }
+};
+
+// New function to reset the pool after restore
+const resetUserPool = async (sessionId) => {
+    const pool = userPools.get(sessionId);
+     const userPool = new sql.ConnectionPool(pool.config);
+    try {
+        await userPool.connect();
+        userPools.set(sessionId, userPool);
+    } catch (err) {
+        console.error('Error recreating user pool:', err);
+        throw err;
     }
 };
 
@@ -93,6 +107,31 @@ const executeStoredProcedure = async (pool, procedureName, params = []) => {
         throw err;
     }
 };
+
+
+// Hàm thực thi Stored Procedure với pool cụ thể
+const executeStoredProcedureAndReturnCode = async (pool, procedureName, params = []) => {
+    try {
+        const request = pool.request();
+        params.forEach(param => {
+            request.input(param.name, param.type, param.value);
+        });
+        const result = await request.execute(procedureName);
+        let id;
+        if (procedureName === 'sp_ThemTacGia') {
+            id = result.recordset.length > 0 ? result.recordset[0].MATACGIA : null;
+        } else if (procedureName === 'sp_ThemNhanVien') {
+            id = result.recordset.length > 0 ? result.recordset[0].MANV : null;
+        } else if (procedureName === 'sp_ThemDocGia') {
+            id = result.recordset.length > 0 ? result.recordset[0].MADG : null;
+        }
+        return id;
+    } catch (err) {
+        console.error(`Error executing stored procedure ${procedureName}:`, err);
+        throw err;
+    }
+};
+
 
 // Hàm thực thi Stored Procedure với transaction
 const executeStoredProcedureWithTransaction = async (pool, procedureName, params = []) => {
@@ -153,7 +192,9 @@ module.exports = {
     getUserPool,
     createUserConnection,
     executeStoredProcedure,
+    executeStoredProcedureAndReturnCode,
     executeStoredProcedureWithTransaction,
     executeStoredProcedureWithTransactionAndReturnCode, 
-    recreateUserPool
+    recreateUserPool, 
+    resetUserPool
 };

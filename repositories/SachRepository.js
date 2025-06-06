@@ -86,7 +86,31 @@ class SachRepository {
             console.error('Error in getNextId Sach:', err);
             throw err;
         }
-    }   
+    }  
+    
+    
+    static async getByMaSach(pool, maSach) {
+        try {
+            await pool.connect(); // Kết nối đến DB
+            const request = pool.request(); // Tạo request
+            request.input('MASACH', sql.NChar(20), maSach); // Thêm tham số MASACH
+            const result = await request.query('SELECT * FROM SACH WHERE MASACH = @MASACH'); // Truy vấn với tham số
+            if (result.recordset.length === 0) {
+                return null; // Không tìm thấy bản ghi
+            }
+            const record = result.recordset[0];
+            return new Sach(
+                record.MASACH,
+                record.ISBN,
+                record.TINHTRANG,
+                record.CHOMUON,
+                record.MANGANTU
+            );
+        } catch (err) {
+            console.error('Error in getByMaSach Sach:', err);
+            throw err;
+        }
+    }
 }
 
 module.exports = SachRepository;
