@@ -15,8 +15,17 @@ module.exports.index = async (req, res) => {
         if (!pool) {
             return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
         }
-
+        
         const list = await PhieuMuonRepository.getAll(pool);
+
+        for (let i = 0; i < list.length; i++) {
+            const dgData = await DocGiaRepository.getById(pool, list[i].maDG);
+            const empData = await NhanVienRepository.getById(pool, list[i].maNV);
+
+            list[i]['dgFullName'] = dgData.hoDG + " " + dgData.tenDG;
+            list[i]['empFullName'] = empData.hoNV + " " + empData.tenNV;
+        }
+
         res.render('admin/pages/phieumuon/index', {
             phieuMuonList: list,
             pageTitle: 'Quản lý phiếu mượn',
@@ -54,10 +63,9 @@ module.exports.create = async (req, res) => {
 // [POST] /phieumuon/create
 module.exports.createPost = async (req, res) => {
     const pool = getUserPool(req.session.id);
-        if (!pool) {
-            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
-        }
-
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
 
     const { maDG, hinhThuc, maNV } = req.body;
 
@@ -160,6 +168,8 @@ module.exports.detail = async (req, res) => {
 
     const { maPhieu } = req.params;
     const { phieuMuon, ctpmList } = await PhieuMuonRepository.getById(pool, maPhieu);
+    const dgData = await DocGiaRepository.getById(pool, phieuMuon.maDG);
+    const empData = await NhanVienRepository.getById(pool, phieuMuon.maNV);
     const sachList = await DauSachRepository.getAllWithQuantity(pool);
     
     res.render('admin/pages/phieumuon/detail', { 
@@ -167,7 +177,8 @@ module.exports.detail = async (req, res) => {
         pageTitle: 'Chi tiết phiếu mượn',
         sachList,
         ctpmList,
-        ngayTra : ctpmList[0]?.ngayTra.toISOString().split('T')[0] || null,
+        dgData,
+        empData
     });
 };
 
@@ -177,21 +188,23 @@ module.exports.edit = async (req, res) => {
     res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
 };
 
-// [PATCH] /phieumuon/lostBook/:maPhieu
+// [PATCH] /phieumuon/lostBook/:maPhieu/:maSach
 module.exports.lostBook = async (req, res) => {
     console.log(req.params.maPhieu)
+    console.log(req.params.maSach)
     res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
 };
 
-// [POST] /phieumuon/returnBook/:maPhieu
+// [PATCH] /phieumuon/returnBook/:maPhieu/:maSach
 module.exports.returnBook = async (req, res) => {
     const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
-
-    const kq = await PhieuMuonRepository.bookReturn(pool, req.params.maPhieu);
-    console.log(kq)
+    console.log(req.params.maPhieu)
+    console.log(req.params.maSach)
+    // const kq = await PhieuMuonRepository.bookReturn(pool, req.params.maPhieu);
+    // console.log(kq)
     res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
 };
 

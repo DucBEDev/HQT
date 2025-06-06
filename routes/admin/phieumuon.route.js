@@ -9,7 +9,7 @@ router.post('/create', controller.createPost);
 router.get('/next-id', controller.getNextId);
 router.get('/detail/:maPhieu', controller.detail);
 router.patch('/edit/:maPhieu', controller.edit);
-router.patch('/lostBook/:maPhieu', controller.lostBook);
-router.post('/returnBook/:maPhieu', controller.returnBook);
+router.patch('/lostBook/:maPhieu/:maSach', controller.lostBook);
+router.patch('/returnBook/:maPhieu/:maSach', controller.returnBook);
 
 module.exports = router;

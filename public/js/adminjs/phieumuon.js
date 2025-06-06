@@ -46,7 +46,31 @@ $(document).ready(function() {
         };
     }).get();
     
-    const fuse = new Fuse(books, {
+    // Khởi tạo dữ liệu độc giả
+    const readers = $('.reader-search-item').map(function () {
+        const maDG = $(this).data('ma-dg');
+        const hoDG = $(this).data('ho-dg');
+        const tenDG = $(this).data('ten-dg');
+        const email = $(this).data('email');
+        const sdt = $(this).data('sdt');
+        
+        return {
+            el: this,
+            maDG: maDG,
+            hoDG: hoDG,
+            tenDG: tenDG,
+            email: email,
+            sdt: sdt,
+            fullName: `${hoDG} ${tenDG}`,
+            // Thêm các trường đã loại bỏ dấu để tìm kiếm
+            maDGNormalized: removeAccents(String(maDG || '')).toLowerCase(),
+            fullNameNormalized: removeAccents(`${hoDG} ${tenDG}`).toLowerCase(),
+            emailNormalized: removeAccents(String(email || '')).toLowerCase(),
+            sdtNormalized: removeAccents(String(sdt || '')).toLowerCase()
+        };
+    }).get();
+    
+    const fuseBooks = new Fuse(books, {
         keys: [
             // Tìm kiếm trên cả dữ liệu gốc và đã chuẩn hóa
             { name: 'maSach', weight: 0.2 },
@@ -63,6 +87,27 @@ $(document).ready(function() {
         includeScore: true, // Bao gồm điểm số để debug
         useExtendedSearch: true,
         // Thêm các option này để tìm kiếm tốt hơn
+        findAllMatches: true,
+        includeMatches: true
+    });
+
+    const fuseReaders = new Fuse(readers, {
+        keys: [
+            { name: 'maDG', weight: 0.3 },
+            { name: 'maDGNormalized', weight: 0.3 },
+            { name: 'fullName', weight: 0.4 },
+            { name: 'fullNameNormalized', weight: 0.4 },
+            { name: 'email', weight: 0.1 },
+            { name: 'emailNormalized', weight: 0.1 },
+            { name: 'sdt', weight: 0.2 },
+            { name: 'sdtNormalized', weight: 0.2 }
+        ],
+        threshold: 0.4,
+        distance: 100,
+        ignoreLocation: true,
+        minMatchCharLength: 1,
+        includeScore: true,
+        useExtendedSearch: true,
         findAllMatches: true,
         includeMatches: true
     });
@@ -99,7 +144,7 @@ $(document).ready(function() {
         
         // Thực hiện tìm kiếm với từng query
         searchQueries.forEach(query => {
-            const results = fuse.search(query);
+            const results = fuseBooks.search(query);
             allResults = allResults.concat(results);
         });
 
@@ -142,6 +187,115 @@ $(document).ready(function() {
                     $item.show();
                 }
             });
+        }
+    });
+
+    // Tìm kiếm độc giả
+    $('#tenDocGia').on('input', function () {
+        const searchRaw = $(this).val().trim();
+        const dropdown = $('#readerSearchDropdown');
+        
+        if (searchRaw === '') {
+            dropdown.hide();
+            return;
+        }
+
+        if (searchRaw.length < 1) {
+            dropdown.hide();
+            return;
+        }
+
+        // Tạo query tìm kiếm
+        let searchQueries = [];
+        searchQueries.push(searchRaw);
+        
+        const searchNormalized = removeAccents(searchRaw).toLowerCase();
+        if (searchNormalized !== searchRaw.toLowerCase()) {
+            searchQueries.push(searchNormalized);
+        }
+        
+        if (searchRaw.length >= 2) {
+            searchQueries.push(`'${searchRaw}`); // Exact match
+            searchQueries.push(`^${searchRaw}`); // Starts with
+        }
+
+        let allResults = [];
+        
+        // Thực hiện tìm kiếm với từng query
+        searchQueries.forEach(query => {
+            const results = fuseReaders.search(query);
+            allResults = allResults.concat(results);
+        });
+
+        // Loại bỏ kết quả trùng lặp và sắp xếp theo điểm số
+        const uniqueResults = [];
+        const seenItems = new Set();
+        
+        allResults
+            .sort((a, b) => a.score - b.score)
+            .forEach(result => {
+                const itemKey = result.item.maDG;
+                if (!seenItems.has(itemKey)) {
+                    seenItems.add(itemKey);
+                    uniqueResults.push(result);
+                }
+            });
+
+        // Hiển thị kết quả
+        $('.reader-search-item').hide();
+        
+        if (uniqueResults.length > 0) {
+            uniqueResults.slice(0, 10).forEach(result => { // Giới hạn 10 kết quả
+                const $item = $(result.item.el);
+                $item.show();
+            });
+            dropdown.show();
+        } else {
+            // Tìm kiếm đơn giản hơn
+            let hasResults = false;
+            readers.forEach(reader => {
+                const $item = $(reader.el);
+                const searchLower = searchNormalized;
+                
+                if (reader.maDGNormalized.includes(searchLower) || 
+                    reader.fullNameNormalized.includes(searchLower) ||
+                    reader.emailNormalized.includes(searchLower) ||
+                    reader.sdtNormalized.includes(searchLower)) {
+                    $item.show();
+                    hasResults = true;
+                }
+            });
+            
+            if (hasResults) {
+                dropdown.show();
+            } else {
+                dropdown.hide();
+            }
+        }
+    });
+
+    // Chọn độc giả từ dropdown
+    $(document).on('click', '.reader-search-item', function() {
+        const maDG = $(this).data('ma-dg');
+        const hoDG = $(this).data('ho-dg');
+        const tenDG = $(this).data('ten-dg');
+        
+        $('#maDG').val(maDG);
+        $('#tenDocGia').val(hoDG + ' ' + tenDG);
+        $('#readerSearchDropdown').hide();
+    });
+
+    // Ẩn dropdown khi click ra ngoài
+    $(document).on('click', function(e) {
+        if (!$(e.target).closest('.form-group.position-relative').length) {
+            $('#readerSearchDropdown').hide();
+        }
+    });
+
+    // Ẩn dropdown khi nhấn ESC
+    $(document).on('keydown', function(e) {
+        if (e.key === 'Escape') {
+            $('#readerSearchDropdown').hide();
         }
     });
     
