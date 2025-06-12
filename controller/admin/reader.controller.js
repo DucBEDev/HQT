@@ -6,7 +6,7 @@ const DocGiaRepository = require('../../repositories/DocGiaRepository');
 
 const systemConfig = require('../../configs/system');
 const DocGia = require('../../models/DocGia');
-const { pushToUndoStack, popUndoStack, clearUndoStack } = require('../../public/js/adminjs/reader/reader-undo');
+const { pushToUndoStack, popUndoStack, clearUndoStack, updateAfterDeleteUndo } = require('../../public/js/adminjs/reader/reader-undo');
 
 // Hàm chuyển đổi chuỗi DD/MM/YYYY thành đối tượng Date
 function parseDate(dateStr) {
@@ -47,11 +47,12 @@ module.exports.delete = async (req, res) => {
     const { maDG } = req.params; 
     const reader = await DocGiaRepository.getById(pool, maDG);
     const params = [
-        { name: 'MADG', type: sql.Int, value: maDG }
+        { name: 'USER_TYPE', type: sql.VarChar(10), value: 'DOCGIA' },
+        { name: 'ID', type: sql.Int, value: maDG }
     ];
 
     try {
-        await executeStoredProcedure(pool, 'sp_XoaMemDocGia', params);
+        await executeStoredProcedure(pool, 'sp_XoaTaiKhoan', params);
         pushToUndoStack('delete', reader);
         res.redirect(`${systemConfig.prefixAdmin}/reader`);
     } catch (error) {
@@ -84,33 +85,42 @@ module.exports.create = async (req, res) => {
 
 // [POST] /admin/reader/create
 module.exports.createPost = async (req, res) => {
-    const pool = getUserPool(req.session.id);
+    try
+    {
+        const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
     const readerList = req.body;
+    console.log(req.body)
     const savedReaders = [];
     for (const reader of readerList) {
         const cleanHoDG = reader.hoDG.trim().replace(/\s+/g, ' ');
         const cleanTenDG = reader.tenDG.trim().replace(/\s+/g, ' ');
         const cleanDiaChiDG = reader.diaChiDG.trim().replace(/\s+/g, ' ');
         const cleanEmailDG = reader.emailDG.trim().replace(/\s+/g, ' ');
-
+        let gioiTinh
+        if (reader.gioiTinh == 'Nam') {
+            gioiTinh = 1;
+        } else if (reader.gioiTinh == 'Nữ') {
+            gioiTinh = 0;
+        }
         const ngaySinh = parseDate(reader.ngaySinh);
         const ngayLamThe = parseDate(reader.ngayLamThe);
         const ngayHetHan = parseDate(reader.ngayHetHan);
+        
 
         const params = [
-            { name: 'MADG', type: sql.NVarChar, value: reader.maDG },
+            { name: 'USER_TYPE', type: sql.VarChar(10), value: 'DOCGIA' },
             { name: 'HODG', type: sql.NVarChar, value: cleanHoDG },
             { name: 'TENDG', type: sql.NVarChar, value: cleanTenDG },
             { name: 'EMAILDG', type: sql.NVarChar, value: cleanEmailDG + '@gmail.com' },
             { name: 'SOCMND', type: sql.NVarChar, value: reader.soCMND },
-            { name: 'GIOITINH', type: sql.Bit, value: reader.gioiTinh == '1' },
+            { name: 'GIOITINH_DG', type: sql.Bit, value: gioiTinh },
             { name: 'NGAYSINH', type: sql.DateTime, value: ngaySinh },
             { name: 'DIACHIDG', type: sql.NVarChar, value: cleanDiaChiDG },
-            { name: 'DIENTHOAI', type: sql.NVarChar, value: reader.dienThoai },
+            { name: 'DIENTHOAI_DG', type: sql.NVarChar, value: reader.dienThoai },
             { name: 'NGAYLAMTHE', type: sql.DateTime, value: ngayLamThe },
             { name: 'NGAYHETHAN', type: sql.DateTime, value: ngayHetHan },
             { name: 'HOATDONG', type: sql.Bit, value: reader.hoatDong == '1' },
@@ -119,9 +129,10 @@ module.exports.createPost = async (req, res) => {
         ];
 
         console.log(params)
-        const maDG = await executeStoredProcedure(pool, 'sp_ThemDocGia', params);
+        const result = await executeStoredProcedure(pool, 'sp_TaoTaiKhoan', params);
+        const maDG = result.recordset && result.recordset[0] ? result.recordset[0].ID : null;
         savedReaders.push({
-            maDG: reader.maDG,
+            maDG: maDG,
             hoDG: cleanHoDG,
             tenDG: cleanTenDG,
             emailDG: cleanEmailDG + '@gmail.com',
@@ -135,10 +146,20 @@ module.exports.createPost = async (req, res) => {
             hoatDong: reader.hoatDong == '1'
         });
     }
+        req.flash('success', 'Tạo đọc giả thành công!');
 
     pushToUndoStack('create', savedReaders);
 
     res.json({ success: true });
+    }
+    catch (error) {
+        console.error('Error creating reader:', error);
+        req.flash('error', 'Có lỗi xảy ra khi tạo đọc giả!');
+
+        res.status(500).json({ success: false, message: error.message });
+        //res.redirect(`${systemConfig.prefixAdmin}/staff/create`);
+    }
+    
 }
 
 module.exports.edit = async (req, res) => {
@@ -235,30 +256,37 @@ module.exports.undo = async (req, res) => {
             // Undo create: Xóa từng độc giả đã thêm
             for (const reader of data) {
                 const params = [
-                    { name: 'MADG', type: sql.BigInt, value: reader.maDG }
+                    { name: 'USER_TYPE', type: sql.VarChar(10), value: 'DOCGIA' },
+                    { name: 'ID', type: sql.BigInt, value: reader.maDG }
 
                 ];
                 console.log("Undo create reader: ", params);
-                await executeStoredProcedure(pool, 'sp_XoaMemDocGia', params);
+                await executeStoredProcedure(pool, 'sp_XoaTaiKhoan', params);
             }
         } else if (action === 'delete') {
+            const oldMaDG = data.maDG; // Lấy mã DG từ dữ liệu đã xóa
             // Undo delete: Thêm lại độc giả đã xóa
             const params = [
-                { name: 'MADG', type: sql.NVarChar, value: data.maDG },
+                { name: 'USER_TYPE', type: sql.VarChar(10), value: 'DOCGIA' },
+                // { name: 'MADG', type: sql.NVarChar, value: data.maDG },
                 { name: 'HODG', type: sql.NVarChar, value: data.hoDG },
                 { name: 'TENDG', type: sql.NVarChar, value: data.tenDG },
                 { name: 'EMAILDG', type: sql.NVarChar, value: data.emailDG },
                 { name: 'SOCMND', type: sql.NVarChar, value: data.soCMND },
-                { name: 'GIOITINH', type: sql.Bit, value: data.gioiTinh },
+                { name: 'GIOITINH_DG', type: sql.Bit, value: data.gioiTinh },
                 { name: 'NGAYSINH', type: sql.DateTime, value: data.ngaySinh },
                 { name: 'DIACHIDG', type: sql.NVarChar, value: data.diaChiDG },
-                { name: 'DIENTHOAI', type: sql.NVarChar, value: data.dienThoai },
+                { name: 'DIENTHOAI_DG', type: sql.NVarChar, value: data.dienThoai },
                 { name: 'NGAYLAMTHE', type: sql.DateTime, value: data.ngayLamThe },
                 { name: 'NGAYHETHAN', type: sql.DateTime, value: data.ngayHetHan },
                 { name: 'HOATDONG', type: sql.Bit, value: data.hoatDong },
                 { name: 'PASS', type: sql.NVarChar, value: "1111" }
             ];
-            await executeStoredProcedure(pool, 'sp_ThemDocGia', params);
+            const result = await executeStoredProcedure(pool, 'sp_TaoTaiKhoan', params);
+            const newMaDG = result.recordset && result.recordset[0] ? result.recordset[0].ID : null;
+
+            updateAfterDeleteUndo(oldMaDG, newMaDG);
+
         } else if (action === 'edit') {
             // Undo edit: Khôi phục thông tin cũ
             const params = [

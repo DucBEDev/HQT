@@ -44,19 +44,22 @@ module.exports.create = async (req, res) => {
     }
 
     const empId = req.session.empId;
+    console.log("Employee ID:", empId);
     const empData = await NhanVienRepository.getById(pool, empId);
     
     const sachList = await DauSachRepository.getAllWithQuantity(pool); 
     sachList.sort((a, b) => a.TENSACH.localeCompare(b.TENSACH));
     
     const docGiaList = await DocGiaRepository.getAll(pool);
+    const maPhieu = await PhieuMuonRepository.getNextId(pool);
 
     res.render('admin/pages/phieumuon/create', {
         sachList, 
         docGiaList,
         pageTitle: 'Tạo Phiếu Mượn',
         empName: `${empData.hoNV} ${empData.tenNV}`,
-        empId: empId
+        empId: empId,
+        maPhieu : maPhieu
     });
 };
 
@@ -67,7 +70,9 @@ module.exports.createPost = async (req, res) => {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
-    const { maDG, hinhThuc, maNV } = req.body;
+    const { maPhieu, maDG, hinhThuc, maNV } = req.body;
+
+    console.log(req.body);
 
     const ctPhieuMuonList = [];
     let i = 0;
@@ -79,21 +84,26 @@ module.exports.createPost = async (req, res) => {
         i++;
     }
     try {
-        // Lưu PhieuMuon
-        const paramsPhieu = [
+
+        for (i = 0; i < ctPhieuMuonList.length; i++) 
+        {
+            // Lưu PhieuMuon
+            const paramsPhieu = [
+            { name: 'MAPHIEU', type: sql.NVarChar, value: maPhieu },
+            { name: 'SOLUONGSACH', type: sql.Int, value: ctPhieuMuonList.length-i },
             { name: 'MADG', type: sql.NVarChar, value: maDG },
             { name: 'HINHTHUC', type: sql.NVarChar, value: hinhThuc },
             { name: 'MANV', type: sql.NVarChar, value: maNV },
-            { name: 'MASACH1', type: sql.NChar, value: ctPhieuMuonList[0]?.maSach || null },
-            { name: 'TINHTRANGMUON1', type: sql.Bit, value: ctPhieuMuonList[0]?.tinhTrangMuon || null },
-            { name: 'MASACH2', type: sql.NChar, value: ctPhieuMuonList[1]?.maSach || null },
-            { name: 'TINHTRANGMUON2', type: sql.Bit, value: ctPhieuMuonList[1]?.tinhTrangMuon || null },
-            { name: 'MASACH3', type: sql.NChar, value: ctPhieuMuonList[2]?.maSach || null },
-            { name: 'TINHTRANGMUON3', type: sql.Bit, value: ctPhieuMuonList[2]?.tinhTrangMuon || null }
+            { name: 'MASACH', type: sql.NChar, value: ctPhieuMuonList[i]?.maSach || null },
+            { name: 'TINHTRANGMUON', type: sql.Bit, value: ctPhieuMuonList[i]?.tinhTrangMuon || null }
+            ];
 
+            console.log("Params for stored procedure:", paramsPhieu);
 
-        ];
-        await executeStoredProcedure(pool, 'sp_LapPhieuMuon', paramsPhieu);
+            await executeStoredProcedure(pool, 'sp_LapPhieuMuon', paramsPhieu);
+
+        }
+
         req.flash('success', 'Tạo phiếu mượn thành công!');
         res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
     } 
@@ -140,12 +150,17 @@ module.exports.detail = async (req, res) => {
         sachList,
         ctpmList,
 <<<<<<< HEAD
+<<<<<<< HEAD
         dgData,
         empData
 =======
         ngayTra : ctpmList[0]?.ngayTra.toISOString().split('T')[0] || null,
         trangThai : ctpmList[0]?.tra,
 
+>>>>>>> long
+=======
+        dgData,
+        empData
 >>>>>>> long
     });
 };
@@ -246,64 +261,25 @@ module.exports.lostBook = async (req, res) => {
 
 // [PATCH] /phieumuon/returnBook/:maPhieu/:maSach
 module.exports.returnBook = async (req, res) => {
-    console.log("Returning book ----------------------------------------------------------------------------------------------------------------------------------------------------------");
-    try
-    {
-        const pool = getUserPool(req.session.id);
-        if (!pool) {
-            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
-        }
-
-    console.log(req.params.maPhieu)
-    const maPhieu = req.params.maPhieu;
-    const params = [
-            { name: 'MAPHIEU', type: sql.BigInt, value: maPhieu },
-            { name: 'MANVS', type:sql.Int, value: 1}
-        ];
-
-    // Gọi stored procedure với params
-    const result = await executeStoredProcedure(pool, 'sp_TraSach', params);
-
-    // Check if stored procedure executed successfully
-        if (result.returnValue === 0) {
-            req.flash('success', 'Trả sách thành công!');
-            return res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
-        } else {
-            throw new Error('Lỗi khi gọi stored procedure');
-        }
-    }
-    catch (error) {
-        console.error('Error return borrowing slip:', error);
-        req.flash('error', error.message || 'Lỗi khi trả sách!');
-        return res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
-    }
- 
-};
-
-// [DELETE] /phieumuon/delete/:maPhieu
-module.exports.delete = async (req, res) => {
-    console.log("Deleting phieumuon ----------------------------------------------------------------------------------------------------------------------------------------------------------");
     const pool = getUserPool(req.session.id);
-        if (!pool) {
-            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
-        }
-
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
     console.log(req.params.maPhieu)
-    try
-    {
-            const params = 
-        [
-            { name: 'MAPHIEU', type: sql.BigInt, value: req.params.maPhieu }
-        ]
-        await executeStoredProcedure(pool, 'sp_XoaPhieuMuon', params);
-        req.flash('success', 'Xóa phiếu mượn thành công!');
-        res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
-    }
-    catch (error) {
-        console.error('Error deleting borrowing slip:', error);
-        req.flash('error', error.message || 'Lỗi khi xóa phiếu mượn!');
-        res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
-    }
-    
+    console.log(req.params.maSach)
+
+    const { maPhieu, maSach } = req.params;
+    const empId = req.session.empId; // Assuming the employee ID is stored in the session
+    console.log("Employee ID:", empId);
+    const params = [
+        { name: 'MAPHIEU', type: sql.BigInt, value: maPhieu },
+        { name: 'MASACH', type: sql.NChar(20), value: maSach },
+        { name: 'MANVNS', type: sql.Int, value: empId } // Assuming MANV is the employee ID
+    ];
+    console.log("Params for stored procedure:", params);
+    const kq = await executeStoredProcedureWithTransaction(pool, "sp_TraSach", params );
+    console.log(kq)
+    res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
 };
+
 

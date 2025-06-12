@@ -9,30 +9,42 @@ block main
         .card.mb-4
             .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
                 h6.m-0.font-weight-bold.text-primary Danh Sách Bản Backup
-                a.btn.btn-primary(href=`javascript:void(0);` data-toggle="modal" data-target="#CreateBackupModal") + Tạo Backup
-                a.btn.btn-success(href=`javascript:void(0);` data-toggle="modal" data-target="#RestoreBackupModal") + Khôi phục
+                .d-flex
+                    form.create-backup-form(action="/Library/admin/backup-restore/backup" method="POST")
+                        input(type="hidden" name="replace" value="0")
+                        button.btn.btn-primary.mr-2(type="submit" data-toggle="modal" data-target="#CreateBackupModal") + Tạo Backup
+                    form.delete-all-backups-form(action="/Library/admin/backup-restore/backup" method="POST")
+                        input(type="hidden" name="replace" value="1")
+                        button.btn.btn-danger(type="submit" data-toggle="modal" data-target="#DeleteAllBackupsModal") Xóa Tất Cả Bản Backup Cũ khi tạo Backup Mới
             
             .table-responsive.p-3
                 table#dataTable.table.align-items-center.table-flush
                     thead.thead-light
                         tr
                             th Tên Database
+                            th Vị Trí
                             th Thời Điểm Bắt Đầu
                             th Thời Điểm Kết Thúc
                             th Kích Thước (MB)
                             th Chế Độ Backup
                             th Người Thực Hiện
                             th Mô Tả
+                            th Hành Động
                     tbody#backupTableBody
                         each backup in backupList
                             tr.backup-item
                                 td.align-middle #{backup.database_name}
+                                td.align-middle #{backup.position}
                                 td.align-middle #{backup.backup_start_date}
                                 td.align-middle #{backup.backup_finish_date}
                                 td.align-middle #{backup.BackupSizeMB.toFixed(2)}
                                 td.align-middle #{backup.BackupType}
                                 td.align-middle #{backup.BackupUser}
                                 td.align-middle #{backup.BackupDescription}
+                                td.align-middle
+                                    form.restore-backup-form(action="/Library/admin/backup-restore/restore" method="POST")
+                                        input(type="hidden" name="backupId" value=`${backup.position}`)
+                                        button.btn.btn-sm.btn-success(type="submit" data-toggle="modal" data-target="#RestoreBackupModal") Khôi phục
 
     //- Modal Create Backup
     #CreateBackupModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="CreateBackupModal" aria-hidden="true")
@@ -57,36 +69,54 @@ block main
                     button.close(type="button" data-dismiss="modal" aria-label="Close")
                         span(aria-hidden="true") ×
                 .modal-body
-                    p Bạn chắc chắn muốn khôi phục bản backup mới nhất không? Hành động này sẽ ghi đè dữ liệu hiện tại.
+                    p Bạn chắc chắn muốn khôi phục bản backup này không? Hành động này sẽ ghi đè dữ liệu hiện tại.
                 .modal-footer
                     button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
                     button#restore-backup-link.btn.btn-success(type="button") Khôi phục
 
-
-    //- Form for Create Backup Action
-    form(
-        action="/Library/admin/backup-restore/backup"
-        method="POST"
-        id="create-backup-form"
-    )
-
-    //- Form for Restore Backup Action
-    form(
-        action="/Library/admin/backup-restore/restore"
-        method="POST"
-        id="restore-backup-form"
-    )
-
+    //- Modal Delete All Backups
+    #DeleteAllBackupsModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="DeleteAllBackupsModal" aria-hidden="true")
+        .modal-dialog(role="document")
+            .modal-content
+                .modal-header
+                    h5#exampleModalLabelDeleteAllBackups.modal-title Xóa Tất Cả Bản Backup
+                    button.close(type="button" data-dismiss="modal" aria-label="Close")
+                        span(aria-hidden="true") ×
+                .modal-body
+                    p Bạn chắc chắn muốn xóa tất cả các bản backup và tạo một bản backup mới không? Hành động này không thể hoàn tác.
+                .modal-footer
+                    button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
+                    button#delete-all-backups-link.btn.btn-danger(type="button") Xóa Tất Cả và Tạo Backup
 
     script.
-        // Handle Create Backup Button in Modal
-        document.getElementById('create-backup-link').addEventListener('click', () => {
-            const form = document.getElementById('create-backup-form');
-            form.submit(); // Submit the form directly to trigger server-side redirect
+        // Handle Create Backup Form Submission
+        document.querySelector('.create-backup-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            $('#CreateBackupModal').modal('show');
+            const createButton = document.getElementById('create-backup-link');
+            createButton.onclick = () => {
+                e.target.submit();
+            };
         });
 
-        // Handle Restore Backup Button in Modal
-        document.getElementById('restore-backup-link').addEventListener('click', () => {
-            const form = document.getElementById('restore-backup-form');
-            form.submit();
+        // Handle Delete All Backups Form Submission
+        document.querySelector('.delete-all-backups-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            $('#DeleteAllBackupsModal').modal('show');
+            const deleteButton = document.getElementById('delete-all-backups-link');
+            deleteButton.onclick = () => {
+                e.target.submit();
+            };
+        });
+
+        // Handle Restore Backup Form Submission
+        document.querySelectorAll('.restore-backup-form').forEach(form => {
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                $('#RestoreBackupModal').modal('show');
+                const restoreButton = document.getElementById('restore-backup-link');
+                restoreButton.onclick = () => {
+                    form.submit();
+                };
+            });
         });

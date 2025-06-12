@@ -12,6 +12,7 @@ module.exports.index = async (req, res) => {
         const request = defaultPool.request();
         const result = await request.query(`SELECT 
                                             bs.database_name,
+                                            bs.position,
                                             bs.backup_start_date,
                                             bs.backup_finish_date,
                                             bs.backup_size / 1024.0 / 1024.0 AS BackupSizeMB,
@@ -34,6 +35,7 @@ module.exports.index = async (req, res) => {
         // Extract recordset and ensure BackupSizeMB is a number
         const backupList = result.recordset.map(row => ({
             database_name: row.database_name,
+            position: row.position,
             backup_start_date: row.backup_start_date,
             backup_finish_date: row.backup_finish_date,
             BackupSizeMB: row.BackupSizeMB != null ? Number(row.BackupSizeMB) : 0, // Handle NULL or undefined
@@ -63,6 +65,7 @@ module.exports.index = async (req, res) => {
 // [POST] /backup_restore/backup
 module.exports.backup = async (req, res) => {
     console.log('Backup request received');
+    console.log(req.body)
     const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
@@ -70,18 +73,21 @@ module.exports.backup = async (req, res) => {
 
     try
     {
-
+        const params = [
+        { name: 'Replace', type: sql.Bit, value: parseInt(req.body.replace) },
+       
+        ];
+        console.log('Executing stored procedure with params:', params)
         // Execute the stored procedure
-        const result = await executeStoredProcedure(pool, 'sp_BackupFullQLTV', []);
+        const result = await executeStoredProcedure(pool, 'sp_BackupFullQLTV', params);
 
-        // Check the result and send appropriate response
-        if (result && result.recordset && result.recordset.length > 0) {
-            req.flash('success', 'Backup thành công');
-            res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
+        // Kiểm tra result.recordset
+        if (result && result.recordset && result.recordset.length > 0 && result.recordset[0].Message) {
+            req.flash('success', result.recordset[0].Message);
         } else {
-            req.flash('error', 'Backup không thành công');
-            res.redirect(`${systemConfig.prefixAdmin}/backup_restore`);
+            req.flash('error', 'Backup không thành công: Không nhận được phản hồi hợp lệ từ server');
         }
+        res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
 
 
     }
@@ -89,7 +95,7 @@ module.exports.backup = async (req, res) => {
     {
         console.error('Error during backup:', error);
         req.flash('error', 'Lỗi trong khi backup');
-        res.redirect(`${systemConfig.prefixAdmin}/backup_restore`);
+        res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
     }
     
 };
@@ -99,6 +105,7 @@ module.exports.backup = async (req, res) => {
 module.exports.restore = async (req, res) => {
     console.log('Restore request received');
     const pool = getUserPool(req.session.id);
+    console.log(req.body)
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
@@ -106,8 +113,15 @@ module.exports.restore = async (req, res) => {
     try
     {
 
+        const params = [
+        { name: 'BackupPosition', type: sql.Int, value: req.body.backupId },
+       
+        ];
+        console.log('Executing stored procedure with params:', params)
+
+
         // Execute the stored procedure
-        const result = await executeStoredProcedure(pool, 'sp_RestoreQLTV', []);
+        const result = await executeStoredProcedure(pool, 'sp_RestoreQLTV', params);
         console.log(pool)
         await resetUserPool(req.session.id); // Reset the user pool after restore
 
@@ -129,6 +143,8 @@ module.exports.restore = async (req, res) => {
     }
     
 };
+
+
 
 
 

@@ -1,27 +1,9 @@
 let danhSachDocGia = [];
-let currentMaDG = 0;
+let currentHiddenId = 1; // Start with hidden ID 1
 
-async function getNextMaDG() {
-    try {
-        if (danhSachDocGia.length == 0) {
-            const response = await fetch(`/Library/admin/reader/next-id`);
-            const data = await response.json();
-            if (data.success) {
-                currentMaDG = data.nextId;
-                document.getElementById('maDG').value = currentMaDG;
-            }
-        } 
-        else {
-            currentMaDG = parseInt(danhSachDocGia[danhSachDocGia.length - 1].maDG) + 1;
-            document.getElementById('maDG').value = currentMaDG;
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Không thể lấy mã độc giả tiếp theo!');
-    }
+function generateHiddenId() {
+    return currentHiddenId++;
 }
-
-getNextMaDG();
 
 document.getElementById('btnThem').addEventListener('click', function() {
     const form = document.getElementById('addDocGiaForm');
@@ -122,10 +104,10 @@ document.getElementById('btnThem').addEventListener('click', function() {
 
     if (form.checkValidity()) {
         const docGia = {
-            maDG: document.getElementById('maDG').value,
+            id: generateHiddenId(), // Use hidden sequential ID
             hoDG: hoDGValue,
             tenDG: tenDGValue,
-            emailDG: emailDGValue,
+            emailDG: emailDGValue + "@gmail.com", // Append @gmail.com
             soCMND: soCMNDValue,
             gioiTinh: gioiTinhValue,
             ngaySinh: ngaySinhValue,
@@ -136,15 +118,9 @@ document.getElementById('btnThem').addEventListener('click', function() {
             hoatDong: document.getElementById('hoatDong').checked ? 1 : 0
         };
 
-        if (danhSachDocGia.some(dg => dg.maDG === docGia.maDG)) {
-            alert('Mã độc giả đã tồn tại trong danh sách!');
-            return;
-        }
-
         danhSachDocGia.push(docGia);
         hienThiDanhSachDocGia();
         form.reset();
-        getNextMaDG();
     } else {
         form.reportValidity();
     }
@@ -178,11 +154,10 @@ document.getElementById('btnGhi').addEventListener('click', function() {
     });
 });
 
-function xoaDocGia(maDG) {
+function xoaDocGia(id) {
     if (confirm('Bạn có chắc chắn muốn xóa độc giả này khỏi danh sách?')) {
-        danhSachDocGia = danhSachDocGia.filter(dg => dg.maDG !== maDG);
+        danhSachDocGia = danhSachDocGia.filter(dg => dg.id !== id);
         hienThiDanhSachDocGia();
-        getNextMaDG();
     }
 }
 
@@ -192,9 +167,7 @@ function hienThiDanhSachDocGia() {
 
     danhSachDocGia.forEach(dg => {
         const tr = document.createElement('tr');
-        console.log(dg.ngayHetHan)
         tr.innerHTML = `
-            <td>${dg.maDG}</td>
             <td>${dg.hoDG} ${dg.tenDG}</td>
             <td>${dg.emailDG}</td>
             <td>${dg.soCMND}</td>
@@ -206,7 +179,7 @@ function hienThiDanhSachDocGia() {
             <td>${dg.ngayHetHan}</td>
             <td>${dg.hoatDong ? 'Hoạt động' : 'Không hoạt động'}</td>
             <td>
-                <button class="btn btn-danger btn-sm" onclick="xoaDocGia('${dg.maDG}')">
+                <button class="btn btn-danger btn-sm" onclick="xoaDocGia(${dg.id})">
                     <i class="fas fa-trash"></i>
                 </button>
             </td>
@@ -216,7 +189,6 @@ function hienThiDanhSachDocGia() {
 }
 
 // Validate
-// Áp dụng các hàm chặn nhập vào các input
 function validateCardDates(startInput, endInput) {
     startInput.addEventListener('input', validateCardDateFields);
     endInput.addEventListener('input', validateCardDateFields);
@@ -290,4 +262,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 // End Validate
-

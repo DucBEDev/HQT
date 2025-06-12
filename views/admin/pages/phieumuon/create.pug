@@ -78,6 +78,10 @@ block main
                     .row
                         .col-lg-12
                             h5 Thông Tin Phiếu Mượn
+                            .form-group
+                                label(for="maPhieu") Mã phiếu <span class="required-text">*</span>
+                                input.form-control(type="text" value=`${maPhieu}` readonly)
+                                input.form-control(type="text" id="maPhieu" name="maPhieu" value=`${maPhieu}` hidden readonly)
                             .form-group.position-relative
                                 label(for="maDG") Tên độc giả <span class="required-text">*</span>
                                 input.form-control(type="text" id="tenDocGia" name="tenDocGia" required placeholder="Nhập mã độc giả hoặc tên độc giả" autocomplete="off")
