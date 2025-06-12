@@ -141,7 +141,7 @@ class DauSachRepository {
                                                     FROM DAUSACH AS ds 
                                                     LEFT JOIN SACH AS s ON ds.ISBN = s.ISBN
                                                     WHERE ds.ISDELETED = 0 
-                                                        AND (s.ISDELETED = 0 OR s.ISDELETED IS NULL) AND s.TINHTRANG = 1 AND s.CHOMUON = 0
+                                                        AND (s.ISDELETED = 0 OR s.ISDELETED IS NULL) AND s.TINHTRANG = 1 
                                                     ORDER BY ds.ISBN, s.MASACH;`);
             return result.recordset
         } catch (err) {

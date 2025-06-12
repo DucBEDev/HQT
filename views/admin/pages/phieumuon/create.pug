@@ -2,6 +2,47 @@ extends ../../layouts/default.pug
 include ../../mixins/alert.pug
 
 block main 
+    style.
+        .reader-search-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .reader-search-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background-color 0.2s;
+        }
+
+        .reader-search-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .reader-search-item:last-child {
+            border-bottom: none;
+        }
+
+        .reader-info .reader-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .reader-info .reader-contact {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 2px;
+        }
+
     +alert-error(3000)
     +alert-success(3000)
 
@@ -38,32 +79,36 @@ block main
                         .col-lg-12
                             h5 Thông Tin Phiếu Mượn
                             .form-group
-                                label(for="maPhieu") Mã phiếu mượn
-                                input.form-control(type="text" id="maPhieu" name="maPhieu" readonly value=`${nextPhieuMuonId}`)
-                            .form-group
-                                label(for="maDG") Mã độc giả <span class="required-text">*</span>
-                                select.form-control(id="maDG" name="maDG" required)
-                                    option(value="") -- Chọn độc giả --
+                                label(for="maPhieu") Mã phiếu <span class="required-text">*</span>
+                                input.form-control(type="text" value=`${maPhieu}` readonly)
+                                input.form-control(type="text" id="maPhieu" name="maPhieu" value=`${maPhieu}` hidden readonly)
+                            .form-group.position-relative
+                                label(for="maDG") Tên độc giả <span class="required-text">*</span>
+                                input.form-control(type="text" id="tenDocGia" name="tenDocGia" required placeholder="Nhập mã độc giả hoặc tên độc giả" autocomplete="off")
+                                input.form-control(type="text" id="maDG" name="maDG" required hidden)
+                                .reader-search-dropdown#readerSearchDropdown(style="display: none;")
                                     each docGia in docGiaList
-                                        option(value=`${docGia.maDG}`) #{docGia.maDG} - #{docGia.hoDG} #{docGia.tenDG}
+                                        .reader-search-item(
+                                            data-ma-dg=`${docGia.maDG}`
+                                            data-ho-dg=`${docGia.hoDG}`
+                                            data-ten-dg=`${docGia.tenDG}`
+                                            data-email=`${docGia.emailDG}`
+                                            data-sdt=`${docGia.dienThoai}`)
+                                                .reader-info
+                                                    .reader-name #{docGia.maDG} - #{docGia.hoDG} #{docGia.tenDG}
+                                                    .reader-contact #{docGia.emailDG} | SĐT #{docGia.dienThoai}
                             .form-group
                                 label(for="hinhThuc") Hình thức mượn <span class="required-text">*</span>
                                 select.form-control(id="hinhThuc" name="hinhThuc" required)
-                                    option(value="") -- Chọn hình thức --
-                                    option(value="1") Mang về
+                                    option(value="1" selected) Mang về
                                     option(value="0") Tại chỗ
                             .form-group
                                 label(for="ngayMuon") Ngày mượn <span class="required-text">*</span>
-                                input.form-control(type="date" id="ngayMuon" name="ngayMuon" required readonly)
-                            .form-group
-                                label(for="ngayTra") Ngày trả <span class="required-text">*</span>
-                                input.form-control(type="date" id="ngayTra" name="ngayTra" readonly required)
+                                input.form-control(type="text" id="ngayMuon" name="ngayMuon" required readonly)
                             .form-group
                                 label(for="maNV") Mã nhân viên tạo phiếu <span class="required-text">*</span>
-                                select.form-control(id="maNV" name="maNV" required)
-                                    option(value="") -- Chọn nhân viên --
-                                    each nhanVien in nhanVienList
-                                        option(value=`${nhanVien.maNV}`) #{nhanVien.maNV} - #{nhanVien.hoNV} #{nhanVien.tenNV}
+                                input.form-control(type="text" value=`${empName}` readonly)
+                                input.form-control(type="text" id="maNV" name="maNV" value=`${empId}` hidden readonly)
                     .row
                         .col-lg-12
                             #selectedBooksInputs
@@ -71,6 +116,7 @@ block main
                         button.btn.btn-primary(type="submit") Lưu Phiếu Mượn
 
     script(src="/vendor/jquery/jquery.min.js")
+    script(src="https://cdn.jsdelivr.net/npm/fuse.js@7")
     script(src="/js/validation.js")
     script(src="/js/adminjs/phieumuon.js")
     script(src="https://cdn.jsdelivr.net/npm/flatpickr")
@@ -78,24 +124,8 @@ block main
     script.
         // Khởi tạo Flatpickr cho ngày mượn
         flatpickr('#ngayMuon', {
-            dateFormat: 'Y-m-d', // Định dạng phù hợp với input type="date"
+            dateFormat: 'd/m/Y', 
             defaultDate: 'today',
             allowInput: false,
             clickOpens: false
-        });
-
-        // Tính và đặt giá trị ngày trả (ngày hiện tại + 15 ngày)
-        function setNgayTra() {
-            const today = new Date();
-            const ngayTra = new Date(today);
-            ngayTra.setDate(today.getDate() + 15);
-            
-            // Định dạng ngày trả thành YYYY-MM-DD
-            const formattedNgayTra = ngayTra.toISOString().split('T')[0];
-            document.getElementById('ngayTra').value = formattedNgayTra;
-        }
-
-        // Gọi hàm setNgayTra khi trang tải
-        document.addEventListener('DOMContentLoaded', function() {
-            setNgayTra();
         });

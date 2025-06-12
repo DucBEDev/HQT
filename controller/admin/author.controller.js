@@ -2,7 +2,7 @@ const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, exec
 const TacGiaRepository = require('../../repositories/TacGiaRepository'); // Giả định bạn sẽ tạo repository tương ứng
 const systemConfig = require('../../configs/system');
 const TacGia = require('../../models/TacGia');
-const { pushToUndoStack, popUndoStack, clearUndoStack } = require('../../public/js/adminjs/author/author-undo');
+const { pushToUndoStack, popUndoStack, clearUndoStack, updateAfterDeleteUndo } = require('../../public/js/adminjs/author/author-undo');
 
 
 // [GET] /author
@@ -35,7 +35,7 @@ module.exports.delete = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedureWithTransaction(pool, 'sp_XoaMemTacGia', params);
+        await executeStoredProcedureWithTransaction(pool, 'sp_XoaTacGia', params);
         pushToUndoStack('delete', author);
 
         req.flash("success", "Xóa tác giả thành công!");
@@ -55,7 +55,9 @@ module.exports.create = async (req, res) => {
 
 // [POST] /author/create
 module.exports.createPost = async (req, res) => {
-    const pool = getUserPool(req.session.id);
+    try
+    {
+        const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
@@ -72,7 +74,8 @@ module.exports.createPost = async (req, res) => {
             { name: 'DIACHITG', type: sql.NVarChar, value: cleanDiaChiTG },
             { name: 'DIENTHOAITG', type: sql.NVarChar, value: author.dienThoaiTG }
         ];
-        const maTacGia = await executeStoredProcedureAndReturnCode(pool,'sp_ThemTacGia', params);
+        const result = await executeStoredProcedure(pool, 'sp_ThemTacGia', params);
+        const maTacGia = result.recordset && result.recordset[0] ? result.recordset[0].MATACGIA : null;
         savedAuthors.push({
             maTacGia: maTacGia, 
             hoTenTG: cleanHoTenTG,
@@ -84,6 +87,12 @@ module.exports.createPost = async (req, res) => {
     pushToUndoStack('create', savedAuthors);
 
     res.json({ success: true });
+    }
+    catch (error) {
+        console.error('Error creating author:', error);
+        res.status(500).send(error.message);
+    }
+    
 };
 
 // [GET] /author/edit/:maTacGia
@@ -162,16 +171,25 @@ module.exports.undo = async (req, res) => {
                 const params = [
                     { name: 'MATACGIA', type: sql.Int, value: author.maTacGia }
                 ];
-                await executeStoredProcedureWithTransaction(pool, 'sp_XoaMemTacGia', params);
+                await executeStoredProcedureWithTransaction(pool, 'sp_XoaTacGia', params);
             }
         } else if (action === 'delete') {
+            const oldMaTacGia = data.maTacGia; // Lấy mã nhân viên từ dữ liệu đã xóa
+            console.log('oldMaTacGia', oldMaTacGia);
+
             // Undo delete: Thêm lại tác giả đã xóa
             const params = [
                 { name: 'HOTENTG', type: sql.NVarChar, value: data.hoTenTG },
                 { name: 'DIACHITG', type: sql.NVarChar, value: data.diaChiTG },
                 { name: 'DIENTHOAITG', type: sql.NVarChar, value: data.dienThoaiTG }
             ];
-            await executeStoredProcedure(pool, 'sp_ThemTacGia', params);
+            const result = await executeStoredProcedure(pool, 'sp_ThemTacGia', params);
+            const newMaTacGia = result.recordset && result.recordset[0] ? result.recordset[0].MATACGIA : null;
+            console.log('newMaTacGia', newMaTacGia);
+
+            updateAfterDeleteUndo(oldMaTacGia, newMaTacGia);
+
+            
         } else if (action === 'edit') {
             // Undo edit: Khôi phục thông tin cũ
             const params = [

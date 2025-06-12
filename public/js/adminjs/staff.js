@@ -1,38 +1,11 @@
 let danhSachNhanVien = [];
 let currentMaNV = 0;
 
-async function getNextMaNV() {
-    try {
-        if (danhSachNhanVien.length === 0) {
-            const response = await fetch(`/Library/admin/staff/next-id`);
-            const data = await response.json();
-            if (data.success) {
-                currentMaNV = data.nextId;
-                document.getElementById('maNV').value = currentMaNV;
-            }
-        } else {
-            const currentId = parseInt(danhSachNhanVien[danhSachNhanVien.length - 1].maNV);
-            currentMaNV = currentId + 1;
-            document.getElementById('maNV').value = currentMaNV;
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('Không thể lấy mã nhân viên tiếp theo!');
-    }
+function getNextMaNV() {
+    // Tăng mã ẩn lên 1
+    currentMaNV++;
+    return currentMaNV.toString(); // Trả về mã dưới dạng chuỗi
 }
-
-getNextMaNV();
-
-function splitFullName(fullName) {
-    const nameParts = fullName.trim().split(/\s+/);
-    const firstName = nameParts.pop();
-    const lastName = nameParts.join(' ');
-    
-    return {
-      hoNV: lastName || '', 
-      tenNV: firstName || '' 
-    };
-  }
 
 document.getElementById('btnThem').addEventListener('click', function() {
     const form = document.getElementById('addStaffForm');
@@ -51,7 +24,7 @@ document.getElementById('btnThem').addEventListener('click', function() {
     // Kiểm tra các trường bắt buộc
     if (fullNameValue.length === 0) {
         alert('Họ và tên nhân viên không được để trống!');
-        hoNVInput.classList.add('is-invalid');
+        fullNameInput.classList.add('is-invalid');
         return;
     }
     if (diaChiValue.length === 0) {
@@ -78,7 +51,7 @@ document.getElementById('btnThem').addEventListener('click', function() {
     if (form.checkValidity()) {
         const { hoNV, tenNV } = splitFullName(fullNameValue);
         const nhanVien = {
-            maNV: document.getElementById('maNV').value,
+            maNV: getNextMaNV(), // Sử dụng mã ẩn mới
             hoNV: hoNV,
             tenNV: tenNV,
             diaChi: diaChiValue,
@@ -95,7 +68,6 @@ document.getElementById('btnThem').addEventListener('click', function() {
         danhSachNhanVien.push(nhanVien);
         hienThiDanhSachNhanVien();
         form.reset();
-        getNextMaNV();
     } else {
         form.reportValidity();
     }
@@ -133,8 +105,18 @@ function xoaNhanVien(maNV) {
     if (confirm('Bạn có chắc chắn muốn xóa nhân viên này khỏi danh sách?')) {
         danhSachNhanVien = danhSachNhanVien.filter(nv => nv.maNV !== maNV);
         hienThiDanhSachNhanVien();
-        getNextMaNV();
     }
+}
+
+function splitFullName(fullName) {
+    const nameParts = fullName.trim().split(/\s+/);
+    const firstName = nameParts.pop();
+    const lastName = nameParts.join(' ');
+    
+    return {
+        hoNV: lastName || '', 
+        tenNV: firstName || '' 
+    };
 }
 
 function hienThiDanhSachNhanVien() {
@@ -144,7 +126,6 @@ function hienThiDanhSachNhanVien() {
     danhSachNhanVien.forEach(nv => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${nv.maNV}</td>
             <td>${nv.hoNV} ${nv.tenNV}</td>
             <td>${nv.diaChi}</td>
             <td>${nv.dienThoai}</td>
@@ -156,6 +137,8 @@ function hienThiDanhSachNhanVien() {
                 </button>
             </td>
         `;
+
+        console.log(nv.maNV)
         tbody.appendChild(tr);
     });
 }
@@ -186,4 +169,3 @@ document.addEventListener('DOMContentLoaded', function() {
         form.classList.add('was-validated');
     });
 });
-// End Validate

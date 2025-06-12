@@ -1,7 +1,7 @@
 const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, executeStoredProcedureWithTransactionAndReturnCode, getUserPool } = require('../../configs/database');
 const systemConfig = require('../../configs/system');
 const NhanVien = require('../../models/NhanVien');
-const { pushToUndoStack, popUndoStack, clearUndoStack } = require('../../public/js/adminjs/staff/staff-undo');
+const { pushToUndoStack, popUndoStack, clearUndoStack, updateAfterDeleteUndo } = require('../../public/js/adminjs/staff/staff-undo');
 
 const NhanVienRepository = require('../../repositories/NhanVienRepository'); 
 
@@ -31,11 +31,13 @@ module.exports.delete = async (req, res) => {
     const staff = await NhanVienRepository.getById(pool, maNV);
 
     const params = [
-        { name: 'MANV', type: sql.Int, value: maNV }
+        { name: 'USER_TYPE', type: sql.VarChar(10), value: 'NHANVIEN' },
+        { name: 'ID', type: sql.Int, value: maNV },
+
     ];
 
     try {
-        await executeStoredProcedure(pool,'sp_XoaMemNhanVien', params);
+        await executeStoredProcedure(pool,'sp_XoaTaiKhoan', params);
         pushToUndoStack('delete', staff);
         res.redirect(`${systemConfig.prefixAdmin}/staff`);
     } catch (error) {
@@ -53,7 +55,9 @@ module.exports.create = async (req, res) => {
 
 // [POST] /staff/create
 module.exports.createPost = async (req, res) => {
-    const pool = getUserPool(req.session.id);
+    try
+    {
+        const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
@@ -68,7 +72,7 @@ module.exports.createPost = async (req, res) => {
         const cleanDiaChi = staff.diaChi.trim().replace(/\s+/g, ' ');
 
         const params = [
-            { name: 'MANV', type: sql.Int, value: staff.maNV },
+            { name: 'USER_TYPE', type: sql.VarChar(10), value: 'NHANVIEN' },
             { name: 'HONV', type: sql.NVarChar, value: cleanHoNV },
             { name: 'TENNV', type: sql.NVarChar, value: cleanTenNV },
             { name: 'GIOITINH', type: sql.Bit, value: staff.gioiTinh == '1' },
@@ -79,9 +83,10 @@ module.exports.createPost = async (req, res) => {
 
         ];
         console.log(params)
-        const maNV = await executeStoredProcedure(pool, 'sp_ThemNhanVien', params);
+        const result = await executeStoredProcedure(pool, 'sp_TaoTaiKhoan', params);
+        const maNV = result.recordset && result.recordset[0] ? result.recordset[0].ID : null;
         savedStaff.push({
-            maNV: staff.maNV,
+            maNV: maNV,
             hoNV: cleanHoNV,
             tenNV: cleanTenNV,
             gioiTinh: staff.gioiTinh == '1',
@@ -92,8 +97,21 @@ module.exports.createPost = async (req, res) => {
     }
 
     pushToUndoStack('create', savedStaff);
+    req.flash('success', 'Tạo nhân viên thành công!');
 
     res.json({ success: true });
+
+    //res.redirect(`${systemConfig.prefixAdmin}/staff`);
+
+    }
+    catch (error) {
+        console.error('Error creating staff:', error);
+        req.flash('error', 'Có lỗi xảy ra khi tạo nhân viên!');
+
+        res.status(500).json({ success: false, message: error.message });
+        //res.redirect(`${systemConfig.prefixAdmin}/staff/create`);
+    }
+    
 };
 
 // [GET] /staff/edit/:maNV
@@ -173,14 +191,16 @@ module.exports.undo = async (req, res) => {
             // Undo create: Xóa từng nhân viên đã thêm
             for (const staff of data) {
                 const params = [
-                    { name: 'MANV', type: sql.Int, value: staff.maNV }
+                    { name: 'USER_TYPE', type: sql.VarChar(10), value: 'NHANVIEN' },
+                    { name: 'ID', type: sql.Int, value: staff.maNV }
                 ];
-                await executeStoredProcedure(pool, 'sp_XoaMemNhanVien', params);
+                await executeStoredProcedure(pool, 'sp_XoaTaiKhoan', params);
             }
         } else if (action === 'delete') {
+            const oldMaNV = data.maNV; // Lấy mã nhân viên từ dữ liệu đã xóa
             // Undo delete: Thêm lại nhân viên đã xóa
             const params = [
-                { name: 'MANV', type: sql.Int, value: data.maNV },
+                { name: 'USER_TYPE', type: sql.VarChar(10), value: 'NHANVIEN' },
                 { name: 'HONV', type: sql.NVarChar, value: data.hoNV },
                 { name: 'TENNV', type: sql.NVarChar, value: data.tenNV },
                 { name: 'GIOITINH', type: sql.Bit, value: data.gioiTinh },
@@ -189,7 +209,12 @@ module.exports.undo = async (req, res) => {
                 { name: 'EMAIL', type: sql.NVarChar, value: data.email },
                 { name: 'PASS', type: sql.NVarChar, value: "1111" } // Mật khẩu mặc định
             ];
-            await executeStoredProcedure(pool, 'sp_ThemNhanVien', params);
+            const result = await executeStoredProcedure(pool, 'sp_TaoTaiKhoan', params);
+            const newMaNV = result.recordset && result.recordset[0] ? result.recordset[0].ID : null;
+
+            updateAfterDeleteUndo(oldMaNV, newMaNV);
+
+
         } else if (action === 'edit') {
             // Undo edit: Khôi phục thông tin cũ
             const params = [

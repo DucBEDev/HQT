@@ -12,9 +12,9 @@ block main
             form#addDocGiaForm(action=`${prefixAdmin}/docgia/create` method="post")
                 .row
                     .col-lg-6
-                        .form-group
-                            label(for="maDG") Mã độc giả
-                            input.form-control(type="text" id="maDG" name="maDG" readonly)
+                        //- .form-group
+                        //-     label(for="maDG") Mã độc giả
+                        //-     input.form-control(type="text" id="maDG" name="maDG" readonly)
                         .form-group
                             label(for="hoDG") Họ độc giả <span class="required-text">*</span>
                             input.form-control(type="text" id="hoDG" name="hoDG" placeholder="Nhập họ độc giả" required)
@@ -80,7 +80,7 @@ block main
                 table.table.table-bordered(width="100%" cellspacing="0")
                     thead
                         tr
-                            th Mã độc giả
+                            //- th Mã độc giả
                             th Họ và tên
                             th Email
                             th Số CCCD

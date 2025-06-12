@@ -37,7 +37,7 @@ module.exports.delete = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedureWithTransaction(pool, 'sp_XoaMemTheLoai', params);
+        await executeStoredProcedureWithTransaction(pool, 'sp_XoaTheLoai', params);
         pushToUndoStack('delete', type);
 
         req.flash("success", "Xóa thể loại thành công!");
@@ -99,8 +99,10 @@ module.exports.editPost = async (req, res) => {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
     const type = req.body;
+    console.log("Type to edit: ", type);
     const oldType = await TheLoaiRepository.getById(pool, type.maTL); 
-    const typeEdit = new TheLoai(type.maTL, type.tenTL)
+    console.log("Old Type: ", oldType);
+    //const typeEdit = new TheLoai(type.maTL, type.tenTL)
 
     const cleanTenTL = type.tenTL.trim().replace(/\s+/g, ' ');
 
@@ -142,7 +144,7 @@ module.exports.undo = async (req, res) => {
             // Undo create: Xóa từng thể loại đã thêm
             for (const tl of data) {
                 const params = [{ name: 'MATL', type: sql.NVarChar, value: tl.maTL }];
-                await executeStoredProcedureWithTransaction(pool,'sp_XoaMemTheLoai', params);
+                await executeStoredProcedureWithTransaction(pool,'sp_XoaTheLoai', params);
             }
         } else if (action === 'delete') {
             // Undo delete: Thêm lại thể loại đã xóa

@@ -20,6 +20,10 @@ module.exports.logIn = async (req, res) => {
         });
 
         // Lưu pool vào session
+        const empId = username.split('NV')[1];
+        console.log("Employee ID:", empId); 
+
+        req.session.empId = empId;
         req.session.username = username;
 
         res.redirect(`${systemConfig.prefixAdmin}/staff`);

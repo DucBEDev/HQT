@@ -7,6 +7,7 @@ function pushToUndoStack(action, data) {
         data: data      // Dữ liệu liên quan đến thao tác
     });
     console.log(`Đã thêm thao tác vào stack:`, undoStack[undoStack.length - 1]);
+    console.log('stack sau khi them', undoStack);
 }
 
 // Hàm lấy thao tác cuối cùng từ stack
@@ -14,6 +15,7 @@ function popUndoStack() {
     if (undoStack.length === 0) {
         return null;
     }
+    console.log('stack truoc khi pop', undoStack);
     return undoStack.pop();
 }
 

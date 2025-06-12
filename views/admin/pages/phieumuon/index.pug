@@ -16,89 +16,25 @@ block main
                     thead.thead-light
                         tr
                             th Mã Phiếu
-                            th Mã Độc Giả
+                            th Độc Giả
                             th Hình Thức
                             th Ngày Mượn
-                            th Mã Nhân Viên
+                            th Nhân Viên
                             th Thao Tác
                     tbody#phieuMuonTableBody
                         each phieu in phieuMuonList
                             tr.product-item
                                 td.align-middle #{phieu.maPhieu}
-                                td.align-middle #{phieu.maDG}
+                                td.align-middle #{phieu.dgFullName}
                                 td.align-middle
-                                    if phieu.hinhThuc === true
+                                    if phieu.hinhThuc == true
                                         | Mang về
                                     else
                                         | Tại chỗ
                                 td.align-middle #{phieu.ngayMuon.toLocaleDateString('vi-VN')}
-                                td.align-middle #{phieu.maNV}
+                                td.align-middle #{phieu.empFullName}
                                 td.align-middle
                                     a.btn.btn-sm.btn-danger.edit-type-btn.mr-1(href=`${prefixAdmin}/phieumuon/detail/${phieu.maPhieu}`) Chi tiết
-                                    a.btn.btn-sm.btn-danger.delete-phieu-btn.mr-1(href="javascript:void(0);" data-phieu-id=`${phieu.maPhieu}` data-toggle="modal" data-target="#DeleteModal") Xóa
-                                    //- a.btn.btn-sm.btn-primary.tra-sach-btn.mr-1(href="javascript:void(0);" data-phieu-id=`${phieu.maPhieu}` data-toggle="modal" data-target="#TraSachModal") Trả sách
 
-    //- Modal Delete Item
-    #DeleteModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="DeleteModal" aria-hidden="true")
-        .modal-dialog(role="document")
-            .modal-content
-                .modal-header
-                    h5#exampleModalLabelLogout.modal-title Xóa phiếu mượn
-                    button.close(type="button" data-dismiss="modal" aria-label="Close")
-                        span(aria-hidden="true") ×
-                .modal-body
-                    p Bạn chắc chắn muốn xóa phiếu mượn này không?
-                .modal-footer
-                    button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
-                    button#delete-link.btn.btn-primary(type="button") Xóa
-
-    //- Modal Tra Sach
-    #TraSachModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="TraSachModal" aria-hidden="true")
-        .modal-dialog(role="document")
-            .modal-content
-                .modal-header
-                    h5#exampleModalLabelLogout.modal-title Trả sách
-                    button.close(type="button" data-dismiss="modal" aria-label="Close")
-                        span(aria-hidden="true") ×
-                .modal-body
-                    p Xác nhận trả sách?
-                .modal-footer
-                    button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
-                    button#tra-sach-link.btn.btn-primary(type="button") Xác nhận
-
-    form(
-        action=""
-        method="POST"
-        id="delete-phieu-item"
-    )
-
-    form(
-        action=""
-        method="POST"
-        id="tra-sach-item"
-    )
 
     script(src="/vendor/jquery/jquery.min.js")
-    script.
-        $(document).ready(function() {
-            // Xử lý sự kiện click nút Xóa trong modal
-            $('#phieuMuonTableBody').on('click', '.delete-phieu-btn', function() {
-                const phieuId = $(this).data('phieu-id');
-
-                $('#delete-link').on('click', function(e) {
-                    e.preventDefault();
-                    $('#delete-phieu-item').attr('action', `/Library/admin/phieumuon/delete/${phieuId}?_method=DELETE`);
-                    $('#delete-phieu-item').submit();
-                });
-            });
-
-            $('#phieuMuonTableBody').on('click', '.tra-sach-btn', function() {
-                const phieuId = $(this).data('phieu-id');
-
-                $('#tra-sach-link').on('click', function(e) {
-                    e.preventDefault();
-                    $('#tra-sach-item').attr('action', `/Library/admin/phieumuon/returnBook/${phieuId}`);
-                    $('#tra-sach-item').submit();
-                });
-            });
-        });

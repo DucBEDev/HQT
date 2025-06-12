@@ -12,9 +12,9 @@ block main
             form#addStaffForm(action=`${prefixAdmin}/staff/create` method="post")
                 .row
                     .col-lg-12
-                        .form-group
-                            label(for="maNV") Mã nhân viên
-                            input.form-control(type="text" id="maNV" name="maNV" readonly)
+                        //- .form-group
+                            //- label(for="maNV") Mã nhân viên
+                            //- input.form-control(type="text" id="maNV" name="maNV" readonly)
                         .form-group
                             label(for="hoNV") Họ và tên <span class="required-text">*</span>
                             input.form-control(type="text" id="fullName" name="fullName" placeholder="Nhập họ và tên nhân viên" required)
@@ -53,7 +53,7 @@ block main
                 table.table.table-bordered(width="100%" cellspacing="0")
                     thead
                         tr
-                            th Mã Nhân Viên
+                            //- th Mã Nhân Viên
                             th Họ Tên
                             th Địa Chỉ
                             th Điện Thoại
