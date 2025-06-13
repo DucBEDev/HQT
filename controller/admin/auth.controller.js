@@ -21,7 +21,6 @@ module.exports.logIn = async (req, res) => {
 
         // Lưu pool vào session
         const empId = username.split('NV')[1];
-        console.log("Employee ID:", empId); 
 
         req.session.empId = empId;
         req.session.username = username;
@@ -33,68 +32,53 @@ module.exports.logIn = async (req, res) => {
     }
 };
 
-
 // [GET] /auth/change-password-enter-login
 module.exports.showChangePasswordEnterLogin = async (req, res) => {
     res.render('admin/pages/auth/change-password-enter-login');
 };
 
-
 // [POST] /auth/change-password-enter-login
 module.exports.changePasswordEnterLogin = async (req, res) => {
     const {username} = req.body;
-    console.log(username)
 
-    try
-    {
-        console.log('Checking if user exists..........................................................................')
+    try {
         const request = defaultPool.request(); // Tạo request
         request.input('LoginName', sql.NVarChar, username); // Thêm tham số MATL
         const result = await request.query('SELECT * FROM sys.server_principals WHERE name = @LoginName'); // Truy vấn với tham số
-        console.log(result)
-        if(result)
-        {
-            console.log('User exists..........................................................................')
+        
+        if (result) {
             req.session.changePassUsername = username;
             res.redirect(`${systemConfig.prefixAdmin}/auth/change-password`);
-        }
-        else
-        {
-            console.log('User does not exist..........................................................................')
+        } else {
             req.flash('error', 'Tên người dùng không tồn tại!');
             res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
         }
     }
     catch (err) {
         req.flash('error', 'Có lỗi xảy ra trong quá trình tìm kiếm tài khoản!');
-        console.log(err)
         res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
 };
-
 
 // [GET] /auth/change-password
 module.exports.showChangePassword = async (req, res) => {
     res.render('admin/pages/auth/change-password')
 };
 
-
 // [POST] /auth/change-password
 module.exports.changePassword = async (req, res) => {
-    console.log('Changing password..........................................................................')
     const {oldPass, newPass} = req.body;
-    console.log(oldPass, newPass)
     const username = req.session.changePassUsername;
 
-    try
-    {
+    try {
         const params = [
             { name: 'LoginName', type: sql.NVarChar, value: username },
             { name: 'NewPassword', type: sql.NVarChar, value: newPass },
             { name: 'OldPassword', type: sql.NVarChar, value: oldPass }
         ];
-        await executeStoredProcedure(defaultPool, 'sp_ChangeLoginPassword', params)
+        await executeStoredProcedure(defaultPool, 'sp_ChangeLoginPassword', params);
+
         req.flash('success', 'Đổi mật khẩu thành công!');
         res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
@@ -102,6 +86,5 @@ module.exports.changePassword = async (req, res) => {
         req.flash('error', 'Có lỗi xảy ra trong quá trình tìm kiếm tài khoản!');
         res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
-
 };
 

@@ -149,19 +149,10 @@ module.exports.detail = async (req, res) => {
         pageTitle: 'Chi tiết phiếu mượn',
         sachList,
         ctpmList,
-<<<<<<< HEAD
-<<<<<<< HEAD
-        dgData,
-        empData
-=======
         ngayTra : ctpmList[0]?.ngayTra.toISOString().split('T')[0] || null,
         trangThai : ctpmList[0]?.tra,
-
->>>>>>> long
-=======
         dgData,
         empData
->>>>>>> long
     });
 };
 

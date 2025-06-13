@@ -77,10 +77,12 @@ window.restrictSpecialCharInput = function (input, maxLength = 0) {
         const errorElementId = input.id + 'Error';
         let filteredValue;
 
+        const regex = /[!"#$%&'()*+\-.:;<=>?@[\]^_`{|}~]/g;
+
         if (maxLength > 0) {    
-            filteredValue = value.replace(/[!"#$%&'()*+,-.:;<=>?@[\]^_`{|}~]/g, '').slice(0, maxLength);
+            filteredValue = value.replace(regex, '').slice(0, maxLength);
         } else {
-            filteredValue = value.replace(/[!"#$%&'()*+,-.:;<=>?@[\]^_`{|}~]/g, '');
+            filteredValue = value.replace(regex, '');
         }
 
         if (value !== filteredValue) {
@@ -106,11 +108,19 @@ window.restrictSpecialCharInput = function (input, maxLength = 0) {
     });
 };
 
-window.restrictEmailInput = function (input) {
+window.restrictEmailInput = function (input, maxLength = 0) {
     input.addEventListener('input', function(e) {
         const value = this.value;
-        const filteredValue = value.replace(/[^a-zA-Z0-9]/g, '');
+        let filteredValue;
+        const regex = /[^a-zA-Z0-9]/g;
         const errorElementId = input.id + 'Error';
+
+        if (maxLength > 0) {    
+            filteredValue = value.replace(regex, '').slice(0, maxLength);
+        } else {
+            filteredValue = value.replace(regex, '');
+        }
+
         if (value !== filteredValue) {
             this.value = filteredValue;
             this.classList.add('is-invalid');
@@ -119,6 +129,18 @@ window.restrictEmailInput = function (input) {
             this.classList.remove('is-invalid');
             document.getElementById(errorElementId).style.display = 'none';
         }
+
+        if (maxLength > 0) {
+            if (filteredValue.length !== maxLength) {
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+                document.getElementById(errorElementId).style.display = 'block';
+            } else {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+                document.getElementById(errorElementId).style.display = 'none';
+            }
+        }      
     });
 };
 
