@@ -14,12 +14,15 @@ block main
                         .input-group
                             input.form-control(type="date" id="ngayRestore" name="ngayRestore" required)
                             button.btn.btn-primary(type="submit") Khôi phục đến thời điểm
+
                     form.create-backup-form(action="/Library/admin/backup-restore/backup" method="POST")
                         input(type="hidden" name="replace" value="0")
                         button.btn.btn-primary.mr-2(type="submit") + Tạo Backup
+
                     form.delete-all-backups-form(action="/Library/admin/backup-restore/backup" method="POST")
                         input(type="hidden" name="replace" value="1")
                         button.btn.btn-danger(type="submit") Xóa Tất Cả Bản Backup Cũ khi tạo Backup Mới
+
             
             .table-responsive.p-3
                 table#dataTable.table.align-items-center.table-flush
@@ -64,7 +67,7 @@ block main
                     button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
                     button#create-backup-link.btn.btn-primary(type="button") Tạo
 
-    //- Modal Restore Point in Time
+    //- Modal Restore Point in Time (NEW)
     #RestorePointInTimeModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="RestorePointInTimeModal" aria-hidden="true")
         .modal-dialog(role="document")
             .modal-content
@@ -118,13 +121,13 @@ block main
             };
         });
 
-        // Handle Restore Point-in-Time Form Submission
+        // Handle Restore Point-in-Time Form Submission (FIXED)
         document.querySelector('.restore-point-in-time-form').addEventListener('submit', (e) => {
             e.preventDefault();
             $('#RestorePointInTimeModal').modal('show');
-            const restoreButton = document.getElementById('restore-point-in-time-link');
-            restoreButton.onclick = null;
-            restoreButton.onclick = () => {
+            const restorePointInTimeButton = document.getElementById('restore-point-in-time-link');
+            restorePointInTimeButton.onclick = null; // Clear previous handlers
+            restorePointInTimeButton.onclick = () => {
                 e.target.submit();
             };
         });
@@ -146,7 +149,7 @@ block main
                 e.preventDefault();
                 $('#RestoreBackupModal').modal('show');
                 const restoreButton = document.getElementById('restore-backup-link');
-                restoreButton.onclick = null;
+                restoreButton.onclick = null; // Clear previous handlers
                 restoreButton.onclick = () => {
                     form.submit();
                 };
