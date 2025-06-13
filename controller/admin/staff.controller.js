@@ -55,53 +55,52 @@ module.exports.create = async (req, res) => {
 
 // [POST] /staff/create
 module.exports.createPost = async (req, res) => {
-    try
-    {
+    try {
         const pool = getUserPool(req.session.id);
-    if (!pool) {
-        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
-    }
-    
-    const staffList = req.body;
-    console.log(staffList)
+        if (!pool) {
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+        
+        const staffList = req.body;
+        console.log(staffList)
 
-    const savedStaff = [];
-    for (const staff of staffList) {
-        const cleanHoNV = staff.hoNV.trim().replace(/\s+/g, ' ');
-        const cleanTenNV = staff.tenNV.trim().replace(/\s+/g, ' ');
-        const cleanDiaChi = staff.diaChi.trim().replace(/\s+/g, ' ');
+        const savedStaff = [];
+        for (const staff of staffList) {
+            const cleanHoNV = staff.hoNV.trim().replace(/\s+/g, ' ');
+            const cleanTenNV = staff.tenNV.trim().replace(/\s+/g, ' ');
+            const cleanDiaChi = staff.diaChi.trim().replace(/\s+/g, ' ');
 
-        const params = [
-            { name: 'USER_TYPE', type: sql.VarChar(10), value: 'NHANVIEN' },
-            { name: 'HONV', type: sql.NVarChar, value: cleanHoNV },
-            { name: 'TENNV', type: sql.NVarChar, value: cleanTenNV },
-            { name: 'GIOITINH', type: sql.Bit, value: staff.gioiTinh == '1' },
-            { name: 'DIACHI', type: sql.NVarChar, value: cleanDiaChi },
-            { name: 'DIENTHOAI', type: sql.NVarChar, value: staff.dienThoai },
-            { name: 'EMAIL', type: sql.NVarChar, value: staff.email },
-            { name: 'PASS', type: sql.NVarChar, value: "1111" }
+            const params = [
+                { name: 'USER_TYPE', type: sql.VarChar(10), value: 'NHANVIEN' },
+                { name: 'HONV', type: sql.NVarChar, value: cleanHoNV },
+                { name: 'TENNV', type: sql.NVarChar, value: cleanTenNV },
+                { name: 'GIOITINH', type: sql.Bit, value: staff.gioiTinh == '1' },
+                { name: 'DIACHI', type: sql.NVarChar, value: cleanDiaChi },
+                { name: 'DIENTHOAI', type: sql.NVarChar, value: staff.dienThoai },
+                { name: 'EMAIL', type: sql.NVarChar, value: staff.email },
+                { name: 'PASS', type: sql.NVarChar, value: "1111" }
 
-        ];
-        console.log(params)
-        const result = await executeStoredProcedure(pool, 'sp_TaoTaiKhoan', params);
-        const maNV = result.recordset && result.recordset[0] ? result.recordset[0].ID : null;
-        savedStaff.push({
-            maNV: maNV,
-            hoNV: cleanHoNV,
-            tenNV: cleanTenNV,
-            gioiTinh: staff.gioiTinh == '1',
-            diaChi: cleanDiaChi,
-            dienThoai: staff.dienThoai,
-            email: staff.email
-        });
-    }
+            ];
+            console.log(params)
+            const result = await executeStoredProcedure(pool, 'sp_TaoTaiKhoan', params);
+            const maNV = result.recordset && result.recordset[0] ? result.recordset[0].ID : null;
+            savedStaff.push({
+                maNV: maNV,
+                hoNV: cleanHoNV,
+                tenNV: cleanTenNV,
+                gioiTinh: staff.gioiTinh == '1',
+                diaChi: cleanDiaChi,
+                dienThoai: staff.dienThoai,
+                email: staff.email
+            });
+        }
 
-    pushToUndoStack('create', savedStaff);
-    req.flash('success', 'Tạo nhân viên thành công!');
+        pushToUndoStack('create', savedStaff);
+        req.flash('success', 'Tạo nhân viên thành công!');
 
-    res.json({ success: true });
+        res.json({ success: true });
 
-    //res.redirect(`${systemConfig.prefixAdmin}/staff`);
+        //res.redirect(`${systemConfig.prefixAdmin}/staff`);
 
     }
     catch (error) {

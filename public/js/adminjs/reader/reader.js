@@ -193,6 +193,10 @@ function validateCardDates(startInput, endInput) {
     startInput.addEventListener('input', validateCardDateFields);
     endInput.addEventListener('input', validateCardDateFields);
 
+    function stripTime(date) {
+        return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    }    
+
     function parseDate(dateStr) {
         const [day, month, year] = dateStr.split("/").map(Number);
         return new Date(year, month - 1, day);
@@ -203,9 +207,10 @@ function validateCardDates(startInput, endInput) {
         const endDate = endInput.value;
 
         if (startDate && endDate) {
-            const start = parseDate(startDate);
-            const end = parseDate(endDate);
-            const currentDate = new Date();
+            const start = stripTime(parseDate(startDate));
+            const end = stripTime(parseDate(endDate));
+            const currentDate = stripTime(new Date());
+
 
             if (start < currentDate || end <= start) {
                 startInput.classList.add('is-invalid');

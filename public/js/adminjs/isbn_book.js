@@ -65,7 +65,7 @@ function loadDauSachForEdit(dauSach) {
     $('#confirmEditDauSachBtn, #cancelEditDauSachBtn').show();
     $('#addTitle').hide();
     $('#editTitle').show();
-    $('#dauSachTempList').hide();
+    $('#dauSachTempListHeader').hide();
     
     // Disable ISBN input
     document.getElementById('isbn').disabled = false;
@@ -84,7 +84,7 @@ function resetDauSachForm() {
     $('#confirmEditDauSachBtn, #cancelEditDauSachBtn').hide();
     $('#addTitle').show();
     $('#editTitle').hide();
-    $('#dauSachTempList').show();
+    $('#dauSachTempListHeader').show();
 
     // Xóa preview image nếu có
     const previewDiv = document.getElementById('imagePreview');
@@ -103,7 +103,6 @@ function resetDauSachForm() {
 function updateSachTable() {
     const tbody = document.getElementById('sachList');
     tbody.innerHTML = '';
-    console.log("Chay vao day")
 
     // Only show non-deleted books
     sachList.filter(sach => sach.state !== 'deleted').forEach(sach => {
@@ -170,10 +169,6 @@ $(document).ready(function () {
             fetch(`/Library/admin/isbn_book/dauSach?isbn=${selectedISBN}`).then(res => res.json())
         ])
         .then(([sachData, dauSachData]) => {
-            console.log('Sách data:', sachData);
-            console.log('Đầu sách data:', dauSachData);
-            console.log('Type of loadDauSachForEdit:', typeof loadDauSachForEdit);  
-            
             // Xử lý dữ liệu sách
             if (sachData.success) {
                 sachList = sachData.sachList.map(dt => {
@@ -561,7 +556,7 @@ $(document).ready(function () {
         .then(data => {
             if (data.success) {
                 alert('Xóa đầu sách thành công!');
-                window.location.reload();
+                window.location.href = `/Library/admin/isbn_book`;
             } else {
                 alert('Lỗi khi xóa đầu sách: ' + data.message);
             }
@@ -671,6 +666,7 @@ function addSach() {
         alert('Vui lòng hoàn tất việc thêm sách hiện tại trước khi thêm mới!');
         return;
     }
+    console.log(nganTuList)
 
     const newRow = `
         <tr class="new-sach-row">
@@ -765,7 +761,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const lanXuatBanInput = document.getElementById('lanXuatBan');
     const soTrangInput = document.getElementById('soTrang');
 
-    window.restrictNumberInput(isbnInput, 15);
+    window.restrictEmailInput(isbnInput, 15);
     window.restrictNameInput(tenSachInput);
     window.restrictNameInput(nhaXBInput);
     restrictKhoSachInput(khoSachInput);

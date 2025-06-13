@@ -1,5 +1,5 @@
 class DauSach {
-    constructor(isbn, tenSach, khoSach, noiDung, hinhAnhPath, ngayXuatBan, lanXuatBan, soTrang, gia, nhaXB, maNgonNgu, maTL, maTacGia) {
+    constructor(isbn, tenSach, khoSach, noiDung, hinhAnhPath, ngayXuatBan, lanXuatBan, soTrang, gia, nhaXB, maNgonNgu, maTL, isDeleted) {
         this.isbn = isbn;
         this.tenSach = tenSach;
         this.khoSach = khoSach;
@@ -12,7 +12,7 @@ class DauSach {
         this.nhaXB = nhaXB;
         this.maNgonNgu = maNgonNgu;
         this.maTL = maTL;
-        this.maTacGia = maTacGia;
+        this.isDeleted = isDeleted;
     }
 }
 

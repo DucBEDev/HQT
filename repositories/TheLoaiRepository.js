@@ -60,7 +60,7 @@ class TheLoaiRepository {
             const result = await pool.request().query('SELECT MAX(MATL) as maxId FROM THELOAI');
             const maxId = parseInt(result.recordset[0].maxId.substring(2));
 
-            const nextId = `TL${(maxId + 1).toString().padStart(3, '0')}`;
+            const nextId = `TL${(maxId + 1).toString().padStart(8, '0')}`;
             return nextId;
         } catch (err) {
             console.error('Error in getNextId TheLoai:', err);

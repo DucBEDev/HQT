@@ -169,7 +169,7 @@ html(lang="vi")
                     .col-md-4.col-sm-6.mb-4.detail-book(data-id=book.ISBN)
                         .card.h-100
                             if book.HinhAnhPath
-                                img.card-img-top(src='https://res.cloudinary.com/daayitzhk/image/upload/v1745034822/bia-1_ubsvsd.webp' alt=book.Tensach)
+                                img.card-img-top(src=book.HINHANHPATH alt=book.Tensach)
                             else
                                 img.card-img-top(src="/images/default-book.jpg" alt="Default book image")
                             .card-body

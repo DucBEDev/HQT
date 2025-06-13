@@ -149,6 +149,8 @@ module.exports.detail = async (req, res) => {
         pageTitle: 'Chi tiết phiếu mượn',
         sachList,
         ctpmList,
+        ngayTra : ctpmList[0]?.ngayTra.toISOString().split('T')[0] || null,
+        trangThai : ctpmList[0]?.tra,
         dgData,
         empData
     });

@@ -18,7 +18,8 @@ class DauSachRepository {
                 row.GIA === null ? null : row.GIA,
                 row.NHAXB,
                 row.MANGONNGU === null ? null : row.MANGONNGU,
-                row.MATL
+                row.MATL,
+                row.ISDELETED
             ));
         } catch (err) {
             console.error('Error in getAll DauSach:', err);

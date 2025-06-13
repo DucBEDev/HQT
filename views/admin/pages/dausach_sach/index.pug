@@ -26,17 +26,18 @@ block main
                             th Hành Động
                     tbody#dauSachTableBody
                         each dauSach in dauSachList
-                            tr.dau-sach-item(data-isbn=`${dauSach.isbn}`)
-                                td.align-middle #{dauSach.isbn}
-                                td.align-middle #{dauSach.tenSach}
-                                td.align-middle #{dauSach.khoSach}
-                                td.align-middle #{dauSach.nhaXB}
-                                td.align-middle 
-                                    +formatCurrency(dauSach.gia)
-                                td.align-middle #{dauSach.ngayXuatBan ? new Date(dauSach.ngayXuatBan).toLocaleDateString('vi-VN') : ''}
-                                td.align-middle
-                                    a.btn.btn-sm.btn-dark.select-dau-sach.mr-1(href=`javascript:void(0);` data-isbn=`${dauSach.isbn}`) Chọn
-                                    a.btn.btn-sm.btn-danger.delete-dau-sach-btn.mr-1(href=`javascript:void(0);` data-isbn=`${dauSach.isbn}` data-toggle="modal" data-target="#DeleteDauSachModal") Xóa
+                            if (dauSach.isDeleted == false)
+                                tr.dau-sach-item(data-isbn=`${dauSach.isbn}`)
+                                    td.align-middle #{dauSach.isbn}
+                                    td.align-middle #{dauSach.tenSach}
+                                    td.align-middle #{dauSach.khoSach}
+                                    td.align-middle #{dauSach.nhaXB}
+                                    td.align-middle 
+                                        +formatCurrency(dauSach.gia)
+                                    td.align-middle #{dauSach.ngayXuatBan ? new Date(dauSach.ngayXuatBan).toLocaleDateString('vi-VN') : ''}
+                                    td.align-middle
+                                        a.btn.btn-sm.btn-dark.select-dau-sach.mr-1(href=`javascript:void(0);` data-isbn=`${dauSach.isbn}`) Chọn
+                                        a.btn.btn-sm.btn-danger.delete-dau-sach-btn.mr-1(href=`javascript:void(0);` data-isbn=`${dauSach.isbn}` data-toggle="modal" data-target="#DeleteDauSachModal") Xóa
 
         .card.mb-4
             .card-header.py-3
@@ -131,7 +132,7 @@ block main
                         button.btn.btn-warning.mr-2(type="button" id="confirmEditDauSachBtn" style="display: none;") Xác nhận
                         button.btn.btn-secondary(type="button" id="cancelEditDauSachBtn" style="display: none;") Hủy
 
-        .card.mb-4(id="dauSachTempList")
+        .card.mb-4(id="dauSachTempListHeader")
             .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
                 h6.m-0.font-weight-bold.text-primary Danh Sách Đầu Sách Đã Thêm
             .card-body
@@ -213,4 +214,3 @@ block main
                 }
             }
         });
-    
