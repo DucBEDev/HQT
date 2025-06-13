@@ -79,14 +79,14 @@ module.exports.backup = async (req, res) => {
         ];
         console.log('Executing stored procedure with params:', params)
         // Execute the stored procedure
-        const result = await executeStoredProcedure(pool, 'sp_BackupFullQLTV', params);
+        // const result = await executeStoredProcedure(pool, 'sp_BackupFullQLTV', params);
 
-        // Kiểm tra result.recordset
-        if (result && result.recordset && result.recordset.length > 0 && result.recordset[0].Message) {
-            req.flash('success', result.recordset[0].Message);
-        } else {
-            req.flash('error', 'Backup không thành công: Không nhận được phản hồi hợp lệ từ server');
-        }
+        // // Kiểm tra result.recordset
+        // if (result && result.recordset && result.recordset.length > 0 && result.recordset[0].Message) {
+        //     req.flash('success', result.recordset[0].Message);
+        // } else {
+        //     req.flash('error', 'Backup không thành công: Không nhận được phản hồi hợp lệ từ server');
+        // }
         res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
 
 
@@ -121,19 +121,19 @@ module.exports.restore = async (req, res) => {
 
 
         // Execute the stored procedure
-        const result = await executeStoredProcedure(pool, 'sp_RestoreQLTV', params);
-        console.log(pool)
-        await resetUserPool(req.session.id); // Reset the user pool after restore
+        // const result = await executeStoredProcedure(pool, 'sp_RestoreQLTV', params);
+        // console.log(pool)
+        // await resetUserPool(req.session.id); // Reset the user pool after restore
 
 
-        // Check the result and send appropriate response
-        if (result && result.recordset && result.recordset.length > 0) {
-            req.flash('success', 'Restore thành công');
-            res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
-        } else {
-            req.flash('error', 'Restore không thành công');
-            res.redirect(`${systemConfig.prefixAdmin}/backup_restore`);
-        }
+        // // Check the result and send appropriate response
+        // if (result && result.recordset && result.recordset.length > 0) {
+        //     req.flash('success', 'Restore thành công');
+        //     res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
+        // } else {
+        //     req.flash('error', 'Restore không thành công');
+        //     res.redirect(`${systemConfig.prefixAdmin}/backup_restore`);
+        // }
     }
     catch (error)
     {
@@ -145,7 +145,49 @@ module.exports.restore = async (req, res) => {
 };
 
 
+// [POST] /backup_restore/restore-point-in-time
+module.exports.restoreToPointInTime = async (req, res) => {
+    console.log('Restore request received');
+    const pool = getUserPool(req.session.id);
+    console.log(req.body)
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
 
+    try
+    {
+        console.log(req.body)
+
+        // const params = [
+        // { name: 'BackupPosition', type: sql.Int, value: req.body.backupId },
+       
+        // ];
+        // console.log('Executing stored procedure with params:', params)
+
+
+        // // Execute the stored procedure
+        // const result = await executeStoredProcedure(pool, 'sp_RestoreQLTV', params);
+        // console.log(pool)
+        // await resetUserPool(req.session.id); // Reset the user pool after restore
+
+
+        // // Check the result and send appropriate response
+        // if (result && result.recordset && result.recordset.length > 0) {
+        //     req.flash('success', 'Restore thành công');
+        //     res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
+        // } else {
+        //     req.flash('error', 'Restore không thành công');
+        //     res.redirect(`${systemConfig.prefixAdmin}/backup_restore`);
+        // }
+    }
+    catch (error)
+    {
+        console.error('Error during backup:', error);
+        req.flash('error', 'Lỗi trong khi restore');
+        res.redirect(`${systemConfig.prefixAdmin}/backup_restore`);
+    }
+    
+};
 
 
 

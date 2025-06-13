@@ -23,17 +23,27 @@ function popUndoStack() {
 }
 
 function updateAfterDeleteUndo(oldMaNV, newMaNV) {
-    // Update maNV for any subsequent create actions in the undo stack
-            undoStack.forEach(item => {
-                if (item.action === 'create') {
-                    item.data.forEach(staff => {
-                        if (staff.maNV == oldMaNV) {
-                            staff.maNV = newMaNV; // Increment maNV to avoid conflict
-                        }
-                    });
-                }
-            });
-    console.log(undoStack)
+    // Update maNV for any subsequent create or edit actions in the undo stack
+    undoStack.forEach(item => {
+        if (item.action === 'create') {
+            // For create actions, data is an array
+            if (Array.isArray(item.data)) {
+                item.data.forEach(staff => {
+                    if (staff.maNV == oldMaNV) {
+                        staff.maNV = newMaNV;
+                        console.log(staff);
+                    }
+                });
+            }
+        } else if (item.action === 'edit') {
+            // For edit actions, data is a single object
+            if (!Array.isArray(item.data) && item.data.maNV == oldMaNV) {
+                item.data.maNV = newMaNV;
+                console.log(item.data);
+            }
+        }
+    });
+    console.log('stack sau khi cap nhat', undoStack);
 }
 
 function clearUndoStack() {

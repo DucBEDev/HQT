@@ -22,18 +22,27 @@ function popUndoStack() {
 
 
 function updateAfterDeleteUndo(oldMaTacGia, newMaTacGia) {
-    // Update maTacGia for any subsequent create actions in the undo stack
-            undoStack.forEach(item => {
-                if (item.action === 'create') {
-                    item.data.forEach(author => {
-                        if (author.maTacGia == oldMaTacGia) {
-                            author.maTacGia = newMaTacGia; // Increment maTacGia to avoid conflict
-                            console.log(author)
-                        }
-                    });
-                }
-            });
-    console.log('stack sau khi cap nhat',undoStack)
+    // Update maTacGia for any subsequent create or edit actions in the undo stack
+    undoStack.forEach(item => {
+        if (item.action === 'create') {
+            // For create actions, data is an array
+            if (Array.isArray(item.data)) {
+                item.data.forEach(author => {
+                    if (author.maTacGia == oldMaTacGia) {
+                        author.maTacGia = newMaTacGia;
+                        console.log(author);
+                    }
+                });
+            }
+        } else if (item.action === 'edit') {
+            // For edit actions, data is a single object
+            if (!Array.isArray(item.data) && item.data.maTacGia == oldMaTacGia) {
+                item.data.maTacGia = newMaTacGia;
+                console.log(item.data);
+            }
+        }
+    });
+    console.log('stack sau khi cap nhat', undoStack);
 }
 
 
