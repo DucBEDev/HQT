@@ -99,13 +99,23 @@ class PhieuMuonRepository {
         }
     }
 
-    // Trả sách
-    static async bookReturn(pool, maPhieu) {
+    static async ctPhieuMuonDelete(pool, maPhieu) {
         try {
             await pool.connect();
             const request = pool.request();
             request.input('MAPHIEU', sql.BigInt, maPhieu);
-            await request.query('UPDATE CT_PHIEUMUON SET TRA = 1 WHERE MAPHIEU = @MAPHIEU');
+            await request.query(`-- Cập nhật SACH: Đặt CHOMUON = 0 cho tất cả sách trong CT_PHIEUMUON
+                                        UPDATE SACH
+                                        SET CHOMUON = 0
+                                        WHERE MASACH IN (
+                                            SELECT MASACH 
+                                            FROM CT_PHIEUMUON 
+                                            WHERE MAPHIEU = @MAPHIEU
+                                        );
+
+                                        -- Xóa tất cả CT_PHIEUMUON liên quan đến MAPHIEU
+                                        DELETE FROM CT_PHIEUMUON
+                                        WHERE MAPHIEU = @MAPHIEU;`);
         } catch (err) {
             console.error('Error in getNextId PhieuMuon:', err);
             throw err;
