@@ -9,13 +9,20 @@ block main
         .card.mb-4
             .card-header.py-3.d-flex.flex-row.align-items-center.justify-content-between
                 h6.m-0.font-weight-bold.text-primary Danh Sách Bản Backup
-                .d-flex
+                .d-flex.align-items-center
+                    form.restore-point-in-time-form(action="/Library/admin/backup-restore/restore-point-in-time" method="POST").d-flex.align-items-center.mr-3
+                        .input-group
+                            input.form-control(type="date" id="ngayRestore" name="ngayRestore" required)
+                            button.btn.btn-primary(type="submit") Khôi phục đến thời điểm
+
                     form.create-backup-form(action="/Library/admin/backup-restore/backup" method="POST")
                         input(type="hidden" name="replace" value="0")
-                        button.btn.btn-primary.mr-2(type="submit" data-toggle="modal" data-target="#CreateBackupModal") + Tạo Backup
+                        button.btn.btn-primary.mr-2(type="submit") + Tạo Backup
+
                     form.delete-all-backups-form(action="/Library/admin/backup-restore/backup" method="POST")
                         input(type="hidden" name="replace" value="1")
-                        button.btn.btn-danger(type="submit" data-toggle="modal" data-target="#DeleteAllBackupsModal") Xóa Tất Cả Bản Backup Cũ khi tạo Backup Mới
+                        button.btn.btn-danger(type="submit") Xóa Tất Cả Bản Backup Cũ khi tạo Backup Mới
+
             
             .table-responsive.p-3
                 table#dataTable.table.align-items-center.table-flush
@@ -44,7 +51,8 @@ block main
                                 td.align-middle
                                     form.restore-backup-form(action="/Library/admin/backup-restore/restore" method="POST")
                                         input(type="hidden" name="backupId" value=`${backup.position}`)
-                                        button.btn.btn-sm.btn-success(type="submit" data-toggle="modal" data-target="#RestoreBackupModal") Khôi phục
+                                        button.btn.btn-sm.btn-success(type="submit") Khôi phục
+
 
     //- Modal Create Backup
     #CreateBackupModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="CreateBackupModal" aria-hidden="true")
@@ -59,6 +67,20 @@ block main
                 .modal-footer
                     button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
                     button#create-backup-link.btn.btn-primary(type="button") Tạo
+
+    //- Modal Restore Point in Time (NEW)
+    #RestorePointInTimeModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="RestorePointInTimeModal" aria-hidden="true")
+        .modal-dialog(role="document")
+            .modal-content
+                .modal-header
+                    h5#exampleModalLabelRestorePointInTime.modal-title Khôi phục đến thời điểm
+                    button.close(type="button" data-dismiss="modal" aria-label="Close")
+                        span(aria-hidden="true") ×
+                .modal-body
+                    p Bạn chắc chắn muốn khôi phục database đến thời điểm đã chọn không? Hành động này sẽ ghi đè dữ liệu hiện tại.
+                .modal-footer
+                    button.btn.btn-outline-primary(type="button" data-dismiss="modal") Không
+                    button#restore-point-in-time-link.btn.btn-success(type="button") Khôi phục
     
     //- Modal Restore Backup
     #RestoreBackupModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="RestoreBackupModal" aria-hidden="true")
@@ -99,6 +121,17 @@ block main
             };
         });
 
+        // Handle Restore Point-in-Time Form Submission (FIXED)
+        document.querySelector('.restore-point-in-time-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            $('#RestorePointInTimeModal').modal('show');
+            const restorePointInTimeButton = document.getElementById('restore-point-in-time-link');
+            restorePointInTimeButton.onclick = null; // Clear previous handlers
+            restorePointInTimeButton.onclick = () => {
+                e.target.submit();
+            };
+        });
+
         // Handle Delete All Backups Form Submission
         document.querySelector('.delete-all-backups-form').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -115,6 +148,7 @@ block main
                 e.preventDefault();
                 $('#RestoreBackupModal').modal('show');
                 const restoreButton = document.getElementById('restore-backup-link');
+                restoreButton.onclick = null; // Clear previous handlers
                 restoreButton.onclick = () => {
                     form.submit();
                 };

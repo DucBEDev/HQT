@@ -143,6 +143,9 @@ module.exports.detail = async (req, res) => {
     const dgData = await DocGiaRepository.getById(pool, phieuMuon.maDG);
     const empData = await NhanVienRepository.getById(pool, phieuMuon.maNV);
     const sachList = await DauSachRepository.getAllWithQuantity(pool);
+
+    console.log("phieuMuon ", phieuMuon);
+    console.log("ctpmList ", ctpmList);
     
     res.render('admin/pages/phieumuon/detail', { 
         phieuMuon,
@@ -256,21 +259,19 @@ module.exports.returnBook = async (req, res) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
-    console.log(req.params.maPhieu)
-    console.log(req.params.maSach)
 
     const { maPhieu, maSach } = req.params;
     const empId = req.session.empId; // Assuming the employee ID is stored in the session
-    console.log("Employee ID:", empId);
+    
     const params = [
         { name: 'MAPHIEU', type: sql.BigInt, value: maPhieu },
         { name: 'MASACH', type: sql.NChar(20), value: maSach },
         { name: 'MANVNS', type: sql.Int, value: empId } // Assuming MANV is the employee ID
     ];
-    console.log("Params for stored procedure:", params);
+
     const kq = await executeStoredProcedureWithTransaction(pool, "sp_TraSach", params );
-    console.log(kq)
-    res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+
+    res.redirect(`back`);
 };
 
 

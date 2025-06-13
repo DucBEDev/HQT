@@ -88,11 +88,11 @@ block main
                                                         else
                                                             | Cũ
                                                 td.text-center
-                                                    if sach.daTraSach
+                                                    if (sach.tra == true)
                                                         span.badge.badge-success
                                                             i.fas.fa-check.mr-1
                                                             | Đã trả
-                                                    else if sach.matSach
+                                                    else if (sach.tra == false)
                                                         span.badge.badge-danger
                                                             i.fas.fa-times.mr-1
                                                             | Mất sách
@@ -101,7 +101,7 @@ block main
                                                             i.fas.fa-clock.mr-1
                                                             | Chưa trả
                                                 td.text-center
-                                                    if !sach.daTraSach && !sach.matSach
+                                                    if sach.tra == null
                                                         .btn-group(role="group")
                                                             button.btn.btn-success.btn-sm.return-book-btn(
                                                                 type="button" 
