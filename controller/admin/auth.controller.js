@@ -14,6 +14,15 @@ module.exports.logIn = async (req, res) => {
     const { username, password } = req.body;
 
     try {
+        const role = await NhanVienRepository.getRoleByUsername(defaultPool, username);
+        console.log('Role:', role);
+        if (!role || role.length === 0 || role[0] !=="THUTHU")
+        {
+            console.log('Role not found or not THUTHU');
+            req.flash('error', 'Tên người dùng hoặc mật khẩu không đúng!');
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
+
         const userPool = await createUserConnection(username, password, req.session.id);
         userPool.on('error', err => {
             console.error(`UserPool (${username}) Connection Error:`, err);
@@ -22,13 +31,15 @@ module.exports.logIn = async (req, res) => {
         // Lưu pool vào session
         const empId = username.split('NV')[1];
 
+
         req.session.empId = empId;
         req.session.username = username;
+        req.session.role = role[0];
 
         res.redirect(`${systemConfig.prefixAdmin}/staff`);
     } catch (err) {
         req.flash('error', 'Tên người dùng hoặc mật khẩu không đúng!');
-        res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 };
 

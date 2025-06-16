@@ -79,14 +79,14 @@ module.exports.backup = async (req, res) => {
         ];
         console.log('Executing stored procedure with params:', params)
         // Execute the stored procedure
-        // const result = await executeStoredProcedure(pool, 'sp_BackupFullQLTV', params);
+        const result = await executeStoredProcedure(pool, 'sp_BackupFullQLTV', params);
 
-        // // Kiểm tra result.recordset
-        // if (result && result.recordset && result.recordset.length > 0 && result.recordset[0].Message) {
-        //     req.flash('success', result.recordset[0].Message);
-        // } else {
-        //     req.flash('error', 'Backup không thành công: Không nhận được phản hồi hợp lệ từ server');
-        // }
+        // Kiểm tra result.recordset
+        if (result && result.recordset && result.recordset.length > 0 && result.recordset[0].Message) {
+            req.flash('success', result.recordset[0].Message);
+        } else {
+            req.flash('error', 'Backup không thành công: Không nhận được phản hồi hợp lệ từ server');
+        }
         res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
 
 
@@ -121,19 +121,19 @@ module.exports.restore = async (req, res) => {
 
 
         // Execute the stored procedure
-        // const result = await executeStoredProcedure(pool, 'sp_RestoreQLTV', params);
-        // console.log(pool)
-        // await resetUserPool(req.session.id); // Reset the user pool after restore
+        const result = await executeStoredProcedure(pool, 'sp_RestoreQLTV', params);
+        console.log(pool)
+        await resetUserPool(req.session.id); // Reset the user pool after restore
 
 
-        // // Check the result and send appropriate response
-        // if (result && result.recordset && result.recordset.length > 0) {
-        //     req.flash('success', 'Restore thành công');
-        //     res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
-        // } else {
-        //     req.flash('error', 'Restore không thành công');
-        //     res.redirect(`${systemConfig.prefixAdmin}/backup_restore`);
-        // }
+        // Check the result and send appropriate response
+        if (result && result.recordset && result.recordset.length > 0) {
+            req.flash('success', 'Restore thành công');
+            res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
+        } else {
+            req.flash('error', 'Restore không thành công');
+            res.redirect(`${systemConfig.prefixAdmin}/backup_restore`);
+        }
     }
     catch (error)
     {
@@ -156,13 +156,36 @@ module.exports.restoreToPointInTime = async (req, res) => {
 
     try
     {
-        console.log(req.body)
+        // Parse datetimeRestore and add 7 hours
+        const datetimeRestore = req.body.datetimeRestore;
+        if (!datetimeRestore) {
+            throw new Error('datetimeRestore is required');
+        }
 
-        // const params = [
-        // { name: 'BackupPosition', type: sql.Int, value: req.body.backupId },
+        // Create Date object from datetimeRestore (e.g., '2025-06-13T22:35')
+        const date = new Date(datetimeRestore);
+        if (isNaN(date)) {
+            throw new Error('Invalid datetimeRestore format');
+        }
+
+        // Add 7 hours
+        date.setHours(date.getHours() + 7);
+
+        // Format the adjusted date as 'YYYY-MM-DD HH:mm:ss'
+        const formattedDatetimeRestore = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+
+        // Log the adjusted values for debugging
+        console.log('Adjusted datetime:', {
+            datetimeRestore,
+            formattedDatetimeRestore
+        });
+
+
+        const params = [
+        { name: 'RestoreTime', type: sql.DateTime, value: formattedDatetimeRestore },
        
-        // ];
-        // console.log('Executing stored procedure with params:', params)
+        ];
+        console.log('Executing stored procedure with params:', params)
 
 
         // // Execute the stored procedure
