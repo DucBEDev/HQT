@@ -161,95 +161,127 @@ class DauSachRepository {
                         COUNT(MASACH) AS SOLUONG,
                         SUM(CASE WHEN CHOMUON = 0 THEN 1 ELSE 0 END) AS SOLUONGCHOMUON
                     FROM SACH
+                    WHERE ISBN IS NOT NULL
                     GROUP BY ISBN
-                ),
-                DauSachInfo AS (
-                    SELECT DISTINCT
-                        ds.ISBN, ds.Tensach, ds.KHOSACH, ds.Noidung, ds.Sotrang, ds.Gia, 
-                        ds.HinhAnhPath, ds.Ngayxuatban, ds.Lanxuatban, ds.NHAXB,
-                        nt.MOTA, nt.KE,
-                        tg.HOTENTG,
-                        COALESCE(ss.SOLUONG, 0) AS SOLUONG,
-                        COALESCE(ss.SOLUONGCHOMUON, 0) AS SOLUONGCHOMUON
-                    FROM DAUSACH ds
-                    LEFT JOIN SachStats ss ON ds.ISBN = ss.ISBN
-                    LEFT JOIN SACH s ON ds.ISBN = s.ISBN
-                    LEFT JOIN THELOAI tl ON ds.MaTL = tl.MaTL
-                    LEFT JOIN NGONNGU nn ON ds.MANGONNGU = nn.MaNgonNgu
-                    LEFT JOIN NGANTU nt ON nt.MANGANTU = s.MANGANTU
-                    LEFT JOIN TACGIA_SACH tgs ON tgs.ISBN = ds.ISBN
-                    LEFT JOIN TACGIA tg ON tg.MATACGIA = tgs.MATACGIA
-                    GROUP BY ds.ISBN, ds.Tensach, ds.KHOSACH, ds.Noidung, ds.Sotrang, ds.Gia,
-                             ds.HinhAnhPath, ds.Ngayxuatban, ds.Lanxuatban, ds.NHAXB,
-                             nt.MOTA, nt.KE, ss.SOLUONG, ss.SOLUONGCHOMUON, tg.HOTENTG
                 )
-                SELECT * FROM DauSachInfo
+                SELECT DISTINCT
+                    ds.ISBN, 
+                    ds.TENSACH, 
+                    ds.KHOSACH, 
+                    ds.NOIDUNG, 
+                    ds.SOTRANG, 
+                    ds.GIA, 
+                    ds.HINHANHPATH,
+                    ds.NGAYXUATBAN, 
+                    ds.LANXUATBAN, 
+                    ds.NHAXB,
+                    tl.TENTL,
+                    nn.NGONNGU,
+                    STRING_AGG(tg.HOTENTG, ', ') AS TENTACGIA,
+                    COALESCE(ss.SOLUONG, 0) AS SOLUONG,
+                    COALESCE(ss.SOLUONGCHOMUON, 0) AS SOLUONGCHOMUON
+                FROM DAUSACH ds
+                LEFT JOIN SachStats ss ON ds.ISBN = ss.ISBN
+                LEFT JOIN THELOAI tl ON ds.MATL = tl.MATL
+                LEFT JOIN NGONNGU nn ON ds.MANGONNGU = nn.MANGONNGU
+                LEFT JOIN TACGIA_SACH tgs ON tgs.ISBN = ds.ISBN
+                LEFT JOIN TACGIA tg ON tg.MATACGIA = tgs.MATACGIA
+                WHERE ds.ISDELETED = 0 OR ds.ISDELETED IS NULL
+                GROUP BY 
+                    ds.ISBN, ds.TENSACH, ds.KHOSACH, ds.NOIDUNG, ds.SOTRANG, ds.GIA,
+                    ds.HINHANHPATH, ds.NGAYXUATBAN, ds.LANXUATBAN, ds.NHAXB,
+                    tl.TENTL, nn.NGONNGU, ss.SOLUONG, ss.SOLUONGCHOMUON
+                ORDER BY ds.TENSACH
             `);
             return result.recordset;
         } catch (err) {
-            console.error('Error in getAll DauSach:', err);
+            console.error('Error in getAllWithStatus DauSach:', err);
             throw err;
         }
     }
 
     static async getBookDetailByISBN(pool, isbn) {
-        await pool.connect();
-        
-        const bookResult = await pool.request()
-            .input('isbn', sql.NVarChar, isbn)
-            .query(`
-                WITH SachStats AS (
+        try {
+            await pool.connect();
+            
+            const bookResult = await pool.request()
+                .input('isbn', sql.NVarChar, isbn)
+                .query(`
+                    WITH SachStats AS (
+                        SELECT 
+                            ISBN,
+                            COUNT(MASACH) AS SOLUONG,
+                            SUM(CASE WHEN CHOMUON = 0 THEN 1 ELSE 0 END) AS SOLUONGCHOMUON
+                        FROM SACH
+                        WHERE ISBN = @isbn
+                        GROUP BY ISBN
+                    )
                     SELECT 
-                        ISBN,
-                        COUNT(MASACH) AS SOLUONG,
-                        SUM(CASE WHEN CHOMUON = 0 THEN 1 ELSE 0 END) AS SOLUONGCHOMUON
-                    FROM SACH
-                    WHERE ISBN = @isbn
-                    GROUP BY ISBN
-                ),
-                DauSachInfo AS (
-                    SELECT DISTINCT
-                        ds.ISBN, ds.Tensach, ds.KHOSACH, ds.Noidung, ds.Sotrang, ds.Gia, 
-                        ds.HinhAnhPath, ds.Ngayxuatban, ds.Lanxuatban, ds.NHAXB,
-                        nt.MOTA, nt.KE,
-                        tg.HOTENTG,
+                        ds.ISBN, 
+                        ds.TENSACH, 
+                        ds.KHOSACH, 
+                        ds.NOIDUNG, 
+                        ds.SOTRANG, 
+                        ds.GIA, 
+                        ds.HINHANHPATH,
+                        ds.NGAYXUATBAN, 
+                        ds.LANXUATBAN, 
+                        ds.NHAXB,
+                        tl.TENTL AS TheLoai,
+                        nn.NGONNGU AS NgonNgu,
+                        STRING_AGG(tg.HOTENTG, ', ') AS TacGia,
                         COALESCE(ss.SOLUONG, 0) AS SOLUONG,
                         COALESCE(ss.SOLUONGCHOMUON, 0) AS SOLUONGCHOMUON
-                    FROM SachStats ss
-                    LEFT JOIN DAUSACH ds ON ss.ISBN = ds.ISBN
-                    LEFT JOIN SACH s ON ds.ISBN = s.ISBN
-                    LEFT JOIN THELOAI tl ON ds.MaTL = tl.MaTL
-                    LEFT JOIN NGONNGU nn ON ds.MANGONNGU = nn.MaNgonNgu
-                    LEFT JOIN NGANTU nt ON nt.MANGANTU = s.MANGANTU
+                    FROM DAUSACH ds
+                    LEFT JOIN SachStats ss ON ds.ISBN = ss.ISBN
+                    LEFT JOIN THELOAI tl ON ds.MATL = tl.MATL
+                    LEFT JOIN NGONNGU nn ON ds.MANGONNGU = nn.MANGONNGU
                     LEFT JOIN TACGIA_SACH tgs ON tgs.ISBN = ds.ISBN
                     LEFT JOIN TACGIA tg ON tg.MATACGIA = tgs.MATACGIA
-                    GROUP BY ds.ISBN, ds.Tensach, ds.KHOSACH, ds.Noidung, ds.Sotrang, ds.Gia,
-                             ds.HinhAnhPath, ds.Ngayxuatban, ds.Lanxuatban, ds.NHAXB,
-                             nt.MOTA, nt.KE, ss.SOLUONG, ss.SOLUONGCHOMUON, tg.HOTENTG
-                )
-                SELECT * FROM DauSachInfo
-            `);
-    
-        const copiesResult = await pool.request()
-            .input('isbn', sql.NVarChar, isbn)
-            .query(`
-                SELECT 
-                    s.MASACH AS Masach,
-                    CONCAT(nt.MOTA, ' - Kệ ', nt.KE) AS ViTri,
-                    s.TINHTRANG AS TinhTrang,
-                    s.CHOMUON AS TrangThai
-                FROM SACH s
-                LEFT JOIN NGANTU nt ON s.MANGANTU = nt.MANGANTU
-                WHERE s.ISBN = @isbn
-            `);
-    
-        // Kết hợp dữ liệu
-        const book = bookResult.recordset[0] || null;
-        if (book) {
-            book.copies = copiesResult.recordset;
+                    WHERE ds.ISBN = @isbn 
+                      AND (ds.ISDELETED = 0 OR ds.ISDELETED IS NULL)
+                    GROUP BY 
+                        ds.ISBN, ds.TENSACH, ds.KHOSACH, ds.NOIDUNG, ds.SOTRANG, ds.GIA,
+                        ds.HINHANHPATH, ds.NGAYXUATBAN, ds.LANXUATBAN, ds.NHAXB,
+                        tl.TENTL, nn.NGONNGU, ss.SOLUONG, ss.SOLUONGCHOMUON
+                `);
+        
+            const copiesResult = await pool.request()
+                .input('isbn', sql.NVarChar, isbn)
+                .query(`
+                    SELECT 
+                        s.MASACH,
+                        CASE 
+                            WHEN nt.MOTA IS NOT NULL AND nt.KE IS NOT NULL 
+                            THEN CONCAT(nt.MOTA, ' - Kệ ', nt.KE)
+                            WHEN nt.MOTA IS NOT NULL 
+                            THEN nt.MOTA
+                            ELSE 'Chưa xếp vị trí'
+                        END AS ViTri,
+                        s.TINHTRANG AS TinhTrangCode,
+                        s.CHOMUON AS TrangThaiCode
+                    FROM SACH s
+                    LEFT JOIN NGANTU nt ON s.MANGANTU = nt.MANGANTU
+                    WHERE s.ISBN = @isbn
+                    ORDER BY s.MASACH
+                `);
+        
+            // Kết hợp dữ liệu
+            const book = bookResult.recordset[0] || null;
+            if (book) {
+                book.copies = copiesResult.recordset;
+                
+                // Thêm thông tin tổng hợp
+                book.tongSoBan = book.copies.length;
+                book.soLuongCoTheMuon = book.copies.filter(copy => copy.TrangThaiCode == false).length;
+                book.soLuongDangMuon = book.copies.filter(copy => copy.TrangThaiCode == true).length;
+            }
+        
+            return book;
+        } catch (err) {
+            console.error('Error in getBookDetailByISBN:', err);
+            throw err;
         }
-    
-        return book;
     }
 
     static async getDauSach(pool, isbn) {

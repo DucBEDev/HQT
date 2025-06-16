@@ -153,10 +153,7 @@ module.exports.detail = async (req, res) => {
 
         }
     }
-                    
-                
-            
-
+    
     console.log("phieuMuon ", phieuMuon);
     console.log("ctpmList ", ctpmList);
     

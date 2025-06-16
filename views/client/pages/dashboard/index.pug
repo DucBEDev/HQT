@@ -39,8 +39,12 @@ html(lang="vi")
             .card-img-top {
                 border-top-left-radius: 15px;
                 border-top-right-radius: 15px;
-                height: 250px;
-                object-fit: cover;
+                width: 100%;
+                height: 300px; /* Tăng chiều cao để phù hợp với sách dọc */
+                object-fit: contain; /* Thay đổi từ 'cover' thành 'contain' để hiển thị toàn bộ bìa sách */
+                object-position: center;
+                background-color: #f8f9fa; /* Thêm màu nền nhẹ để tạo khung đẹp */
+                padding: 10px; /* Thêm padding để tạo khoảng cách */
             }
             .card-body {
                 padding: 20px;
@@ -118,6 +122,76 @@ html(lang="vi")
             .footer a:hover {
                 color: #ffffff;
             }
+            .pagination-wrapper {
+                margin: 40px 0;
+                text-align: center;
+            }
+
+            .pagination {
+                display: inline-flex;
+                justify-content: center;
+                align-items: center;
+                gap: 5px;
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+
+            .pagination .page-item {
+                margin: 0 2px;
+            }
+
+            .pagination .page-link {
+                display: block;
+                padding: 10px 15px;
+                margin: 0;
+                color: #007bff;
+                text-decoration: none;
+                background-color: #fff;
+                border: 1px solid #dee2e6;
+                border-radius: 50px;
+                transition: all 0.3s ease;
+                font-weight: 500;
+            }
+
+            .pagination .page-link:hover {
+                color: #0056b3;
+                background-color: #e9ecef;
+                border-color: #adb5bd;
+                transform: translateY(-2px);
+            }
+
+            .pagination .page-item.active .page-link {
+                color: #fff;
+                background: linear-gradient(45deg, #007bff, #00c4b4);
+                border-color: #007bff;
+                box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+            }
+
+            .pagination .page-item.disabled .page-link {
+                color: #6c757d;
+                background-color: #fff;
+                border-color: #dee2e6;
+                cursor: not-allowed;
+                opacity: 0.6;
+            }
+
+            .pagination-info {
+                color: #6c757d;
+                font-size: 0.9rem;
+                margin-bottom: 15px;
+            }
+
+            @media (max-width: 768px) {
+                .pagination .page-link {
+                    padding: 8px 12px;
+                    font-size: 0.9rem;
+                }
+                
+                .pagination-info {
+                    font-size: 0.8rem;
+                }
+            }
             @media (max-width: 768px) {
                 .navbar-brand img {
                     height: 30px;
@@ -153,6 +227,8 @@ html(lang="vi")
                     ul.navbar-nav.ms-auto
                         li.nav-item
                             a.nav-link.text-white(href="#") Trang chủ
+                        li.nav-item
+                            a.nav-link.text-white(href="http://localhost:3000/Library/admin/auth/login") Trang quản lý
 
         // Main content
         .container.py-5.mt-5
@@ -168,27 +244,24 @@ html(lang="vi")
                 each book in books || []
                     .col-md-4.col-sm-6.mb-4.detail-book(data-id=book.ISBN)
                         .card.h-100
-                            if book.HinhAnhPath
-                                img.card-img-top(src=book.HINHANHPATH alt=book.Tensach)
-                            else
-                                img.card-img-top(src="/images/default-book.jpg" alt="Default book image")
+                            img.card-img-top(src=book.HINHANHPATH alt=book.TENSACH)
                             .card-body
-                                h5.card-title= book.Tensach
-                                if book.HOTENTG
+                                h5.card-title= book.TENSACH
+                                if book.TENTACGIA
                                     p.card-text
                                         i.fas.fa-user-pen.me-2
                                         strong Tác giả: 
-                                        span= book.HOTENTG
+                                        span= book.TENTACGIA
                                 if book.NHAXB
                                     p.card-text
                                         i.fas.fa-building.me-2
                                         strong Nhà xuất bản: 
                                         span= book.NHAXB
-                                if book.Gia
+                                if book.GIA
                                     p.card-text
                                         i.fas.fa-tag.me-2
                                         strong Giá: 
-                                        - const price = book.Gia.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                                        - const price = book.GIA.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
                                         span.price-badge= price + ' ₫'
                                 if book.SOLUONGCHOMUON > 0
                                     p.card-text
@@ -196,6 +269,19 @@ html(lang="vi")
                                 else
                                     p.card-text
                                         span.badge.badge-danger Hết sách
+
+            // Pagination
+            .pagination-wrapper
+                .pagination-info
+                    span#paginationInfo
+                nav(aria-label="Phân trang sách")
+                    ul.pagination
+                        li.page-item#prevPage
+                            a.page-link(href="#" aria-label="Trang trước")
+                                i.fas.fa-chevron-left
+                        li.page-item#nextPage
+                            a.page-link(href="#" aria-label="Trang sau")
+                                i.fas.fa-chevron-right
 
         // Footer
         footer.footer.text-center
@@ -219,20 +305,137 @@ html(lang="vi")
         script.
             document.addEventListener('DOMContentLoaded', function() {
                 const searchInput = document.getElementById('searchInput');
+                const booksList = document.getElementById('booksList');
+                const paginationInfo = document.getElementById('paginationInfo');
+                const pagination = document.querySelector('.pagination');
+                const prevPage = document.getElementById('prevPage');
+                const nextPage = document.getElementById('nextPage');
                 
-                function performSearch() {
-                    const searchTerm = searchInput.value.toLowerCase().trim();
-                    const bookCards = document.querySelectorAll('.detail-book');
-                    
-                    bookCards.forEach(card => {
-                        const title = card.querySelector('.card-title').textContent.toLowerCase();
-                        const shouldShow = searchTerm === '' || title.includes(searchTerm);
-                        card.style.display = shouldShow ? 'block' : 'none';
-                    });
+                let currentPage = 1;
+                let booksPerPage = 6; // Số sách mỗi trang
+                let filteredBooks = [];
+                let allBooks = [];
+                
+                // Lấy tất cả sách từ DOM
+                function initializeBooks() {
+                    allBooks = Array.from(document.querySelectorAll('.detail-book'));
+                    filteredBooks = [...allBooks];
+                    showPage(1);
                 }
                 
+                // Tìm kiếm sách
+                function performSearch() {
+                    const searchTerm = searchInput.value.toLowerCase().trim();
+                    
+                    if (searchTerm === '') {
+                        filteredBooks = [...allBooks];
+                    } else {
+                        filteredBooks = allBooks.filter(card => {
+                            const title = card.querySelector('.card-title').textContent.toLowerCase();
+                            return title.includes(searchTerm);
+                        });
+                    }
+                    
+                    currentPage = 1;
+                    showPage(1);
+                }
+                
+                // Hiển thị trang
+                function showPage(page) {
+                    currentPage = page;
+                    const totalBooks = filteredBooks.length;
+                    const totalPages = Math.ceil(totalBooks / booksPerPage);
+                    
+                    // Ẩn tất cả sách
+                    allBooks.forEach(book => book.style.display = 'none');
+                    
+                    // Hiển thị sách của trang hiện tại
+                    const startIndex = (page - 1) * booksPerPage;
+                    const endIndex = startIndex + booksPerPage;
+                    const booksToShow = filteredBooks.slice(startIndex, endIndex);
+                    
+                    booksToShow.forEach(book => book.style.display = 'block');
+                    
+                    // Cập nhật thông tin phân trang
+                    updatePaginationInfo(totalBooks, startIndex, endIndex);
+                    
+                    // Cập nhật các nút phân trang
+                    updatePaginationButtons(totalPages);
+                }
+                
+                // Cập nhật thông tin phân trang
+                function updatePaginationInfo(totalBooks, startIndex, endIndex) {
+                    if (totalBooks === 0) {
+                        paginationInfo.textContent = 'Không tìm thấy sách nào';
+                    } else {
+                        const actualEndIndex = Math.min(endIndex, totalBooks);
+                        paginationInfo.textContent = `Hiển thị ${startIndex + 1}-${actualEndIndex} trong tổng số ${totalBooks} cuốn sách`;
+                    }
+                }
+                
+                // Cập nhật các nút phân trang
+                function updatePaginationButtons(totalPages) {
+                    // Xóa các nút trang cũ
+                    const existingPageButtons = pagination.querySelectorAll('.page-item:not(#prevPage, #nextPage)');
+                    existingPageButtons.forEach(button => button.remove());
+                    
+                    // Cập nhật nút Previous
+                    prevPage.classList.toggle('disabled', currentPage === 1);
+                    
+                    // Cập nhật nút Next
+                    nextPage.classList.toggle('disabled', currentPage === totalPages || totalPages === 0);
+                    
+                    // Tạo các nút trang
+                    if (totalPages > 0) {
+                        const maxVisiblePages = 5;
+                        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+                        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                        
+                        if (endPage - startPage + 1 < maxVisiblePages) {
+                            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                        }
+                        
+                        for (let i = startPage; i <= endPage; i++) {
+                            const pageItem = document.createElement('li');
+                            pageItem.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                            
+                            const pageLink = document.createElement('a');
+                            pageLink.className = 'page-link';
+                            pageLink.href = '#';
+                            pageLink.textContent = i;
+                            pageLink.addEventListener('click', function(e) {
+                                e.preventDefault();
+                                showPage(i);
+                            });
+                            
+                            pageItem.appendChild(pageLink);
+                            nextPage.parentNode.insertBefore(pageItem, nextPage);
+                        }
+                    }
+                }
+                
+                // Event listeners
                 searchInput.addEventListener('input', performSearch);
                 document.querySelector('.btn-primary').addEventListener('click', performSearch);
+                
+                // Event listeners cho Previous/Next
+                prevPage.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    if (currentPage > 1) {
+                        showPage(currentPage - 1);
+                    }
+                });
+                
+                nextPage.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
+                    if (currentPage < totalPages) {
+                        showPage(currentPage + 1);
+                    }
+                });
+                
+                // Khởi tạo
+                initializeBooks();
             });
 
             $(document).ready(function () {
@@ -241,4 +444,4 @@ html(lang="vi")
                     $('#form-detail-book').attr('action', `/Library/dashboard/detail/${id}`)
                     $('#form-detail-book').submit()
                 })
-            })
+            });

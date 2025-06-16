@@ -193,18 +193,15 @@ html(lang="vi")
             if book
                 .book-detail-card
                     .book-image-container
-                        if book.HinhAnhPath
-                            img.book-image(src='https://res.cloudinary.com/daayitzhk/image/upload/v1745034822/bia-1_ubsvsd.webp' alt=book.Tensach)
-                        else
-                            img.book-image(src='https://res.cloudinary.com/daayitzhk/image/upload/v1745034822/bia-1_ubsvsd.webp' alt="Default book image")
+                        img.book-image(src=book.HINHANHPATH alt=book.TENSACH)
                     .book-info
-                        h1.book-title= book.Tensach
+                        h1.book-title= book.TENSACH
                         .book-meta
                             .meta-item
                                 i.fas.fa-user-pen
                                 | 
                                 strong Tác giả: 
-                                span= book.HOTENTG || 'Không có thông tin'
+                                span= book.TacGia || 'Không có thông tin'
                             .meta-item
                                 i.fas.fa-building
                                 | 
@@ -214,30 +211,30 @@ html(lang="vi")
                                 i.fas.fa-calendar
                                 | 
                                 strong Năm xuất bản: 
-                                span= book.Ngayxuatban ? new Date(book.Ngayxuatban).getFullYear() : 'Không có thông tin'
+                                span= book.NGAYXUATBAN ? new Date(book.NGAYXUATBAN).getFullYear() : 'Không có thông tin'
                             .meta-item
                                 i.fas.fa-book
                                 | 
                                 strong Số trang: 
-                                span= book.Sotrang || 'Không có thông tin'
+                                span= book.SOTRANG || 'Không có thông tin'
                             .meta-item
                                 i.fas.fa-language
                                 | 
                                 strong Ngôn ngữ: 
-                                span= book.MANGONNGU || 'Không có thông tin'
+                                span= book.NgonNgu || 'Không có thông tin'
                             .meta-item
                                 i.fas.fa-layer-group
                                 | 
                                 strong Lần xuất bản: 
-                                span= book.Lanxuatban || 'Không có thông tin'
-                        if book.Gia
+                                span= book.LANXUATBAN || 'Không có thông tin'
+                        if book.GIA
                             .price-badge
                                 i.fas.fa-tag.me-1
-                                - const price = book.Gia.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+                                - const price = book.GIA.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")
                                 span= price + ' ₫'
                         .book-description
                             h4 Mô tả
-                            p= book.MoTa || book.Noidung || 'Chưa có mô tả cho sách này.'
+                            p= book.NOIDUNG || 'Chưa có mô tả cho sách này.'
                         .copies-table
                             h3.mb-4
                                 | Danh sách sách 
@@ -254,10 +251,10 @@ html(lang="vi")
                                         if book.copies && book.copies.length
                                             each copy in book.copies
                                                 tr
-                                                    td= copy.Masach
+                                                    td= copy.MASACH
                                                     td= copy.ViTri || 'Không xác định'
                                                     td 
-                                                        if copy.TinhTrang == 1
+                                                        if copy.TinhTrangCode == true
                                                             span.status-available
                                                                 i.fas.fa-check-circle
                                                                 | Còn cho mượn
@@ -266,7 +263,7 @@ html(lang="vi")
                                                                 i.fas.fa-clock
                                                                 | Đã thanh lý
                                                     td
-                                                        if copy.TrangThai == 1
+                                                        if copy.TrangThaiCode == false
                                                             span.status-available
                                                                 i.fas.fa-check-circle
                                                                 | Có sẵn

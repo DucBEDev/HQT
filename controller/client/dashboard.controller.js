@@ -10,8 +10,8 @@ module.exports.index = async (req, res) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
-    const books = await DauSachRepository.getAllWithStatus(pool);
 
+    const books = await DauSachRepository.getAllWithStatus(pool);
     res.render('client/pages/dashboard/index', { 
         books 
     });
@@ -23,7 +23,9 @@ module.exports.detail = async (req, res) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
+
     const { isbn } = req.params;
     const book = await DauSachRepository.getBookDetailByISBN(pool, isbn);
+
     res.render('client/pages/dashboard/detail', { book });
 }

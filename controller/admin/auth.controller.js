@@ -88,3 +88,8 @@ module.exports.changePassword = async (req, res) => {
     }
 };
 
+// [GET] /auth/logout
+module.exports.logout = async (req, res) => {
+    req.session.destroy();
+    res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+};
