@@ -5,10 +5,12 @@ const controller = require('../../controller/admin/auth.controller');
 
 router.get('/login', controller.showLogIn);
 router.post('/login', controller.logIn);
-router.get('/change-password-enter-login', controller.showChangePasswordEnterLogin);
-router.post('/change-password-enter-login', controller.changePasswordEnterLogin);
-router.get('/change-password', controller.showChangePassword);
-router.post('/change-password', controller.changePassword);
 router.get('/logout', controller.logout);
+
+router.get('/changePass', controller.changePassword);
+router.post('/changePass', controller.changePasswordPost);
+
+router.get('/deleteLogin', controller.deleteLoginView);
+router.delete('/deleteLogin', controller.deleteLogin);
 
 module.exports = router;

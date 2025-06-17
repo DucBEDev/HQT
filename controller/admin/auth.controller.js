@@ -1,6 +1,7 @@
-const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, createUserConnection, defaultPool} = require('../../configs/database');
+const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, createUserConnection, defaultPool, getUserPool} = require('../../configs/database');
 
 const NhanVienRepository = require('../../repositories/NhanVienRepository');
+const DocGiaRepository = require('../../repositories/DocGiaRepository');
 
 const systemConfig = require('../../configs/system');
 
@@ -15,12 +16,11 @@ module.exports.logIn = async (req, res) => {
 
     try {
         const role = await NhanVienRepository.getRoleByUsername(defaultPool, username);
-        console.log('Role:', role);
-        if (!role || role.length === 0 || role[0] !=="THUTHU")
-        {
-            console.log('Role not found or not THUTHU');
-            req.flash('error', 'Tên người dùng hoặc mật khẩu không đúng!');
-            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+
+        if (!role || role.length === 0 || role[0] !== "THUTHU") {
+            return res.render('admin/pages/auth/login', {
+                message: 'Tài khoản không được cấp quyền truy cập!'
+            });
         }
 
         const userPool = await createUserConnection(username, password, req.session.id);
@@ -36,66 +36,11 @@ module.exports.logIn = async (req, res) => {
         req.session.username = username;
         req.session.role = role[0];
 
+        req.flash("success", "Đăng nhập thành công!");
         res.redirect(`${systemConfig.prefixAdmin}/staff`);
     } catch (err) {
-        req.flash('error', 'Tên người dùng hoặc mật khẩu không đúng!');
+        req.flash("error", "Đăng nhập thất bại!")
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
-    }
-};
-
-// [GET] /auth/change-password-enter-login
-module.exports.showChangePasswordEnterLogin = async (req, res) => {
-    res.render('admin/pages/auth/change-password-enter-login');
-};
-
-// [POST] /auth/change-password-enter-login
-module.exports.changePasswordEnterLogin = async (req, res) => {
-    const {username} = req.body;
-
-    try {
-        const request = defaultPool.request(); // Tạo request
-        request.input('LoginName', sql.NVarChar, username); // Thêm tham số MATL
-        const result = await request.query('SELECT * FROM sys.server_principals WHERE name = @LoginName'); // Truy vấn với tham số
-        
-        if (result) {
-            req.session.changePassUsername = username;
-            res.redirect(`${systemConfig.prefixAdmin}/auth/change-password`);
-        } else {
-            req.flash('error', 'Tên người dùng không tồn tại!');
-            res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
-        }
-    }
-    catch (err) {
-        req.flash('error', 'Có lỗi xảy ra trong quá trình tìm kiếm tài khoản!');
-        res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
-    }
-
-};
-
-// [GET] /auth/change-password
-module.exports.showChangePassword = async (req, res) => {
-    res.render('admin/pages/auth/change-password')
-};
-
-// [POST] /auth/change-password
-module.exports.changePassword = async (req, res) => {
-    const {oldPass, newPass} = req.body;
-    const username = req.session.changePassUsername;
-
-    try {
-        const params = [
-            { name: 'LoginName', type: sql.NVarChar, value: username },
-            { name: 'NewPassword', type: sql.NVarChar, value: newPass },
-            { name: 'OldPassword', type: sql.NVarChar, value: oldPass }
-        ];
-        await executeStoredProcedure(defaultPool, 'sp_ChangeLoginPassword', params);
-
-        req.flash('success', 'Đổi mật khẩu thành công!');
-        res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
-    }
-    catch (err) {
-        req.flash('error', 'Có lỗi xảy ra trong quá trình tìm kiếm tài khoản!');
-        res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 };
 
@@ -103,4 +48,88 @@ module.exports.changePassword = async (req, res) => {
 module.exports.logout = async (req, res) => {
     req.session.destroy();
     res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+};
+
+// [GET] /auth/changePass
+module.exports.changePassword = async (req, res) => {
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+    const empList = await NhanVienRepository.getAll(pool);
+    const dgList = await DocGiaRepository.getAll(pool);
+
+    res.render('admin/pages/auth/changePassword', {
+        empList: empList,
+        dgList: dgList
+    })
+};
+
+// [POST] /auth/changePass
+module.exports.changePasswordPost = async (req, res) => {
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+    try {
+        const { userType, userId, newPassword, confirmPassword } = req.body;
+        let newUserId = ((userType == 'librarian') ? 'NV' : 'DG') + userId;
+
+        const params = [
+            { name: 'LoginName', type: sql.NVarChar, value: newUserId },
+            { name: 'NewPassword', type: sql.NVarChar, value: newPassword },
+            { name: 'OldPassword', type: sql.NVarChar, value: confirmPassword }
+        ];
+        console.log(params)
+        await executeStoredProcedure(pool, 'sp_ChangeLoginPassword', params);
+
+        req.flash('success', "Đổi mật khẩu thành công!");
+        res.redirect(`${systemConfig.prefixAdmin}/auth/changePass`);
+    } catch (error) {
+        console.log(error);
+        req.flash("error", "Đổi mật khẩu thất bại!");
+        res.redirect(`${systemConfig.prefixAdmin}/auth/changePass`);
+    }
+};
+
+// [GET] /auth/deleteLogin
+module.exports.deleteLoginView = async (req, res) => {
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+    const empList = await NhanVienRepository.getAll(pool);
+    const dgList = await DocGiaRepository.getAll(pool);
+
+    res.render('admin/pages/auth/deleteLogin', {
+        empList: empList,
+        dgList: dgList
+    })
+};
+
+// [DELETE] /auth/deleteLogin
+module.exports.deleteLogin = async (req, res) => {
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+    try {
+        let newUserId = ((userType == 'librarian') ? 'NV' : 'DG') + userId;
+        const params = [
+            { name: 'LoginName', type: sql.NVarChar, value: newUserId }
+        ];
+
+        await executeStoredProcedure(pool, 'sp_Delete_Login', params);
+
+        req.flash('success', "Xoá login thành công!");
+        res.redirect(`${systemConfig.prefixAdmin}/auth/deleteLogin`);
+    } catch (error) {
+        req.flash("error", "Xóa login thất bại!");
+        res.redirect(`${systemConfig.prefixAdmin}/auth/deleteLogin`);
+    }
+    
 };

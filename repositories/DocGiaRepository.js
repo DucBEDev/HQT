@@ -161,6 +161,40 @@ class DocGiaRepository {
             throw err;
         }
     }
+
+    static async getRoleByUsername(pool, username) {
+        try {
+            await pool.connect();
+            const request = pool.request();
+
+            request.input('LoginName', sql.NVarChar, username);
+
+            const result = await request.query(`
+                SELECT 
+                    r.name AS ServerRole
+                FROM sys.server_role_members rm
+                JOIN sys.server_principals r ON rm.role_principal_id = r.principal_id
+                JOIN sys.server_principals m ON rm.member_principal_id = m.principal_id
+                WHERE m.name = @LoginName
+                UNION
+                SELECT name AS ServerRole
+                FROM sys.server_principals
+                WHERE principal_id IN (
+                    SELECT role_principal_id 
+                    FROM sys.server_role_members 
+                    WHERE member_principal_id = (
+                        SELECT principal_id 
+                        FROM sys.server_principals 
+                        WHERE name = @LoginName
+                    )
+                );
+            `);
+            return result.recordset.map(row => row.ServerRole);
+        } catch (err) {
+            console.error('Error in get Role:', err);
+            throw err;
+        }
+    }
 }
 
 module.exports = DocGiaRepository;
