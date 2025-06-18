@@ -4,7 +4,7 @@ const TheLoaiRepository = require('../../repositories/TheLoaiRepository');
 
 const systemConfig = require('../../configs/system');
 const TheLoai = require('../../models/TheLoai');
-const { pushToUndoStack, popUndoStack, clearUndoStack} = require('../../public/js/adminjs/type/type-undo');
+const { pushToUndoStack, popUndoStack, clearUndoStack, isEmpty } = require('../../public/js/adminjs/type/type-undo');
 
 // [GET] /type
 module.exports.index = async (req, res) => {
@@ -18,6 +18,7 @@ module.exports.index = async (req, res) => {
     res.render('admin/pages/theloai/index', {
         typeList: list,
         pageTitle: 'Quản lý thể loại',
+        isEmptyStack: isEmpty()
     });
 }
 

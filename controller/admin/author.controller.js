@@ -2,7 +2,7 @@ const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, exec
 const TacGiaRepository = require('../../repositories/TacGiaRepository'); // Giả định bạn sẽ tạo repository tương ứng
 const systemConfig = require('../../configs/system');
 const TacGia = require('../../models/TacGia');
-const { pushToUndoStack, popUndoStack, clearUndoStack, updateAfterDeleteUndo } = require('../../public/js/adminjs/author/author-undo');
+const { pushToUndoStack, popUndoStack, clearUndoStack, updateAfterDeleteUndo, isEmpty } = require('../../public/js/adminjs/author/author-undo');
 
 
 // [GET] /author
@@ -17,6 +17,7 @@ module.exports.index = async (req, res) => {
     res.render('admin/pages/tacgia/index', {
         authorList: list,
         pageTitle: 'Quản lý tác giả',
+        isEmptyStack: isEmpty()
     });
 };
 

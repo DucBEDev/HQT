@@ -1,7 +1,7 @@
 const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, getUserPool } = require('../../configs/database');
 const moment = require('moment');
 const puppeteer = require('puppeteer');
-const { pushToUndoStack, popUndoStack, clearUndoStack } = require('../../public/js/adminjs/isbn_book/isbn_book_undo');
+const { pushToUndoStack, popUndoStack, clearUndoStack, isEmpty } = require('../../public/js/adminjs/isbn_book/isbn_book_undo');
 
 const DauSachRepository = require('../../repositories/DauSachRepository'); 
 const SachRepository = require('../../repositories/SachRepository'); 
@@ -41,7 +41,8 @@ module.exports.index = async (req, res) => {
         ngonNguList: ngonNguList,
         theLoaiList: theLoaiList,
         tacGiaList: tacGiaList,
-        pageTitle: 'Quản Lý Đầu Sách và Sách'
+        pageTitle: 'Quản Lý Đầu Sách và Sách',
+        isEmptyStack: isEmpty()
     });
 };
 

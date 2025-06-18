@@ -1,7 +1,7 @@
 const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, executeStoredProcedureWithTransactionAndReturnCode, getUserPool } = require('../../configs/database');
 const systemConfig = require('../../configs/system');
 const NhanVien = require('../../models/NhanVien');
-const { pushToUndoStack, popUndoStack, clearUndoStack, updateAfterDeleteUndo } = require('../../public/js/adminjs/staff/staff-undo');
+const { pushToUndoStack, popUndoStack, clearUndoStack, updateAfterDeleteUndo, isEmpty } = require('../../public/js/adminjs/staff/staff-undo');
 
 const NhanVienRepository = require('../../repositories/NhanVienRepository'); 
 
@@ -17,6 +17,7 @@ module.exports.index = async (req, res) => {
     res.render('admin/pages/nhanvien/index', {
         staffList: list,
         pageTitle: 'Quản lý nhân viên',
+        isEmptyStack: isEmpty()
     });
 };
 
@@ -168,7 +169,6 @@ module.exports.editPost = async (req, res) => {
         res.status(500).send('Có lỗi xảy ra khi cập nhật nhân viên!');
     }
 };
-
 
 // [POST] /staff/undo
 module.exports.undo = async (req, res) => {

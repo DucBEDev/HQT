@@ -6,7 +6,7 @@ const DocGiaRepository = require('../../repositories/DocGiaRepository');
 
 const systemConfig = require('../../configs/system');
 const DocGia = require('../../models/DocGia');
-const { pushToUndoStack, popUndoStack, clearUndoStack, updateAfterDeleteUndo } = require('../../public/js/adminjs/reader/reader-undo');
+const { pushToUndoStack, popUndoStack, clearUndoStack, updateAfterDeleteUndo, isEmpty } = require('../../public/js/adminjs/reader/reader-undo');
 
 // Hàm chuyển đổi chuỗi DD/MM/YYYY thành đối tượng Date
 function parseDate(dateStr) {
@@ -23,7 +23,7 @@ function parseDate(dateStr) {
 
 // [GET] /admin/reader
 module.exports.index = async (req, res) => {
-     const pool = getUserPool(req.session.id);
+    const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
@@ -33,6 +33,7 @@ module.exports.index = async (req, res) => {
     res.render('admin/pages/docgia/index', {
         readerList: list,
         pageTitle: 'Quản lý độc giả',
+        isEmptyStack: isEmpty()
     });
 }
 
