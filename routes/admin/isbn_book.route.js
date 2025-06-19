@@ -27,5 +27,6 @@ router.post('/clear-undo', controller.clearUndo); // Thêm route mới
 router.get('/next-id', controller.getNextISBN);
 router.get('/report', controller.getReport);
 router.post('/download-report', controller.downloadReport);
+router.post('/download-excel', controller.downloadExcel);
 
 module.exports = router;

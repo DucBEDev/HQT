@@ -1,8 +1,10 @@
 const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, executeStoredProcedureWithTransactionAndReturnCode, getUserPool } = require('../../configs/database');
 const puppeteer = require('puppeteer');
 const moment = require('moment');
+const XLSX = require('xlsx');
 
 const DocGiaRepository = require('../../repositories/DocGiaRepository');
+const NhanVienRepository = require('../../repositories/NhanVienRepository');
 
 const systemConfig = require('../../configs/system');
 const DocGia = require('../../models/DocGia');
@@ -39,8 +41,7 @@ module.exports.index = async (req, res) => {
 
 // [DELETE] /admin/reader/delete/:maDG
 module.exports.delete = async (req, res) => {
-    console.log("Deleting reader ----------------------------------------------------------------------------------------------------------------------------------------------------------");
-     const pool = getUserPool(req.session.id);
+    const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
@@ -346,9 +347,13 @@ module.exports.report = async (req, res) => {
             }
         }).sort((a, b) => a.hoTen.localeCompare(b.hoTen, 'vi'))
 
+        const empId = req.session.empId;
+        const empData = await NhanVienRepository.getById(pool, empId);
+
         res.render('admin/pages/docgia/reportList', {
             readerList: updatedReaderList,
-            printDate: moment().format('DD/MM/YYYY')
+            printDate: moment().format('DD/MM/YYYY'),
+            empName: `${empData.hoNV} ${empData.tenNV}`
         });
     }
     else if (type == 'overdue') {
@@ -375,9 +380,13 @@ module.exports.report = async (req, res) => {
             }
         }).sort((a, b) => b.soNgayQuaHan - a.soNgayQuaHan)
 
+        const empId = req.session.empId;
+        const empData = await NhanVienRepository.getById(pool, empId);
+
         res.render('admin/pages/docgia/reportOverdue', {
             readerList: updatedReaderList,
-            printDate: moment().format('DD/MM/YYYY')
+            printDate: moment().format('DD/MM/YYYY'),
+            empName: `${empData.hoNV} ${empData.tenNV}`
         });
     }
 }
@@ -387,7 +396,7 @@ module.exports.downloadReport = async (req, res) => {
     try {
         const type = req.query.type;
 
-        const { readerList, printDate } = req.body;
+        const { readerList, printDate, empName } = req.body;
         const parsedReaderList = JSON.parse(readerList);
         
         // Khởi tạo Puppeteer với các options cần thiết
@@ -403,7 +412,8 @@ module.exports.downloadReport = async (req, res) => {
             html = await new Promise((resolve, reject) => {
                 res.render('admin/pages/docgia/reportList', {
                     readerList: parsedReaderList,
-                    printDate: printDate
+                    printDate: printDate,
+                    empName: empName
                 }, (err, html) => {
                     if (err) reject(err);
                     resolve(html);
@@ -414,7 +424,8 @@ module.exports.downloadReport = async (req, res) => {
             html = await new Promise((resolve, reject) => {
                 res.render('admin/pages/docgia/reportOverdue', {
                     readerList: parsedReaderList,
-                    printDate: printDate
+                    printDate: printDate,
+                    empName: empName
                 }, (err, html) => {
                     if (err) reject(err);
                     resolve(html);
@@ -484,5 +495,103 @@ module.exports.clearUndo = async (req, res) => {
     } catch (error) {
         console.error('Error clearing undo stack:', error);
         res.json({ success: false, message: 'Không thể xóa stack undo!' });
+    }
+};
+
+module.exports.downloadExcel = async (req, res) => {
+    try {
+        const type = req.query.type;
+        const { readerList } = req.body;
+        const parsedReaderList = JSON.parse(readerList);
+        
+        let workbook, worksheet, filename;
+        
+        if (type === 'list') {
+            // Tạo workbook cho danh sách độc giả
+            workbook = XLSX.utils.book_new();
+            
+            // Chuẩn bị dữ liệu
+            const data = [
+                ['STT', 'Họ tên', 'Số CMND', 'Phái', 'Địa chỉ', 'Số ĐT', 'Ngày lập thẻ', 'Trạng thái']
+            ];
+            
+            parsedReaderList.forEach((reader, index) => {
+                data.push([
+                    index + 1,
+                    reader.hoTen,
+                    reader.cmnd,
+                    reader.phai,
+                    reader.diaChi,
+                    reader.dienThoai,
+                    reader.ngayLamThe,
+                    reader.trangThai
+                ]);
+            });
+            
+            worksheet = XLSX.utils.aoa_to_sheet(data);
+            filename = 'danh_sach_doc_gia.xlsx';
+            
+        } else if (type === 'overdue') {
+            // Tạo workbook cho báo cáo quá hạn
+            workbook = XLSX.utils.book_new();
+            
+            // Chuẩn bị dữ liệu
+            const data = [
+                ['STT', 'Số CMND', 'Họ tên', 'Số ĐT', 'Email', 'Mã sách', 'Tên sách', 'Ngày mượn', 'Số ngày quá hạn']
+            ];
+            
+            parsedReaderList.forEach((reader, index) => {
+                data.push([
+                    index + 1,
+                    reader.cmnd,
+                    reader.hoTen,
+                    reader.dienThoai,
+                    reader.email,
+                    reader.maSach,
+                    reader.tenSach,
+                    reader.ngayMuon,
+                    reader.soNgayQuaHan
+                ]);
+            });
+            
+            worksheet = XLSX.utils.aoa_to_sheet(data);
+            filename = 'bao_cao_doc_gia_qua_han.xlsx';
+        }
+        
+        // Thiết lập độ rộng cột
+        const columnWidths = [
+            { wch: 5 },   // STT
+            { wch: 15 },  // Số CMND hoặc Họ tên
+            { wch: 25 },  // Họ tên hoặc các cột khác
+            { wch: 10 },  // Phái
+            { wch: 30 },  // Địa chỉ
+            { wch: 12 },  // Số ĐT
+            { wch: 15 },  // Ngày lập thẻ
+            { wch: 15 }   // Trạng thái
+        ];
+        
+        if (type === 'overdue') {
+            columnWidths.push({ wch: 15 }); // Thêm cột cho số ngày quá hạn
+        }
+        
+        worksheet['!cols'] = columnWidths;
+        
+        // Thêm worksheet vào workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, type === 'list' ? 'Danh sách độc giả' : 'Độc giả quá hạn');
+        
+        // Tạo buffer
+        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' });
+        
+        // Thiết lập headers cho response
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Length', excelBuffer.length);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        
+        // Gửi Excel buffer về client
+        res.end(excelBuffer);
+        
+    } catch (err) {
+        console.error('Lỗi khi tạo Excel:', err);
+        res.status(500).send('Lỗi khi tạo Excel: ' + err.message);
     }
 };

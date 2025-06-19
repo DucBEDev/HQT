@@ -106,11 +106,11 @@ class DauSachRepository {
                 .input('endDate', sql.DateTime, endDate)
                 .input('quantity', sql.Int, quantity)
                 .query(`SELECT 
-                        ds.ISBN AS isbn,
-                        ds.TENSACH AS tenSach,
-                        tg.HOTENTG AS hoTenTG,
-                        tl.TENTL AS tenTL,
-                        COUNT(pm.MAPHIEU) AS soLuongMuon
+                            ds.ISBN AS isbn,
+                            ds.TENSACH AS tenSach,
+                            tg.HOTENTG AS hoTenTG,
+                            tl.TENTL AS tenTL,
+                            COUNT(pm.MAPHIEU) AS soLuongMuon
                         FROM PHIEUMUON pm
                         LEFT JOIN CT_PHIEUMUON ctpm ON pm.MAPHIEU = ctpm.MAPHIEU
                         LEFT JOIN SACH s ON s.MASACH = ctpm.MASACH

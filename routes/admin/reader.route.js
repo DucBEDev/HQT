@@ -11,10 +11,11 @@ router.post('/create', controller.createPost);
 router.get('/next-id', controller.getNextId);
 router.get('/edit/:maDG', controller.edit);
 router.post('/edit/:maDG', controller.editPatch);
+router.post('/undo', controller.undo); 
+router.post('/clear-undo', controller.clearUndo); 
 router.get('/report', controller.report);
 router.post('/download-report', controller.downloadReport);
-router.post('/undo', controller.undo); // Route mới cho undo
-router.post('/clear-undo', controller.clearUndo); // Thêm route mới
+router.post('/download-excel', controller.downloadExcel);
 
 
 
