@@ -25,6 +25,24 @@ label {
   margin-bottom: 5px;
 }
 
+.disabled-overlay {
+  position: relative;
+  pointer-events: none; /* Chặn click, hover, focus */
+  opacity: 0.6; /* Làm mờ nút */
+}
+
+.disabled-overlay::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(200, 200, 200, 0.5); /* Lớp phủ màu xám */
+  border-radius: inherit; /* Giữ bo góc nếu có */
+  z-index: 1;
+}
+
 .badge {
   border: none;
   box-shadow: none;

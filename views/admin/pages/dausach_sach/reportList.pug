@@ -108,11 +108,16 @@ html(lang="vi")
     body
         .button-container
             button(onclick="window.history.back()") Quay lại
-            button(onclick="printReport()") In Báo Cáo
             form(action=`${prefixAdmin}/isbn_book/download-report?type=list` method="POST" style="display: inline;")
                 input(type="hidden" name="dauSachList" value=JSON.stringify(dauSachList))
                 input(type="hidden" name="printDate" value=printDate)
+                input(type="hidden" name="empName" value=empName)
                 button(type="submit") Xuất File PDF
+            form(action=`${prefixAdmin}/isbn_book/download-excel?type=list` method="POST" style="display: inline;")
+                input(type="hidden" name="dauSachList" value=JSON.stringify(dauSachList))
+                input(type="hidden" name="printDate" value=printDate)
+                input(type="hidden" name="empName" value=empName)
+                button(type="submit") Xuất File Excel
 
         h1 DANH MỤC ĐẦU SÁCH
         
@@ -155,11 +160,6 @@ html(lang="vi")
                                     
         .signature-container
             .staff-signature
-                p Nhân viên lập báo cáo: __________________
+                p Nhân viên lập báo cáo: #{empName}
             .date-signature
                 p Ngày lập: #{printDate}
-
-    script.
-        function printReport() {
-            window.print(); 
-        }

@@ -120,14 +120,22 @@ html(lang="vi")
             if dauSachList.length > 0
                 button(onclick="showModal()") Thay đổi thời gian
             button(onclick="window.history.back()") Quay lại
-            button(onclick="printReport()") In Báo Cáo
             form(action=`${prefixAdmin}/isbn_book/download-report?type=most-borrow` method="POST" style="display: inline;")
                 input(type="hidden" name="dauSachList" value=JSON.stringify(dauSachList))
                 input(type="hidden" name="printDate" value=printDate)
                 input(type="hidden" name="quantity" value=quantity)
                 input(type="hidden" name="startDate" value=startDate)
                 input(type="hidden" name="endDate" value=endDate)
+                input(type="hidden" name="empName" value=empName)
                 button(type="submit") Xuất File PDF
+            form(action=`${prefixAdmin}/isbn_book/download-excel?type=most-borrow` method="POST" style="display: inline;")
+                input(type="hidden" name="dauSachList" value=JSON.stringify(dauSachList))
+                input(type="hidden" name="printDate" value=printDate)
+                input(type="hidden" name="quantity" value=quantity)
+                input(type="hidden" name="startDate" value=startDate)
+                input(type="hidden" name="endDate" value=endDate)
+                input(type="hidden" name="empName" value=empName)
+                button(type="submit") Xuất File Excel
 
         h1 DANH MỤC ĐẦU SÁCH ĐƯỢC MƯỢN NHIỀU NHẤT
 
@@ -159,7 +167,7 @@ html(lang="vi")
 
         .signature-container
             .staff-signature
-                p Nhân viên lập báo cáo: __________________
+                p Nhân viên lập báo cáo: #{empName}
             .date-signature
                 p Ngày lập: #{printDate}
 
@@ -223,8 +231,4 @@ html(lang="vi")
                 } else {
                     alert('Vui lòng chọn cả hai ngày!');
                 }
-            }
-
-            function printReport() {
-                window.print();
             }

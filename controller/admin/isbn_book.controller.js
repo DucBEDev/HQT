@@ -1,7 +1,8 @@
 const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, getUserPool } = require('../../configs/database');
 const moment = require('moment');
 const puppeteer = require('puppeteer');
-const { pushToUndoStack, popUndoStack, clearUndoStack } = require('../../public/js/adminjs/isbn_book/isbn_book_undo');
+const { pushToUndoStack, popUndoStack, clearUndoStack, isEmpty } = require('../../public/js/adminjs/isbn_book/isbn_book_undo');
+const xlsx = require('xlsx');
 
 const DauSachRepository = require('../../repositories/DauSachRepository'); 
 const SachRepository = require('../../repositories/SachRepository'); 
@@ -9,6 +10,7 @@ const NgonNguRepository = require('../../repositories/NgonNguRepository');
 const TheLoaiRepository = require('../../repositories/TheLoaiRepository'); 
 const TacGiaRepository = require('../../repositories/TacGiaRepository'); 
 const NganTuRepository = require('../../repositories/NganTuRepository'); 
+const NhanVienRepository = require('../../repositories/NhanVienRepository'); 
 
 const systemConfig = require('../../configs/system');
 
@@ -41,7 +43,8 @@ module.exports.index = async (req, res) => {
         ngonNguList: ngonNguList,
         theLoaiList: theLoaiList,
         tacGiaList: tacGiaList,
-        pageTitle: 'Quản Lý Đầu Sách và Sách'
+        pageTitle: 'Quản Lý Đầu Sách và Sách',
+        isEmptyStack: isEmpty()
     });
 };
 
@@ -486,10 +489,9 @@ module.exports.clearUndo = async (req, res) => {
 // [GET] /admin/isbn_book/report?type=list/most-borrow
 module.exports.getReport = async (req, res) => {
     const pool = getUserPool(req.session.id);
-        if (!pool) {
-            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
-        }
-
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
 
     const type = req.query.type;
 
@@ -507,9 +509,13 @@ module.exports.getReport = async (req, res) => {
             dauSachList.push(categoryData);
         }
 
+        const empId = req.session.empId;
+        const empData = await NhanVienRepository.getById(pool, empId);
+
         res.render('admin/pages/dausach_sach/reportList', { 
             dauSachList: dauSachList,
-            printDate: moment().format('DD/MM/YYYY')
+            printDate: moment().format('DD/MM/YYYY'),
+            empName: `${empData.hoNV} ${empData.tenNV}`
         });
     }
     else if (type == 'most-borrow') {
@@ -533,6 +539,8 @@ module.exports.getReport = async (req, res) => {
             }
 
             const dauSachList = await DauSachRepository.getAllBaseOnDate(pool, start, end, updatedQuantity);
+            const empId = req.session.empId;
+            const empData = await NhanVienRepository.getById(pool, empId);
 
             res.render('admin/pages/dausach_sach/reportMostBorrow', { 
                 printDate: moment().format('DD/MM/YYYY'),
@@ -540,7 +548,8 @@ module.exports.getReport = async (req, res) => {
                 endDate: moment(end).format('DD/MM/YYYY'),
                 dauSachList: dauSachList,
                 quantity: updatedQuantity,
-                hasData: dauSachList.length > 0
+                hasData: dauSachList.length > 0,
+                empName: `${empData.hoNV} ${empData.tenNV}`
             });
         } else {
             res.render('admin/pages/dausach_sach/reportMostBorrow', { 
@@ -557,7 +566,7 @@ module.exports.downloadReport = async (req, res) => {
     try {
         const type = req.query.type;
 
-        const { dauSachList, printDate, quantity, startDate, endDate } = req.body;
+        const { dauSachList, printDate, quantity, startDate, endDate, empName } = req.body;
         const parsedDauSachList = JSON.parse(dauSachList);
 
         // Khởi tạo Puppeteer với các options cần thiết
@@ -573,7 +582,8 @@ module.exports.downloadReport = async (req, res) => {
             html = await new Promise((resolve, reject) => {
                 res.render('admin/pages/dausach_sach/reportList', {
                     dauSachList: parsedDauSachList,
-                    printDate: printDate
+                    printDate: printDate,
+                    empName: empName
                 }, (err, html) => {
                     if (err) reject(err);
                     resolve(html);
@@ -587,7 +597,8 @@ module.exports.downloadReport = async (req, res) => {
                     dauSachList: parsedDauSachList,
                     quantity: quantity,
                     startDate: startDate,
-                    endDate: endDate
+                    endDate: endDate,
+                    empName: empName
                 }, (err, html) => {
                     if (err) reject(err);
                     resolve(html);
@@ -648,5 +659,117 @@ module.exports.downloadReport = async (req, res) => {
     }
 };
 
+// [POST] /admin/isbn_book/download-excel?type=list/most-borrow
+module.exports.downloadExcel = async (req, res) => {
+    try {
+        const type = req.query.type;
+        const { dauSachList, printDate, quantity, startDate, endDate, empName } = req.body;
+        const parsedDauSachList = JSON.parse(dauSachList);
 
+        let workbook = xlsx.utils.book_new();
+        let worksheetData = [];
+
+        if (type === 'list') {
+            // Header cho báo cáo danh mục
+            worksheetData.push(['DANH MỤC ĐẦU SÁCH']);
+            worksheetData.push([]);
+            worksheetData.push(['STT', 'ISBN', 'Tên sách', 'Ngày XB', 'Số trang', 'Tác giả', 'Ngôn ngữ', 'Số cuốn']);
+
+            let totalBooks = 0;
+            let sttCounter = 1;
+
+            parsedDauSachList.forEach(dauSach => {
+                // Thêm header thể loại
+                worksheetData.push([`Thể loại: ${dauSach.tenTL}`, '', '', '', '', '', '', '']);
+                
+                dauSach.books.forEach(sach => {
+                    const ngayXB = new Date(sach.ngayXuatBan).toLocaleDateString('vi-VN');
+                    worksheetData.push([
+                        sttCounter++,
+                        sach.isbn,
+                        sach.tenSach,
+                        ngayXB,
+                        sach.soTrang,
+                        sach.tacGia,
+                        sach.ngonNgu,
+                        sach.soCuon
+                    ]);
+                    totalBooks += sach.soCuon;
+                });
+
+                // Tổng số sách của thể loại
+                const categoryTotal = dauSach.books.reduce((sum, book) => sum + book.soCuon, 0);
+                worksheetData.push([`Số đầu sách: ${categoryTotal}`, '', '', '', '', '', '', '']);
+                worksheetData.push([]);
+            });
+
+            // Tổng cộng
+            worksheetData.push([`Số đầu sách thư viện: ${totalBooks}`, '', '', '', '', '', '', '']);
+            worksheetData.push([]);
+            worksheetData.push([`Ngày lập: ${printDate}`, '', '', '', '', '', '', '']);
+            worksheetData.push([]);
+            worksheetData.push([`Nhân viên lập: ${empName}`, '', '', '', '', '', '', '']);
+
+        } else if (type === 'most-borrow') {
+            // Header cho báo cáo sách mượn nhiều nhất
+            worksheetData.push(['BÁO CÁO SÁCH MƯỢN NHIỀU NHẤT']);
+            worksheetData.push([`Từ ngày: ${startDate} - Đến ngày: ${endDate}`]);
+            worksheetData.push([`Top ${quantity} sách mượn nhiều nhất`]);
+            worksheetData.push([]);
+            worksheetData.push(['STT', 'ISBN', 'Tên sách', 'Tác giả', 'Thể loại', 'Số lần mượn']);
+
+            parsedDauSachList.forEach((sach, index) => {
+                worksheetData.push([
+                    index + 1,
+                    sach.isbn,
+                    sach.tenSach,
+                    sach.hoTenTG,
+                    sach.tenTL,
+                    sach.soLuongMuon || 0
+                ]);
+            });
+
+            worksheetData.push([]);
+            worksheetData.push([`Ngày lập: ${printDate}`, '', '', '', '', '']);
+            worksheetData.push([]);
+            worksheetData.push([`Nhân viên lập: ${empName}`, '', '', '', '', '']);
+        }
+
+        // Tạo worksheet
+        const worksheet = xlsx.utils.aoa_to_sheet(worksheetData);
+
+        // Styling cho header
+        const range = xlsx.utils.decode_range(worksheet['!ref']);
+        
+        // Merge cell cho tiêu đề
+        if (!worksheet['!merges']) worksheet['!merges'] = [];
+        worksheet['!merges'].push({
+            s: { r: 0, c: 0 },
+            e: { r: 0, c: 7 }
+        });
+
+        // Thêm worksheet vào workbook
+        const sheetName = type === 'list' ? 'Danh mục đầu sách' : 'Sách mượn nhiều nhất';
+        xlsx.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+        // Tạo buffer
+        const excelBuffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+        // Thiết lập headers cho response
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Length', excelBuffer.length);
+        
+        if (type === 'list') {
+            res.setHeader('Content-Disposition', 'attachment; filename="bao_cao_danh_muc_dau_sach.xlsx"');
+        } else if (type === 'most-borrow') {
+            res.setHeader('Content-Disposition', 'attachment; filename="bao_cao_sach_muon_nhieu_nhat.xlsx"');
+        }
+
+        // Gửi Excel buffer về client
+        res.end(excelBuffer);
+    } catch (err) {
+        console.error('Lỗi khi tạo Excel:', err);
+        res.status(500).send('Lỗi khi tạo Excel: ' + err.message);
+    }
+};  
 

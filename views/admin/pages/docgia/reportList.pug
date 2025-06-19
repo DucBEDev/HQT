@@ -103,11 +103,16 @@ html(lang="vi")
     body
         .button-container
             button(onclick="window.history.back()") Quay lại
-            button(onclick="printReport()") In Báo Cáo
             form(action=`${prefixAdmin}/reader/download-report?type=list` method="POST" style="display: inline;")
                 input(type="hidden" name="readerList" value=JSON.stringify(readerList))
                 input(type="hidden" name="printDate" value=printDate)
+                input(type="hidden" name="empName" value=empName)
                 button(type="submit") Xuất File PDF
+            form(action=`${prefixAdmin}/reader/download-excel?type=list` method="POST" style="display: inline;")
+                input(type="hidden" name="readerList" value=JSON.stringify(readerList))
+                input(type="hidden" name="printDate" value=printDate)
+                input(type="hidden" name="empName" value=empName)
+                button(type="submit") Xuất File Excel
 
         h1 DANH SÁCH ĐỘC GIẢ
         
@@ -137,11 +142,6 @@ html(lang="vi")
 
         .signature-container
             .staff-signature
-                p Nhân viên lập báo cáo: __________________
+                p Nhân viên lập báo cáo: #{empName}
             .date-signature
                 p Ngày lập: #{printDate}
-
-    script.
-        function printReport() {
-            window.print(); 
-        }
