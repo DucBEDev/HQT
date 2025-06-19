@@ -191,9 +191,23 @@ module.exports.edit = async (req, res) => {
 
 // [PATCH] /phieumuon/lostBook/:maPhieu/:maSach
 module.exports.lostBook = async (req, res) => {
-    console.log(req.params.maPhieu)
-    console.log(req.params.maSach)
-    res.redirect(`${systemConfig.prefixAdmin}/phieumuon`);
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+    const { maPhieu, maSach } = req.params;
+    const empId = req.session.empId; // Assuming the employee ID is stored in the session
+    
+    const params = [
+        { name: 'MAPHIEU', type: sql.BigInt, value: maPhieu },
+        { name: 'MASACH', type: sql.NChar(20), value: maSach },
+        { name: 'MANVNS', type: sql.Int, value: empId } // Assuming MANV is the employee ID
+    ];
+
+    const kq = await executeStoredProcedureWithTransaction(pool, "sp_XacNhanMatSach", params );
+
+    res.redirect(`back`);
 };
 
 // [PATCH] /phieumuon/returnBook/:maPhieu/:maSach

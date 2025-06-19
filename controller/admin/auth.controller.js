@@ -73,14 +73,21 @@ module.exports.changePasswordPost = async (req, res) => {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
+    console.log(pool.config.password)
+
     try {
         const { userType, userId, newPassword, confirmPassword } = req.body;
         let newUserId = ((userType == 'librarian') ? 'NV' : 'DG') + userId;
 
+        if (newPassword !== confirmPassword) {
+            req.flash("error", "Mật khẩu mới và xác nhận mật khẩu không khớp!");
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/changePass`);
+        }
+
         const params = [
             { name: 'LoginName', type: sql.NVarChar, value: newUserId },
             { name: 'NewPassword', type: sql.NVarChar, value: newPassword },
-            { name: 'OldPassword', type: sql.NVarChar, value: confirmPassword }
+            { name: 'OldPassword', type: sql.NVarChar, value: pool.config.password }
         ];
         console.log(params)
         await executeStoredProcedure(pool, 'sp_ChangeLoginPassword', params);
@@ -118,12 +125,16 @@ module.exports.deleteLogin = async (req, res) => {
     }
 
     try {
+        const { userType, userId } = req.body;
         let newUserId = ((userType == 'librarian') ? 'NV' : 'DG') + userId;
         const params = [
-            { name: 'LoginName', type: sql.NVarChar, value: newUserId }
-        ];
+            { name: 'ID', type: sql.BigInt, value: userId },
+            { name: 'USER_TYPE', type: sql.NVarChar, value: (userType == 'librarian') ? 'NHANVIEN_LOGIN' : 'DOCGIA_LOGIN' }
 
-        await executeStoredProcedure(pool, 'sp_Delete_Login', params);
+        ];
+        console.log(params);
+
+        //await executeStoredProcedure(pool, 'sp_Delete_Login', params);
 
         req.flash('success', "Xoá login thành công!");
         res.redirect(`${systemConfig.prefixAdmin}/auth/deleteLogin`);

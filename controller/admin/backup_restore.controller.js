@@ -29,6 +29,8 @@ module.exports.index = async (req, res) => {
                                             msdb.dbo.backupset bs
                                             INNER JOIN msdb.dbo.backupmediafamily bmf 
                                                 ON bs.media_set_id = bmf.media_set_id
+                                        WHERE 
+                                            bmf.physical_device_name = (SELECT physical_name FROM sys.backup_devices WHERE name = 'DEVICE_QLTV')
                                         ORDER BY 
                                             bs.backup_start_date DESC;`);
 
@@ -121,7 +123,7 @@ module.exports.restore = async (req, res) => {
 
 
         // Execute the stored procedure
-        const result = await executeStoredProcedure(pool, 'sp_RestoreQLTV', params);
+        const result = await executeStoredProcedure(pool, 'sp_RestoreQLTVMoi', params);
         console.log(pool)
         await resetUserPool(req.session.id); // Reset the user pool after restore
 
@@ -156,52 +158,30 @@ module.exports.restoreToPointInTime = async (req, res) => {
 
     try
     {
-        // Parse datetimeRestore and add 7 hours
-        const datetimeRestore = req.body.datetimeRestore;
-        if (!datetimeRestore) {
-            throw new Error('datetimeRestore is required');
-        }
-
-        // Create Date object from datetimeRestore (e.g., '2025-06-13T22:35')
-        const date = new Date(datetimeRestore);
-        if (isNaN(date)) {
-            throw new Error('Invalid datetimeRestore format');
-        }
-
-        // Add 7 hours
-        date.setHours(date.getHours() + 7);
-
-        // Format the adjusted date as 'YYYY-MM-DD HH:mm:ss'
-        const formattedDatetimeRestore = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
-
-        // Log the adjusted values for debugging
-        console.log('Adjusted datetime:', {
-            datetimeRestore,
-            formattedDatetimeRestore
-        });
+        console.log('Received restore time:', req.body.formattedDatetimeRestore);
 
 
         const params = [
-        { name: 'RestoreTime', type: sql.DateTime, value: formattedDatetimeRestore },
+        { name: 'RestoreTime', type: sql.NVarChar, value: req.body.formattedDatetimeRestore },
        
         ];
         console.log('Executing stored procedure with params:', params)
 
 
         // // Execute the stored procedure
-        // const result = await executeStoredProcedure(pool, 'sp_RestoreQLTV', params);
-        // console.log(pool)
-        // await resetUserPool(req.session.id); // Reset the user pool after restore
+        const result = await executeStoredProcedure(pool, 'sp_RestoreQLTVToPointInTime', params);
+        console.log(pool)
+        await resetUserPool(req.session.id); // Reset the user pool after restore
 
 
-        // // Check the result and send appropriate response
-        // if (result && result.recordset && result.recordset.length > 0) {
-        //     req.flash('success', 'Restore thành công');
-        //     res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
-        // } else {
-        //     req.flash('error', 'Restore không thành công');
-        //     res.redirect(`${systemConfig.prefixAdmin}/backup_restore`);
-        // }
+        // Check the result and send appropriate response
+        if (result && result.recordset && result.recordset.length > 0) {
+            req.flash('success', 'Restore thành công');
+            res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
+        } else {
+            req.flash('error', 'Restore không thành công');
+            res.redirect(`${systemConfig.prefixAdmin}/backup_restore`);
+        }
     }
     catch (error)
     {
