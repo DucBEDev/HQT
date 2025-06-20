@@ -248,11 +248,12 @@ module.exports.createDauSach = async (req, res) => {
                 { name: 'NHAXB', type: sql.NVarChar, value: cleanNhaXB },
                 { name: 'MANGONNGU', type: sql.Int, value: dauSach.maNgonNgu ? parseInt(dauSach.maNgonNgu) : null },
                 { name: 'MATL', type: sql.NChar, value: cleanMaTL },
-                { name: 'MATACGIA', type: sql.Int, value: parseInt(dauSach.maTacGia) }
+                { name: 'MATACGIA', type: sql.NVarChar, value: Array.isArray(dauSach.maTacGia) ? dauSach.maTacGia.join(',') : dauSach.maTacGia }
             ];
+            console.log(params)
 
             // Gọi stored procedure để thêm đầu sách
-            await executeStoredProcedure(pool, 'sp_ThemDauSach', params);
+            // await executeStoredProcedure(pool, 'sp_ThemDauSach', params);
             savedDauSach.push({
                 isbn: cleanISBN,
                 tenSach: cleanTenSach,
@@ -270,7 +271,7 @@ module.exports.createDauSach = async (req, res) => {
             });
         }
 
-        pushToUndoStack('create_dausach', savedDauSach);
+        // pushToUndoStack('create_dausach', savedDauSach);
 
         res.json({ success: true });
     } catch (error) {

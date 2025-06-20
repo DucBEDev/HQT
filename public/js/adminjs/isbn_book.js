@@ -37,7 +37,16 @@ function loadDauSachForEdit(dauSach) {
     document.getElementById('soTrang').value = dauSach.SOTRANG;
     document.getElementById('maNgonNgu').value = dauSach.MANGONNGU;
     document.getElementById('maTL').value = dauSach.MATL;
-    document.getElementById('maTacGia').value = dauSach.MATACGIA;
+    // Xử lý nhiều tác giả
+    const tacGiaSelect = document.getElementById('maTacGia');
+    if (dauSach.MATACGIA && Array.isArray(dauSach.MATACGIA)) {
+        Array.from(tacGiaSelect.options).forEach(option => {
+            option.selected = dauSach.MATACGIA.includes(parseInt(option.value));
+        });
+    } else if (dauSach.MATACGIA) {
+        // Trường hợp chỉ có 1 tác giả (backward compatibility)
+        tacGiaSelect.value = dauSach.MATACGIA;
+    }
 
     const hinhAnhInput = document.getElementById('hinhAnhPath');
     if (dauSach.HINHANHPATH) {
@@ -494,7 +503,8 @@ $(document).ready(function () {
         formData.append('soTrang', parseInt(document.getElementById('soTrang').value));
         formData.append('maNgonNgu', document.getElementById('maNgonNgu').value);
         formData.append('maTL', document.getElementById('maTL').value);
-        formData.append('maTacGia', document.getElementById('maTacGia').value);
+        const selectedTacGia = Array.from(document.getElementById('maTacGia').selectedOptions).map(option => option.value);
+        formData.append('maTacGia', JSON.stringify(selectedTacGia));
         
         // Kiểm tra xem có file mới được chọn không
         if (hinhAnhInput.files && hinhAnhInput.files.length > 0) {
@@ -596,7 +606,7 @@ function addDauSach() {
         soTrang: parseInt(document.getElementById('soTrang').value),
         maNgonNgu: document.getElementById('maNgonNgu').value,
         maTL: document.getElementById('maTL').value,
-        maTacGia: document.getElementById('maTacGia').value,
+        maTacGia: Array.from(document.getElementById('maTacGia').selectedOptions).map(option => option.value),
         state: 'added'
     };
 
@@ -636,7 +646,9 @@ function updateDauSachTempList() {
             <td>${ds.soTrang}</td>
             <td>${ngonNguList.find(ng => ng.maNgonNgu === ds.maNgonNgu)?.ngonNgu || ds.maNgonNgu}</td>
             <td>${theLoaiList.find(tl => tl.maTL === ds.maTL)?.tenTL || ds.maTL}</td>
-            <td>${tacGiaList.find(tg => tg.maTacGia === ds.maTacGia)?.hoTenTG || ds.maTacGia}</td>
+            <td>${Array.isArray(ds.maTacGia) ? 
+                ds.maTacGia.map(id => tacGiaList.find(tg => tg.maTacGia === id)?.hoTenTG || id).join(', ') :
+                (tacGiaList.find(tg => tg.maTacGia === ds.maTacGia)?.hoTenTG || ds.maTacGia)}</td>
             <td>
                 <button class="btn btn-danger btn-sm" onclick="xoaDauSach('${ds.isbn}')">
                     <i class="fas fa-trash"></i>
