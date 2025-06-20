@@ -108,8 +108,8 @@ module.exports.deleteLoginView = async (req, res) => {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
-    const empList = await NhanVienRepository.getAll(pool);
-    const dgList = await DocGiaRepository.getAll(pool);
+    const empList = await NhanVienRepository.getEmployeeLogins(pool);
+    const dgList = await DocGiaRepository.getReaderLogins(pool);
 
     res.render('admin/pages/auth/deleteLogin', {
         empList: empList,

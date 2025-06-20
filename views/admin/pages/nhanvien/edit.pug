@@ -13,8 +13,7 @@ block main
                 .row
                     .col-lg-12
                         .form-group
-                            label(for="maNV") Mã nhân viên
-                            input.form-control(type="text" id="maNV" name="maNV" value=`${staff.maNV}` readonly)
+                            input.form-control(type="text" id="maNV" name="maNV" value=`${staff.maNV}` hidden)
                         .form-group
                             label(for="hoNV") Họ nhân viên <span class="required-text">*</span>
                             input.form-control(type="text" id="hoNV" name="hoNV" value=`${staff.hoNV}` placeholder="Nhập họ nhân viên" required)

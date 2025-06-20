@@ -13,8 +13,7 @@ block main
                 .row
                     .col-lg-6
                         .form-group
-                            label(for="maDG") Mã độc giả
-                            input.form-control(type="text" id="maDG" name="maDG" value=`${docgia.maDG}` readonly)
+                            input.form-control(type="text" id="maDG" name="maDG" value=`${docgia.maDG}` hidden)
                         .form-group
                             label(for="hoDG") Họ độc giả <span class="required-text">*</span>
                             input.form-control(type="text" id="hoDG" name="hoDG" value=`${docgia.hoDG}` placeholder="Nhập họ độc giả" required)

@@ -127,6 +127,29 @@ class NhanVienRepository {
         }
     }
 
+    static async getEmployeeLogins(pool) {
+        try {
+            await pool.connect();
+            const request = pool.request();
+            const result = await request.query(`
+                SELECT 
+                    sp.name as LOGIN_NAME,
+                    nv.MANV,
+                    nv.HONV,
+                    nv.TENNV,
+                    sp.is_disabled
+                FROM sys.server_principals sp
+                INNER JOIN NHANVIEN nv ON sp.name = 'NV' + CAST(nv.MANV AS VARCHAR) 
+                WHERE sp.type = 'S'
+                AND nv.ISDELETED = 0
+                ORDER BY sp.name
+            `);
+            return result.recordset;
+        } catch (err) {
+            console.error('Error in getEmployeeLogins:', err);
+            throw err;
+        }
+    }
 }
 
 module.exports = NhanVienRepository;
