@@ -85,7 +85,7 @@ module.exports.backup = async (req, res) => {
 
         // Kiểm tra result.recordset
         if (result && result.recordset && result.recordset.length > 0 && result.recordset[0].Message) {
-            req.flash('success', result.recordset[0].Message);
+            req.flash('success', 'Backup thành công');
         } else {
             req.flash('error', 'Backup không thành công: Không nhận được phản hồi hợp lệ từ server');
         }
@@ -123,7 +123,7 @@ module.exports.restore = async (req, res) => {
 
 
         // Execute the stored procedure
-        const result = await executeStoredProcedure(pool, 'sp_RestoreQLTVMoi', params);
+        const result = await executeStoredProcedure(pool, 'sp_RestoreQLTV', params);
         console.log(pool)
         await resetUserPool(req.session.id); // Reset the user pool after restore
 
