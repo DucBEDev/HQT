@@ -358,6 +358,8 @@ module.exports.report = async (req, res) => {
     }
     else if (type == 'overdue') {
         const readerList = await DocGiaRepository.getOverdueReader(pool);
+        const soLuong = readerList[0].soLuongDocGia
+        console.log("Số lượng độc giả quá hạn: ", soLuong);
         const updatedReaderList = readerList.map(dt => {
             cmnd = dt.soCMND;
             hoTen = dt.hoTen;
@@ -386,7 +388,8 @@ module.exports.report = async (req, res) => {
         res.render('admin/pages/docgia/reportOverdue', {
             readerList: updatedReaderList,
             printDate: moment().format('DD/MM/YYYY'),
-            empName: `${empData.hoNV} ${empData.tenNV}`
+            empName: `${empData.hoNV} ${empData.tenNV}`,
+            soLuong: soLuong
         });
     }
 }

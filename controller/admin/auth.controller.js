@@ -87,7 +87,7 @@ module.exports.changePasswordPost = async (req, res) => {
         const params = [
             { name: 'LoginName', type: sql.NVarChar, value: newUserId },
             { name: 'NewPassword', type: sql.NVarChar, value: newPassword },
-            { name: 'OldPassword', type: sql.NVarChar, value: pool.config.password }
+            { name: 'OldPassword', type: sql.NVarChar, value: null }
         ];
         console.log(params)
         await executeStoredProcedure(pool, 'sp_ChangeLoginPassword', params);
@@ -127,14 +127,19 @@ module.exports.deleteLogin = async (req, res) => {
     try {
         const { userType, userId } = req.body;
         let newUserId = ((userType == 'librarian') ? 'NV' : 'DG') + userId;
+
+        const userTypeTest = (userType == 'librarian') ? 'NHANVIEN_LOGIN' : 'DOCGIA_LOGIN';
+
+        console.log(`Deleting login for user: ${newUserId}, type: ${userTypeTest}`);
+
         const params = [
             { name: 'ID', type: sql.BigInt, value: userId },
-            { name: 'USER_TYPE', type: sql.NVarChar, value: (userType == 'librarian') ? 'NHANVIEN_LOGIN' : 'DOCGIA_LOGIN' }
+            { name: 'USER_TYPE', type: sql.NVarChar, value: userTypeTest }
 
         ];
         console.log(params);
 
-        //await executeStoredProcedure(pool, 'sp_Delete_Login', params);
+        await executeStoredProcedure(pool, 'sp_XoaTaiKhoan', params);
 
         req.flash('success', "Xoá login thành công!");
         res.redirect(`${systemConfig.prefixAdmin}/auth/deleteLogin`);

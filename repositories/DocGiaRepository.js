@@ -146,15 +146,24 @@ class DocGiaRepository {
                         ctpm.MASACH AS maSach,
                         ds.TENSACH as tenSach,
                         pm.NGAYMUON AS ngayMuon,
-                        DATEDIFF(day, ctpm.NGAYTRA, GETDATE()) AS soNgayQuaHan
-                        FROM DOCGIA dg
-                        LEFT JOIN PHIEUMUON pm ON dg.MADG = pm.MADG
-                        LEFT JOIN CT_PHIEUMUON ctpm ON ctpm.MAPHIEU = pm.MAPHIEU 
-                            AND ctpm.NGAYTRA < GETDATE()
-                            AND ctpm.TRA = 0
-                        LEFT JOIN SACH s ON s.MASACH = ctpm.MASACH
-                        LEFT JOIN DAUSACH ds ON ds.ISBN = s.ISBN
-                        WHERE dg.HOATDONG = 1 AND DATEDIFF(day, ctpm.NGAYTRA, GETDATE()) > 0`);
+                        DATEDIFF(day, DATEADD(day, 15, pm.NGAYMUON), GETDATE()) AS soNgayQuaHan,
+                        (SELECT COUNT(DISTINCT dg2.MADG) 
+                        FROM DOCGIA dg2
+                        LEFT JOIN PHIEUMUON pm2 ON dg2.MADG = pm2.MADG
+                        LEFT JOIN CT_PHIEUMUON ctpm2 ON ctpm2.MAPHIEU = pm2.MAPHIEU 
+                            AND pm2.NGAYMUON < GETDATE()
+                            AND ctpm2.TRA IS NULL
+                        WHERE dg2.HOATDONG = 1 AND DATEDIFF(day, pm2.NGAYMUON, GETDATE()) > 0
+                        ) AS soLuongDocGia
+                    FROM DOCGIA dg
+                    LEFT JOIN PHIEUMUON pm ON dg.MADG = pm.MADG
+                    LEFT JOIN CT_PHIEUMUON ctpm ON ctpm.MAPHIEU = pm.MAPHIEU 
+                        AND pm.NGAYMUON < GETDATE()
+                        AND ctpm.TRA IS NULL
+                    LEFT JOIN SACH s ON s.MASACH = ctpm.MASACH
+                    LEFT JOIN DAUSACH ds ON ds.ISBN = s.ISBN
+                    WHERE dg.HOATDONG = 1 AND DATEDIFF(day, pm.NGAYMUON, GETDATE()) > 0;`);
+                    
             return result.recordset
         } catch (err) {
             console.error('Error in getOverdueReader DocGia:', err);
