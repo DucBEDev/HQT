@@ -64,6 +64,21 @@ module.exports.createPost = async (req, res) => {
 
         const authorList = req.body;
 
+        let duplicateAuthors = [];
+        for (const author of authorList) {
+            if(TacGiaRepository.checkExist(pool, author)) {
+                duplicateAuthors.push(author);
+            }
+        }
+
+        if (duplicateAuthors.length > 0) {
+            return res.status(400).json({
+                success: false, 
+                message: 'Các tác giả sau có sô điện thoại trùng với số điện thoại khác của tác giả đã có trong database: ' + duplicateAuthors.map(a => a.hoTenTG).join(', ')
+                
+            });
+        }
+
         const savedAuthors = [];
         for (const author of authorList) {
             const cleanHoTenTG = author.hoTenTG.trim().replace(/\s+/g, ' ');

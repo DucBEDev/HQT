@@ -52,6 +52,28 @@ class TacGiaRepository {
         }
     }
 
+
+
+    static async checkExist(pool, tacGia) {
+        try {
+            await pool.connect();
+            const request = pool.request();
+            request.input('dienThoaiTG', sql.NVarChar, tacGia.dienThoaiTG);
+
+            const result = await request.query(`
+                SELECT COUNT(*) AS count
+                FROM TACGIA
+                WHERE DIENTHOAITG = @dienThoaiTG
+                    AND ISDELETED = 0
+            `);
+
+            return result.recordset[0].count > 0;
+        } catch (err) {
+            console.error('Error in add TacGia:', err);
+            throw err;
+        }
+    }
+
     static async getCurrentId(pool) {
         try {
             await pool.connect();

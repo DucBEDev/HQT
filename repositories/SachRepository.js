@@ -74,6 +74,28 @@ class SachRepository {
         }
     }
 
+
+    static async checkExist(pool, sach) {
+        try {
+            await pool.connect();
+            const request = pool.request();
+            request.input('MASACH', sql.NChar(20), sach.MASACH);
+
+            const result = await request.query(`
+                SELECT COUNT(*) AS count
+                FROM SACH
+                WHERE MASACH = @MASACH
+                    AND ISDELETED = 0
+            `);
+
+            return result.recordset[0].count > 0;
+        } catch (err) {
+            console.error('Error in checkExist Sach:', err);
+            throw err;
+        }
+    }
+    
+
     static async getNextId(pool) {
         try {
             await pool.connect();

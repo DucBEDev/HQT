@@ -55,6 +55,26 @@ class DauSachRepository {
         }
     }
 
+    static async checkExist(pool, dauSach) {
+        try {
+            await pool.connect();
+            const request = pool.request();
+            request.input('ISBN', sql.NChar(15), dauSach.ISBN);
+
+            const result = await request.query(`
+                SELECT COUNT(*) AS count
+                FROM DAUSACH
+                WHERE ISBN = @ISBN
+                    AND ISDELETED = 0
+            `);
+
+            return result.recordset[0].count > 0;
+        } catch (err) {
+            console.error('Error in checkExist DauSach:', err);
+            throw err;
+        }
+    }
+
     static async getCurrentId(pool) {
         try {
             await pool.connect();

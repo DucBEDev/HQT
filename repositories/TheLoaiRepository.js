@@ -38,6 +38,25 @@ class TheLoaiRepository {
     }
 
 
+    static async checkExist(pool, theLoai) {
+        try {
+            await pool.connect();
+            const request = pool.request();
+            request.input('MATL', sql.NChar(10), theLoai.MATL);
+
+            const result = await request.query(`
+                SELECT COUNT(*) AS count
+                FROM THELOAI
+                WHERE MATL = @MATL
+                    AND ISDELETED = 0
+            `);
+
+            return result.recordset[0].count > 0;
+        } catch (err) {
+            console.error('Error in checkExist TheLoai:', err);
+            throw err;
+        }
+    }
 
     static async getCurrentId(pool) {
         try {

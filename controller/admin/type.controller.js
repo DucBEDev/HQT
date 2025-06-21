@@ -64,6 +64,21 @@ module.exports.createPost = async (req, res) => {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
+    let duplicateTypes = [];
+        for (const type of typeList) {
+            if(TheLoaiRepository.checkExist(pool, type) ==true) {
+                duplicateTypes.push(type);
+            }
+        }
+
+        if (duplicateTypes.length > 0) {
+            return res.status(400).json({
+                success: false, 
+                message: 'Các thể loại sau mã thể loại trùng với mã thể loại khác của thể loại đã có trong database: ' + duplicateTypes.map(a => a.maTL).join(', ')
+                
+            });
+        }
+
     for (const type of typeList) {
         const cleanTenTL = type.tenTL.trim().replace(/\s+/g, ' ');
 
@@ -99,22 +114,25 @@ module.exports.editPost = async (req, res) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
+    console.log(req.body)
     const type = req.body;
-    console.log("Type to edit: ", type);
-    const oldType = await TheLoaiRepository.getById(pool, type.maTL); 
+    console.log("Type to edit: ", type);    
+    const oldType = await TheLoaiRepository.getById(pool, type.originalMaTL); // Lấy thể loại cũ để lưu vào undo stack
     console.log("Old Type: ", oldType);
     //const typeEdit = new TheLoai(type.maTL, type.tenTL)
 
     const cleanTenTL = type.tenTL.trim().replace(/\s+/g, ' ');
 
     const params = [
-        { name: 'MATL', type: sql.NVarChar, value: type.maTL },
+        { name: 'MATLCU', type: sql.NVarChar, value: type.originalMaTL },
+        { name: 'MATLMOI', type: sql.NVarChar, value: type.maTL },
         { name: 'TENTL', type: sql.NVarChar, value: cleanTenTL }
     ];
 
     try {
+        console.log("Params to edit: ", params);
         await executeStoredProcedureWithTransaction(pool,'sp_SuaTheLoai', params);
-        pushToUndoStack('edit',  oldType );
+        pushToUndoStack('edit',  {maTLCu: oldType.maTL, maTLMoi: type.maTL, tenTLCu: oldType.tenTL} );
         
         res.status(200).json({
             success: true
@@ -157,9 +175,11 @@ module.exports.undo = async (req, res) => {
         } else if (action === 'edit') {
             // Undo edit: Khôi phục tên cũ
             const params = [
-                { name: 'MATL', type: sql.NVarChar, value: data.maTL },
-                { name: 'TENTL', type: sql.NVarChar, value: data.tenTL }
+                { name: 'MATLCU', type: sql.NVarChar, value: data.maTLMoi },
+                { name: 'MATLMOI', type: sql.NVarChar, value: data.maTLCu },
+                { name: 'TENTL', type: sql.NVarChar, value: data.tenTLCu }
             ];
+            console.log("Params to undo edit: ", params);
             await executeStoredProcedureWithTransaction(pool,'sp_SuaTheLoai', params);
         }
         res.json({ success: true });

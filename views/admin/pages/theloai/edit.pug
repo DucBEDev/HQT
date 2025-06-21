@@ -15,6 +15,7 @@ block main
                         .form-group
                             label(for="maTL") Mã thể loại
                             input.form-control(type="text" id="maTL" name="maTL" value=`${type.maTL}`)
+                            input.form-control(type="hidden" id="originalMaTL" name="originalMaTL" value=`${type.maTL}`)
                         .form-group
                             label(for="tenTL") Tên thể loại <span class="required-text">*</span>
                             input.form-control(type="text" id="tenTL" name="tenTL" value=`${type.tenTL}` placeholder="Nhập tên thể loại" required)

@@ -56,6 +56,29 @@ class NhanVienRepository {
         }
     }
 
+
+    static async checkExist(pool, nhanVien) {
+        try {
+            await pool.connect();
+            const request = pool.request();
+            request.input('dienThoai', sql.NVarChar, nhanVien.dienThoai);
+            request.input('email', sql.NVarChar, nhanVien.email);
+
+            const result = await request.query(`
+                SELECT COUNT(*) AS count
+                FROM NHANVIEN
+                WHERE (DIENTHOAI = @dienThoai OR EMAIL = @email)
+                    AND ISDELETED = 0
+            `);
+            
+            console.log('Check exist result:', result.recordset[0].count >0);
+            return result.recordset[0].count > 0;
+        } catch (err) {
+            console.error('Error in checkExist NhanVien:', err);
+            throw err;
+        }
+    }
+
     static async getCurrentId(pool) {
         try {
             await pool.connect();

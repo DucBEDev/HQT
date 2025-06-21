@@ -171,6 +171,21 @@ module.exports.write = async (req, res) => {
 
     const sachList = req.body;
 
+    let duplicateBooks = [];
+        for (const book of sachList) {
+            if(SachRepository.checkExist(pool, book) == true) {
+                duplicateBooks.push(book);
+            }
+        }
+
+        if (duplicateBooks.length > 0) {
+            return res.status(400).json({
+                success: false, 
+                message: 'Các  sách sau có mã sách trùng với mã sách khác của sách đã có trong database: ' + duplicateBooks.map(a => a.maSach).join(', ')
+                
+            });
+        }
+
     try {
         const savedSach = [];
         for (const sach of sachList) {
@@ -212,11 +227,27 @@ module.exports.createDauSach = async (req, res) => {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
+    
+
     const dauSachList = Object.values(req.body.dauSach || []).map((ds, index) => ({
         ...ds,
         hinhAnhPath: req.body.hinhAnhUrls ? req.body.hinhAnhUrls[index] : null
     }));
 
+    let duplicateTitles = [];
+        for (const title of dauSachList) {
+            if(DauSachRepository.checkExist(pool, title) == true) {
+                duplicateTitles.push(title);
+            }
+        }
+
+        if (duplicateTitles.length > 0) {
+            return res.status(400).json({
+                success: false, 
+                message: 'Các đầu sách sau có ISBN trùng với ISBN khác của đầu sách đã có trong database: ' + duplicateTitles.map(a => a.isbn).join(', ')
+                
+            });
+        }
 
     try {
         const savedDauSach = [];

@@ -81,7 +81,7 @@ module.exports.backup = async (req, res) => {
         ];
         console.log('Executing stored procedure with params:', params)
         // Execute the stored procedure
-        const result = await executeStoredProcedure(pool, 'sp_BackupFullQLTV', params);
+        const result = await executeStoredProcedure(pool, 'sp_BackupFullQLTVMoi', params);
 
         // Kiểm tra result.recordset
         if (result && result.recordset && result.recordset.length > 0 && result.recordset[0].Message) {

@@ -38,7 +38,7 @@ module.exports.delete = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedure(pool,'sp_XoaTaiKhoan', params);
+        await executeStoredProcedure(pool,'sp_XoaTaiKhoanMoi', params);
         pushToUndoStack('delete', staff);
         res.redirect(`${systemConfig.prefixAdmin}/staff`);
     } catch (error) {
@@ -65,6 +65,21 @@ module.exports.createPost = async (req, res) => {
         const staffList = req.body;
         console.log(staffList)
 
+        let duplicateStaffs = [];
+        for (const staff of staffList) {
+            if(NhanVienRepository.checkExist(pool, staff)=== true) {
+                duplicateStaffs.push(staff);
+            }
+        }
+
+        if (duplicateStaffs.length > 0) {
+            return res.status(400).json({
+                success: false, 
+                message: 'Các nhân viên sau có sô điện thoại hoặc email trùng với số điện thoại hoặc email khác của nhân viên đã có trong database: ' + duplicateStaffs.map(a => a.hoNV + " " + a.tenNV).join(', ')
+                
+            });
+        }
+
         const savedStaff = [];
         for (const staff of staffList) {
             const cleanHoNV = staff.hoNV.trim().replace(/\s+/g, ' ');
@@ -83,7 +98,7 @@ module.exports.createPost = async (req, res) => {
 
             ];
             console.log(params)
-            const result = await executeStoredProcedure(pool, 'sp_TaoTaiKhoan', params);
+            const result = await executeStoredProcedure(pool, 'sp_TaoTaiKhoanMoi', params);
             const maNV = result.recordset && result.recordset[0] ? result.recordset[0].ID : null;
             savedStaff.push({
                 maNV: maNV,

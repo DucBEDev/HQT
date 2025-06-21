@@ -54,7 +54,7 @@ module.exports.delete = async (req, res) => {
     ];
 
     try {
-        await executeStoredProcedure(pool, 'sp_XoaTaiKhoan', params);
+        await executeStoredProcedure(pool, 'sp_XoaTaiKhoanMoi', params);
         pushToUndoStack('delete', reader);
         res.redirect(`${systemConfig.prefixAdmin}/reader`);
     } catch (error) {
@@ -96,6 +96,22 @@ module.exports.createPost = async (req, res) => {
 
     const readerList = req.body;
     console.log(req.body)
+
+    let duplicateReaders = [];
+        for (const reader of readerList) {
+            if(DocGiaRepository.checkExist(pool, reader)==true) {
+                duplicateReaders.push(reader);
+            }
+        }
+
+        if (duplicateReaders.length > 0) {
+            return res.status(400).json({
+                success: false, 
+                message: 'Các đọc giả sau có sô điện thoại hoặc email hoặc số CMND trùng với số điện thoại hoặc email hoặc số CMND khác của đọc giả đã có trong database: ' + duplicateReaders.map(a => a.hoDG + " " + a.tenDG).join(', ')
+                
+            });
+        }
+
     const savedReaders = [];
     for (const reader of readerList) {
         const cleanHoDG = reader.hoDG.trim().replace(/\s+/g, ' ');
@@ -131,7 +147,7 @@ module.exports.createPost = async (req, res) => {
         ];
 
         console.log(params)
-        const result = await executeStoredProcedure(pool, 'sp_TaoTaiKhoan', params);
+        const result = await executeStoredProcedure(pool, 'sp_TaoTaiKhoanMoi', params);
         const maDG = result.recordset && result.recordset[0] ? result.recordset[0].ID : null;
         savedReaders.push({
             maDG: maDG,

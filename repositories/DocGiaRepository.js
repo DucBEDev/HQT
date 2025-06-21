@@ -85,6 +85,29 @@ class DocGiaRepository {
         }
     }
 
+
+    static async checkExist(pool, docGia) {
+        try {
+            await pool.connect();
+            const request = pool.request();
+            request.input('emailDG', sql.NVarChar, docGia.emailDG);
+            request.input('soCMND', sql.NVarChar, docGia.soCMND);
+            request.input('dienThoai', sql.NVarChar, docGia.dienThoai);
+
+            const result = await request.query(`
+                SELECT COUNT(*) AS count
+                FROM DOCGIA
+                WHERE (EMAILDG = @emailDG OR SOCMND = @soCMND OR DIENTHOAI = @dienThoai)
+                    AND ISDELETED = 0
+            `);
+
+            return result.recordset[0].count > 0;
+        } catch (err) {
+            console.error('Error in checkExist DocGia:', err);
+            throw err;
+        }
+    }
+
     static async getCurrentId(pool) {
         try {
             await pool.connect();
@@ -138,32 +161,32 @@ class DocGiaRepository {
         try {
             await pool.connect();
             const result = await pool.request()
-                .query(`SELECT 
-                        dg.SOCMND AS soCMND,
-                        CONCAT(dg.HODG, ' ', dg.TENDG) AS hoTen,
-                        dg.DIENTHOAI AS soDT,
-                        dg.EMAILDG AS email,
-                        ctpm.MASACH AS maSach,
-                        ds.TENSACH as tenSach,
-                        pm.NGAYMUON AS ngayMuon,
-                        DATEDIFF(day, DATEADD(day, 15, pm.NGAYMUON), GETDATE()) AS soNgayQuaHan,
-                        (SELECT COUNT(DISTINCT dg2.MADG) 
-                        FROM DOCGIA dg2
-                        LEFT JOIN PHIEUMUON pm2 ON dg2.MADG = pm2.MADG
-                        LEFT JOIN CT_PHIEUMUON ctpm2 ON ctpm2.MAPHIEU = pm2.MAPHIEU 
-                            AND pm2.NGAYMUON < GETDATE()
-                            AND ctpm2.TRA IS NULL
-                        WHERE dg2.HOATDONG = 1 AND DATEDIFF(day, pm2.NGAYMUON, GETDATE()) > 0
-                        ) AS soLuongDocGia
-                    FROM DOCGIA dg
-                    LEFT JOIN PHIEUMUON pm ON dg.MADG = pm.MADG
-                    LEFT JOIN CT_PHIEUMUON ctpm ON ctpm.MAPHIEU = pm.MAPHIEU 
-                        AND pm.NGAYMUON < GETDATE()
-                        AND ctpm.TRA IS NULL
-                    LEFT JOIN SACH s ON s.MASACH = ctpm.MASACH
-                    LEFT JOIN DAUSACH ds ON ds.ISBN = s.ISBN
-                    WHERE dg.HOATDONG = 1 AND DATEDIFF(day, pm.NGAYMUON, GETDATE()) > 0;`);
-                    
+                    .query(`SELECT 
+                            dg.SOCMND AS soCMND,
+                            CONCAT(dg.HODG, ' ', dg.TENDG) AS hoTen,
+                            dg.DIENTHOAI AS soDT,
+                            dg.EMAILDG AS email,
+                            ctpm.MASACH AS maSach,
+                            ds.TENSACH as tenSach,
+                            pm.NGAYMUON AS ngayMuon,
+                            DATEDIFF(day, DATEADD(day, 15, pm.NGAYMUON), GETDATE()) AS soNgayQuaHan,
+                            (SELECT COUNT(DISTINCT dg2.MADG) 
+                            FROM DOCGIA dg2
+                            LEFT JOIN PHIEUMUON pm2 ON dg2.MADG = pm2.MADG
+                            LEFT JOIN CT_PHIEUMUON ctpm2 ON ctpm2.MAPHIEU = pm2.MAPHIEU 
+                                AND pm2.NGAYMUON < GETDATE()
+                                AND ctpm2.TRA IS NULL
+                            WHERE dg2.HOATDONG = 1 AND DATEDIFF(day, pm2.NGAYMUON, GETDATE()) > 0
+                            ) AS soLuongDocGia
+                        FROM DOCGIA dg
+                        LEFT JOIN PHIEUMUON pm ON dg.MADG = pm.MADG
+                        LEFT JOIN CT_PHIEUMUON ctpm ON ctpm.MAPHIEU = pm.MAPHIEU 
+                            AND pm.NGAYMUON < GETDATE()
+                            AND ctpm.TRA IS NULL
+                        LEFT JOIN SACH s ON s.MASACH = ctpm.MASACH
+                        LEFT JOIN DAUSACH ds ON ds.ISBN = s.ISBN
+                        WHERE dg.HOATDONG = 1 AND DATEDIFF(day, pm.NGAYMUON, GETDATE()) > 0;`);
+
             return result.recordset
         } catch (err) {
             console.error('Error in getOverdueReader DocGia:', err);

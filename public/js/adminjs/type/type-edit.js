@@ -1,6 +1,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('editTypeForm'); // Corrected form ID
     const tenTLInput = document.getElementById('tenTL');
+    const originalMaTL = document.getElementById('originalMaTL'); // Hidden input for original ID
 
     // Chặn nhập số và ký tự đặc biệt trong ô tên thể loại
     window.restrictNameInput(tenTLInput);
@@ -8,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Form submission validation and handling
     form.addEventListener('submit', function(event) {
         event.preventDefault(); // Prevent default form submission
+
 
         const maTLInput = document.getElementById('maTL');
         const tenTLValue = tenTLInput.value.trim();
@@ -21,6 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (form.checkValidity()) {
             const theLoai = {
+                originalMaTL: originalMaTL.value, // Using hidden input for original ID
                 maTL: maTLInput.value, // Using 'id' for consistency with hidden ID system
                 tenTL: tenTLValue
             };
@@ -35,6 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
+                    console.log('Sửa thông tin thành công:', data);
                     alert('Sửa thông tin thành công!');
                     window.location.href = `/Library/admin/type`;
                 } else {
