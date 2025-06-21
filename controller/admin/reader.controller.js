@@ -279,7 +279,7 @@ module.exports.undo = async (req, res) => {
 
                 ];
                 console.log("Undo create reader: ", params);
-                await executeStoredProcedure(pool, 'sp_XoaTaiKhoan', params);
+                await executeStoredProcedure(pool, 'sp_XoaTaiKhoanMoi', params);
             }
         } else if (action === 'delete') {
             const oldMaDG = data.maDG; // Lấy mã DG từ dữ liệu đã xóa
@@ -300,7 +300,7 @@ module.exports.undo = async (req, res) => {
                 { name: 'HOATDONG', type: sql.Bit, value: data.hoatDong },
                 { name: 'PASS', type: sql.NVarChar, value: "1111" }
             ];
-            const result = await executeStoredProcedure(pool, 'sp_TaoTaiKhoan', params);
+            const result = await executeStoredProcedure(pool, 'sp_TaoTaiKhoanMoi', params);
             const newMaDG = result.recordset && result.recordset[0] ? result.recordset[0].ID : null;
 
             updateAfterDeleteUndo(oldMaDG, newMaDG);

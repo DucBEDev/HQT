@@ -69,7 +69,8 @@ module.exports.getDauSach = async (req, res) => {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
-    const dauSach = await DauSachRepository.getDauSach(pool, req.query.isbn);
+    let dauSach = await DauSachRepository.getDauSach(pool, req.query.isbn);
+    dauSach.MATACGIA = dauSach.MATACGIA ? dauSach.MATACGIA.split(',') : []; // Chuyển đổi chuỗi MATACGIA thành mảng
 
     res.json({ success: true, dauSach });
 };
@@ -279,8 +280,9 @@ module.exports.createDauSach = async (req, res) => {
                 { name: 'NHAXB', type: sql.NVarChar, value: cleanNhaXB },
                 { name: 'MANGONNGU', type: sql.Int, value: dauSach.maNgonNgu ? parseInt(dauSach.maNgonNgu) : null },
                 { name: 'MATL', type: sql.NChar, value: cleanMaTL },
-                { name: 'MATACGIA', type: sql.Int, value: parseInt(dauSach.maTacGia) }
+                { name: 'MATACGIA', type: sql.NVarChar, value: Array.isArray(dauSach.maTacGia) ? dauSach.maTacGia.join(',') : dauSach.maTacGia }
             ];
+            console.log(params)
 
             // Gọi stored procedure để thêm đầu sách
             await executeStoredProcedure(pool, 'sp_ThemDauSach', params);
@@ -297,7 +299,7 @@ module.exports.createDauSach = async (req, res) => {
                 nhaXB: cleanNhaXB,
                 maNgonNgu: dauSach.maNgonNgu,
                 maTL: cleanMaTL,
-                maTacGia: dauSach.maTacGia
+                maTacGia: Array.isArray(dauSach.maTacGia) ? dauSach.maTacGia.join(',') : dauSach.maTacGia
             });
         }
 
@@ -325,6 +327,7 @@ module.exports.updateDauSach = async (req, res) => {
         imageUrl = req.body.currentImagePath
     }
     const oldDauSach = await DauSachRepository.getDauSach(pool, dauSach.oldisbn);
+    console.log("oldDauSach ", oldDauSach)
 
     const cleanOldISBN = dauSach.oldisbn.trim();
     const cleanISBN = dauSach.isbn.trim();
@@ -351,11 +354,13 @@ module.exports.updateDauSach = async (req, res) => {
         { name: 'NHAXB', type: sql.NVarChar, value: cleanNhaXB },
         { name: 'MANGONNGU', type: sql.Int, value: dauSach.maNgonNgu ? parseInt(dauSach.maNgonNgu) : null },
         { name: 'MATL', type: sql.NChar, value: cleanMaTL },
-        { name: 'MATACGIA', type: sql.Int, value: parseInt(dauSach.maTacGia) }
+        { name: 'MATACGIA', type: sql.NVarChar, value: Array.isArray(dauSach.maTacGia) ? dauSach.maTacGia.join(',') : dauSach.maTacGia }
     ];
+    console.log(params)
+
 
     // Gọi stored procedure để thêm đầu sách
-    await executeStoredProcedureWithTransaction(pool, 'sp_SuaDauSach', params);
+    await executeStoredProcedure(pool, 'sp_SuaDauSach', params);
     pushToUndoStack('edit_dausach', { oldData: oldDauSach, newData: dauSach});
 
     res.json({ success: true });
@@ -376,6 +381,7 @@ module.exports.deleteTitle = async (req, res) => {
     try {
         // Lấy thông tin đầu sách trước khi xóa để lưu vào undo stack
         const dauSach = await DauSachRepository.getDauSach(pool, isbn);
+        console.log("DauSach to delete: ", dauSach)
 
         await executeStoredProcedureWithTransaction(pool, 'sp_XoaDauSach', params);
         pushToUndoStack('delete_dausach', dauSach);
@@ -470,7 +476,7 @@ module.exports.undo = async (req, res) => {
                 { name: 'NHAXB', type: sql.NVarChar, value: data.NHAXB },
                 { name: 'MANGONNGU', type: sql.Int, value: data.MANGONNGU },
                 { name: 'MATL', type: sql.NChar, value: data.MATL },
-                { name: 'MATACGIA', type: sql.Int, value: data.MATACGIA }
+                { name: 'MATACGIA', type: sql.NVarChar, value: Array.isArray(data.MATACGIA) ? data.MATACGIA.join(',') : data.MATACGIA }
             ];
             await executeStoredProcedure(pool, 'sp_ThemDauSach', params);
         } else if (action === 'edit_dausach') {
@@ -493,7 +499,7 @@ module.exports.undo = async (req, res) => {
                 { name: 'NHAXB', type: sql.NVarChar, value: oldData.NHAXB },
                 { name: 'MANGONNGU', type: sql.Int, value: oldData.MANGONNGU },
                 { name: 'MATL', type: sql.NChar, value: oldData.MATL },
-                { name: 'MATACGIA', type: sql.Int, value: oldData.MATACGIA }
+                { name: 'MATACGIA', type: sql.NVarChar, value: Array.isArray(oldData.MATACGIA) ? oldData.MATACGIA.join(',') : oldData.MATACGIA }
             ];
             console.log("params ", params)
             await executeStoredProcedure(pool, 'sp_SuaDauSach', params);

@@ -208,7 +208,7 @@ module.exports.undo = async (req, res) => {
                     { name: 'USER_TYPE', type: sql.VarChar(10), value: 'NHANVIEN' },
                     { name: 'ID', type: sql.Int, value: staff.maNV }
                 ];
-                await executeStoredProcedure(pool, 'sp_XoaTaiKhoan', params);
+                await executeStoredProcedure(pool, 'sp_XoaTaiKhoanMoi', params);
             }
         } else if (action === 'delete') {
             const oldMaNV = data.maNV; // Lấy mã nhân viên từ dữ liệu đã xóa
@@ -223,7 +223,7 @@ module.exports.undo = async (req, res) => {
                 { name: 'EMAIL', type: sql.NVarChar, value: data.email },
                 { name: 'PASS', type: sql.NVarChar, value: "1111" } // Mật khẩu mặc định
             ];
-            const result = await executeStoredProcedure(pool, 'sp_TaoTaiKhoan', params);
+            const result = await executeStoredProcedure(pool, 'sp_TaoTaiKhoanMoi', params);
             const newMaNV = result.recordset && result.recordset[0] ? result.recordset[0].ID : null;
 
             updateAfterDeleteUndo(oldMaNV, newMaNV);

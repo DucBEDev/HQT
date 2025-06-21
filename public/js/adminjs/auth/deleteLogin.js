@@ -12,12 +12,12 @@ $(document).ready(function () {
         if (userType === 'librarian') {
             $label.text('Mã thủ thư:');
             empList.forEach(emp => {
-                $select.append(`<option value="${emp.maNV}">${emp.maNV} - ${emp.hoNV + " " + emp.tenNV}</option>`);
+                $select.append(`<option value="${emp.MANV}">${emp.MANV} - ${emp.HONV + " " + emp.TENNV}</option>`);
             });
         } else {
             $label.text('Mã độc giả:');
             dgList.forEach(dg => {
-                $select.append(`<option value="${dg.maDG}">${dg.maDG} - ${dg.hoDG + " " + dg.tenDG}</option>`);
+                $select.append(`<option value="${dg.MADG}">${dg.MADG} - ${dg.HODG + " " + dg.TENDG}</option>`);
             });
         }
     }

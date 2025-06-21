@@ -123,9 +123,12 @@ block main
                                         option(value=`${theLoai.maTL}`) #{theLoai.tenTL}
                             .form-group
                                 label(for="maTacGia") Tác Giả <span class="required-text">*</span>
-                                select.form-control(id="maTacGia" name="maTacGia" required)
+                                select.form-control(id="maTacGia" name="maTacGia" multiple size="5" required)
                                     each tacGia in tacGiaList
-                                        option(value=`${tacGia.maTacGia}`) #{tacGia.hoTenTG}
+                                        option(value=`${tacGia.maTacGia}`) #{tacGia.maTacGia} - #{tacGia.hoTenTG}
+                                small.form-text.text-muted Giữ Ctrl (Windows) hoặc Cmd (Mac) để chọn nhiều tác giả
+                                .invalid-feedback#maTacGiaError Vui lòng chọn ít nhất một tác giả
+
                     .d-flex.justify-content-end.mt-3
                         button.btn.btn-primary.mr-2(type="button" id="addDauSachBtn") Thêm
                         button.btn.btn-success(type="button" id="ghiDauSachBtn") Ghi

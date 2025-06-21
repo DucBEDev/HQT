@@ -305,19 +305,53 @@ class DauSachRepository {
     }
 
     static async getDauSach(pool, isbn) {
-        await pool.connect();
-        const result = await pool.request()
-            .input('isbn', sql.NVarChar, isbn)
-            .query(`
-                SELECT d.*,
-                tg.MATACGIA,
-                tg.HOTENTG
+        try {
+            await pool.connect();
+            const request = pool.request();
+            request.input('isbn', sql.NChar(15), isbn);
+
+            const result = await request.query(`
+                SELECT 
+                    d.ISBN,
+                    d.TENSACH,
+                    d.KHOSACH,
+                    d.NOIDUNG,
+                    d.HINHANHPATH,
+                    d.NGAYXUATBAN,
+                    d.LANXUATBAN,
+                    d.SOTRANG,
+                    d.GIA,
+                    d.NHAXB,
+                    d.MANGONNGU,
+                    d.MATL,
+                    d.ISDELETED,
+                    STRING_AGG(CAST(tg.MATACGIA AS NVARCHAR), ',') AS MATACGIA,
+                    STRING_AGG(tg.HOTENTG, ',') AS HOTENTG
                 FROM DAUSACH d
                 LEFT JOIN TACGIA_SACH ts ON ts.ISBN = d.ISBN
-                LEFT JOIN TACGIA tg ON tg.MATACGIA = ts.MATACGIA
-                WHERE d.ISBN = @isbn
+                LEFT JOIN TACGIA tg ON tg.MATACGIA = ts.MATACGIA AND tg.ISDELETED = 0
+                WHERE d.ISBN = @isbn AND d.ISDELETED = 0
+                GROUP BY 
+                    d.ISBN,
+                    d.TENSACH,
+                    d.KHOSACH,
+                    d.NOIDUNG,
+                    d.HINHANHPATH,
+                    d.NGAYXUATBAN,
+                    d.LANXUATBAN,
+                    d.SOTRANG,
+                    d.GIA,
+                    d.NHAXB,
+                    d.MANGONNGU,
+                    d.MATL,
+                    d.ISDELETED
             `);
-        return result.recordset[0];
+
+            return result.recordset[0] || null; // Return the first record or null if not found
+        } catch (err) {
+            console.error('Error in getDauSach:', err);
+            throw err;
+        }
     }
 }
 

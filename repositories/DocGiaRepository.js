@@ -227,6 +227,30 @@ class DocGiaRepository {
             throw err;
         }
     }
+
+    static async getReaderLogins(pool) {
+        try {
+            await pool.connect();
+            const request = pool.request();
+            const result = await request.query(`
+                SELECT 
+                    sp.name as LOGIN_NAME,
+                    dg.MADG,
+                    dg.HODG,
+                    dg.TENDG,
+                    sp.is_disabled
+                FROM sys.server_principals sp
+                INNER JOIN DOCGIA dg ON sp.name = 'DG' + CAST(dg.MADG AS VARCHAR) 
+                WHERE sp.type = 'S' 
+                AND dg.ISDELETED = 0
+                ORDER BY sp.name
+            `);
+            return result.recordset;
+        } catch (err) {
+            console.error('Error in getReaderLogins:', err);
+            throw err;
+        }
+    }
 }
 
 module.exports = DocGiaRepository;

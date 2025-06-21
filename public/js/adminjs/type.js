@@ -13,7 +13,7 @@ async function getNextMaTL() {
         } 
         else {
             const currentId = parseInt(danhSachTheLoai[danhSachTheLoai.length - 1].maTL.substring(2));
-            currentMaTL = `TL${(currentId + 1).toString().padStart(3, '0')}`;
+            currentMaTL = `TL${(currentId + 1).toString().padStart(8, '0')}`;
             document.getElementById('maTL').value = currentMaTL;
         }
     } catch (error) {

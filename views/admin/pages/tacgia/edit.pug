@@ -13,8 +13,7 @@ block main
                 .row
                     .col-lg-12
                         .form-group
-                            label(for="maTacGia") Mã tác giả
-                            input.form-control(type="text" id="maTacGia" name="maTacGia" value=`${author.maTacGia}` readonly)
+                            input.form-control(type="text" id="maTacGia" name="maTacGia" value=`${author.maTacGia}` hidden)
                         .form-group
                             label(for="hoTenTG") Họ tên tác giả <span class="required-text">*</span>
                             input.form-control(type="text" id="hoTenTG" name="hoTenTG" value=`${author.hoTenTG}` placeholder="Nhập họ tên tác giả" required)
