@@ -102,8 +102,8 @@ module.exports.changePasswordPost = async (req, res) => {
     }
 };
 
-// [GET] /auth/deleteLogin
-module.exports.deleteLoginView = async (req, res) => {
+// [GET] /auth/formLogin
+module.exports.formLoginView = async (req, res) => {
     const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
@@ -135,7 +135,6 @@ module.exports.deleteLogin = async (req, res) => {
         const params = [
             { name: 'ID', type: sql.BigInt, value: userId },
             { name: 'USER_TYPE', type: sql.NVarChar, value: userTypeTest }
-
         ];
 
         await executeStoredProcedure(pool, 'sp_XoaTaiKhoanMoi', params);
@@ -148,3 +147,32 @@ module.exports.deleteLogin = async (req, res) => {
     }
     
 };
+
+// [POST /auth/createLogin
+module.exports.createLogin = async (req, res) => {
+    const pool = getUserPool(req.session.id);
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+    try {
+        const { userType, userId, password, confirmPassword } = req.body;
+        const loginName = ((userType == 'librarian') ? "NV" : "DG") + userId;
+        console.log(loginName)
+
+        // const params = [
+        //     { name: 'ID', type: sql.BigInt, value: userId },
+        //     { name: 'USER_TYPE', type: sql.NVarChar, value: userTypeTest }
+        // ];
+
+        // await executeStoredProcedure(pool, 'sp_XoaTaiKhoanMoi', params);
+
+        req.flash("success", "Tạo login thành công!");
+        res.redirect(`${systemConfig.prefixAdmin}/auth/formLogin`);
+        
+    } catch (error) {
+        req.flash("error", "Tạo login thất bại!");
+        res.redirect("back");
+    }
+
+}

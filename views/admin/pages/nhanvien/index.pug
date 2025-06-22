@@ -36,7 +36,8 @@ block main
                                 td.align-middle #{staff.dienThoai}
                                 td.align-middle
                                     a.btn.btn-sm.btn-primary.edit-type-btn.mr-1(href=`${prefixAdmin}/staff/edit/${staff.maNV}`) Sửa
-                                    a.btn.btn-sm.btn-danger.delete-staff-btn.mr-1(href="javascript:void(0);" data-staff-id=`${staff.maNV}` data-toggle="modal" data-target="#DeleteModal") Xóa
+                                    if (staff.maNV != empId)
+                                        a.btn.btn-sm.btn-danger.delete-staff-btn.mr-1(href="javascript:void(0);" data-staff-id=`${staff.maNV}` data-toggle="modal" data-target="#DeleteModal") Xóa
 
     //- Modal Delete Item
     #DeleteModal.modal.fade(tabindex="-1" role="dialog" aria-labelledby="DeleteModal" aria-hidden="true")
