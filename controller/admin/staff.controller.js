@@ -13,11 +13,13 @@ module.exports.index = async (req, res) => {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
     const list = await NhanVienRepository.getAll(pool);
+    const empId = req.session.empId;
 
     res.render('admin/pages/nhanvien/index', {
         staffList: list,
         pageTitle: 'Quản lý nhân viên',
-        isEmptyStack: isEmpty()
+        isEmptyStack: isEmpty(),
+        empId: empId
     });
 };
 
@@ -205,7 +207,6 @@ module.exports.undo = async (req, res) => {
                 { name: 'DIENTHOAI', type: sql.NVarChar, value: data.dienThoai },
                 { name: 'EMAIL', type: sql.NVarChar, value: data.email },
                 { name: 'PASS', type: sql.NVarChar, value: "1111" }, // Mật khẩu mặc định
-                { name: 'MANVCU', type: sql.BigInt, value: data.maNV } // Mật khẩu mặc định
 
             ];
             const result = await executeStoredProcedure(pool, 'sp_TaoTaiKhoanMoi', params);
@@ -233,7 +234,6 @@ module.exports.undo = async (req, res) => {
         res.json({ success: false, message: 'Không thể thực hiện undo!' });
     }
 };
-
 
 // [POST] /staff/clear-undo
 module.exports.clearUndo = async (req, res) => {

@@ -10,37 +10,104 @@ block main
 
     .container-fluid
         .row.justify-content-center
-            .col-md-6
+            .col-md-8
+                // Navigation buttons
+                .card.shadow.mb-3
+                    .card-body.py-2
+                        .d-flex.justify-content-center.gap-2
+                            button.btn.btn-outline-primary#btnCreateMode
+                                i.fas.fa-user-plus.me-2.mr-2
+                                | Tạo tài khoản
+                            button.btn.btn-danger.active#btnDeleteMode
+                                i.fas.fa-user-times.me-2.mr-2
+                                | Xóa tài khoản
+
+                // Main form card
                 .card.shadow
-                    .card-header.bg-danger.text-white
+                    .card-header#cardHeader.bg-danger.text-white
                         h4.mb-0.text-center
-                            i.fas.fa-user-times.me-2.mr-2
-                            | Xóa Tài Khoản Đăng Nhập
+                            i#headerIcon.fas.fa-user-times.me-2.mr-2
+                            span#headerTitle Xóa Tài Khoản Đăng Nhập
 
                     .card-body
+                        // Form tạo tài khoản
+                        form#createLoginForm.d-none(method="POST" action=`${prefixAdmin}/auth/createLogin`)
+                            // Chọn loại tài khoản
+                            .mb-4
+                                label.form-label.fw-bold Chọn loại tài khoản:
+                                .d-flex.gap-4
+                                    .form-check
+                                        input.form-check-input#createRadioLibrarian(type="radio" name="userType" value="librarian" checked)
+                                        label.form-check-label.mr-2(for="createRadioLibrarian")
+                                            i.fas.fa-user-tie.me-2
+                                            | Thủ thư
+                                    .form-check
+                                        input.form-check-input#createRadioReader(type="radio" name="userType" value="reader")
+                                        label.form-check-label.mr-2(for="createRadioReader")
+                                            i.fas.fa-user-graduate.me-2
+                                            | Độc giả
+
+                            // Dropdown mã người dùng
+                            .mb-4
+                                label.form-label(for="createUserSelect") 
+                                    span#createUserTypeLabel Mã thủ thư:
+                                    span.text-danger *
+                                div 
+                                    select.form-control#createUserSelect(name="userId" required)
+                                        option(value="" disabled selected) -- Chọn mã --
+                                .invalid-feedback
+                                    | Vui lòng chọn mã người dùng
+
+                            // Thông tin tài khoản
+                            .mb-4
+                                label.form-label(for="password") 
+                                    | Mật khẩu:
+                                    span.text-danger *
+                                input.form-control#password(type="password" name="password" required placeholder="Nhập mật khẩu")
+                                .invalid-feedback
+                                    | Vui lòng nhập mật khẩu
+
+                            .mb-4
+                                label.form-label(for="confirmPassword") 
+                                    | Xác nhận mật khẩu:
+                                    span.text-danger *
+                                input.form-control#confirmPassword(type="password" name="confirmPassword" required placeholder="Nhập lại mật khẩu")
+                                .invalid-feedback
+                                    | Mật khẩu xác nhận không khớp
+
+                            // Nút hành động
+                            .d-grid.gap-2.d-md-flex.justify-content-md-end
+                                button.btn.btn-secondary.ml-2(type="button" onclick="window.history.back()")
+                                    i.fas.fa-arrow-left.me-2
+                                    | Quay lại
+                                button.btn.btn-success.ml-2(type="submit")
+                                    i.fas.fa-user-plus.me-2.mr-2
+                                    | Tạo Login
+
+                        // Form xóa tài khoản
                         form#deleteLoginForm(method="POST" action=`${prefixAdmin}/auth/deleteLogin?_method=DELETE`)
                             // Chọn loại tài khoản
                             .mb-4
                                 label.form-label.fw-bold Chọn loại tài khoản:
                                 .d-flex.gap-4
                                     .form-check
-                                        input.form-check-input#radioLibrarian(type="radio" name="userType" value="librarian" checked)
-                                        label.form-check-label.mr-2(for="radioLibrarian")
+                                        input.form-check-input#deleteRadioLibrarian(type="radio" name="userType" value="librarian" checked)
+                                        label.form-check-label.mr-2(for="deleteRadioLibrarian")
                                             i.fas.fa-user-tie.me-2
                                             | Thủ thư
                                     .form-check
-                                        input.form-check-input#radioReader(type="radio" name="userType" value="reader")
-                                        label.form-check-label.mr-2(for="radioReader")
+                                        input.form-check-input#deleteRadioReader(type="radio" name="userType" value="reader")
+                                        label.form-check-label.mr-2(for="deleteRadioReader")
                                             i.fas.fa-user-graduate.me-2
                                             | Độc giả
 
                             // Dropdown mã người dùng
                             .mb-4
-                                label.form-label(for="userSelect") 
-                                    span#userTypeLabel Mã thủ thư:
+                                label.form-label(for="deleteUserSelect") 
+                                    span#deleteUserTypeLabel Mã thủ thư:
                                     span.text-danger *
                                 div 
-                                    select.form-control#userSelect(name="userId" required)
+                                    select.form-control#deleteUserSelect(name="userId" required)
                                         option(value="" disabled selected) -- Chọn mã --
                                 .invalid-feedback
                                     | Vui lòng chọn mã người dùng
@@ -52,8 +119,7 @@ block main
                                     | Quay lại
                                 button.btn.btn-danger.ml-2(type="submit")
                                     i.fas.fa-trash.me-2.mr-2
-                                    | Xóa đăng nhập
+                                    | Xóa Login
 
     script(src="/vendor/jquery/jquery.min.js")
     script(src="/js/adminjs/auth/deleteLogin.js")
-        

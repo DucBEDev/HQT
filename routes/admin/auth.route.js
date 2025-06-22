@@ -10,7 +10,8 @@ router.get('/logout', controller.logout);
 router.get('/changePass', controller.changePassword);
 router.post('/changePass', controller.changePasswordPost);
 
-router.get('/deleteLogin', controller.deleteLoginView);
+router.get('/formLogin', controller.formLoginView);
 router.delete('/deleteLogin', controller.deleteLogin);
+router.post('/createLogin', controller.createLogin);
 
 module.exports = router;
