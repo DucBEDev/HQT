@@ -73,9 +73,10 @@ const resetUserPool = async (sessionId) => {
     try {
         await userPool.connect();
         userPools.set(sessionId, userPool);
+        return true
     } catch (err) {
         console.error('Error recreating user pool:', err);
-        throw err;
+        return false;
     }
 };
 

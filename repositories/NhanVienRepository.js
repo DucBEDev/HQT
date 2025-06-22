@@ -18,6 +18,8 @@ class NhanVienRepository {
             ));
         } catch (err) {
             console.error('Error in getAll NhanVien:', err);
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+                
             throw err;
         }
     }

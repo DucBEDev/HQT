@@ -12,7 +12,7 @@ module.exports.index = async (req, res) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
-    const list = await NhanVienRepository.getAll(pool);
+    const list = await NhanVienRepository.getAll(await pool.connect());
     const empId = req.session.empId;
 
     res.render('admin/pages/nhanvien/index', {
@@ -21,6 +21,8 @@ module.exports.index = async (req, res) => {
         isEmptyStack: isEmpty(),
         empId: empId
     });
+
+    
 };
 
 // [DELETE] /staff/delete/:maNV
@@ -207,6 +209,7 @@ module.exports.undo = async (req, res) => {
                 { name: 'DIENTHOAI', type: sql.NVarChar, value: data.dienThoai },
                 { name: 'EMAIL', type: sql.NVarChar, value: data.email },
                 { name: 'PASS', type: sql.NVarChar, value: "1111" }, // Mật khẩu mặc định
+                { name: 'MANVCU', type: sql.BigInt, value: oldMaNV } // Mã nhân viên cũ để khôi phục
 
             ];
             const result = await executeStoredProcedure(pool, 'sp_TaoTaiKhoanMoi', params);

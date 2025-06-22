@@ -251,8 +251,17 @@ module.exports.restoreQLTV = async (req, res) => {
         `;
         await pool.request().query(multiUserQuery);
 
+        await executeStoredProcedure(pool, 'QLTV.dbo.sp_TaoLoginChoTatCaUserChuaCoLogin', []);
+        await executeStoredProcedure(pool, 'sp_XoaLoginMoCoi', []);
+
         console.log(pool)
-        await resetUserPool(req.session.id); // Reset the user pool after restore
+        const result =await resetUserPool(req.session.id); // Reset the user pool after restore
+        if(result ==false)
+        {
+            console.error('Error resetting user pool after restore');
+            req.flash('error', 'Lỗi khi khôi phục người dùng: Không thể thiết lập lại kết nối.');
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
 
         // Check the result and send appropriate response
             req.flash('success', 'Restore thành công');
@@ -282,7 +291,13 @@ module.exports.restoreQLTV = async (req, res) => {
             console.error('Error reverting to MULTI_USER:', revertErr);
         }
         console.log(pool)
-        await resetUserPool(req.session.id); // Reset the user pool after restore      
+        const result =await resetUserPool(req.session.id); // Reset the user pool after restore
+        if(result ==false)
+        {
+            console.error('Error resetting user pool after restore');
+            req.flash('error', 'Lỗi khi khôi phục người dùng: Không thể thiết lập lại kết nối.');
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }      
         // Return error response
         console.error('Error restoring QLTV:', err);
         req.flash('error', 'Restore thất bại: ' + err.message);
@@ -389,11 +404,20 @@ module.exports.restoreQLTVToPointInTime = async (req, res) => {
        
         ];
         console.log('Executing stored procedure with params:', params)
+
+        await executeStoredProcedure(pool, 'QLTV.dbo.sp_TaoLoginChoTatCaUserChuaCoLogin', []);
+        await executeStoredProcedure(pool, 'sp_XoaLoginMoCoi', []);
         // Execute the stored procedure
         await executeStoredProcedure(pool, 'QLTV.dbo.sp_BackupFullQLTVMoi', params);
 
         console.log('Pool after restore:', pool);
-        await resetUserPool(req.session.id); // Reset the user pool after restore
+        const result =await resetUserPool(req.session.id); // Reset the user pool after restore
+        if(result ==false)
+        {
+            console.error('Error resetting user pool after restore');
+            req.flash('error', 'Lỗi khi khôi phục người dùng: Không thể thiết lập lại kết nối.');
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
 
         // Success response
         req.flash('success', 'Khôi phục đến thời điểm thành công!');
@@ -456,7 +480,13 @@ module.exports.restoreQLTVToPointInTime = async (req, res) => {
         }
 
         console.log('Pool after error:', pool);
-        await resetUserPool(req.session.id); // Reset the user pool after error
+        const result =await resetUserPool(req.session.id); // Reset the user pool after restore
+        if(result ==false)
+        {
+            console.error('Error resetting user pool after restore');
+            req.flash('error', 'Lỗi khi khôi phục người dùng: Không thể thiết lập lại kết nối.');
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+        }
 
         // Error response
         console.error('Error restoring QLTV to point in time:', err);

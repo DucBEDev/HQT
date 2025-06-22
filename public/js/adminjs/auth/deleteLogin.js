@@ -1,7 +1,10 @@
 $(document).ready(function () {
     const empList = JSON.parse(document.querySelector('#empList').getAttribute('data-emp'));
     const dgList = JSON.parse(document.querySelector('#dgList').getAttribute('data-dg'));
-    
+    const empCreateList = JSON.parse(document.querySelector('#empCreateList').getAttribute('data-create-emp'));
+    const dgCreateList = JSON.parse(document.querySelector('#dgCreateList').getAttribute('data-create-dg'));
+    const empId = document.querySelector('#empId').getAttribute('data-empId');
+
     let currentMode = 'delete'; // Mặc định là chế độ xóa
 
     // Chuyển đổi chế độ
@@ -47,10 +50,28 @@ $(document).ready(function () {
         $select.empty();
         $select.append('<option value="" disabled selected>-- Chọn mã --</option>');
 
-        if (userType === 'librarian') {
+        if(mode === 'create') 
+        {
+            if (userType === 'librarian') {
+            $label.text('Mã thủ thư:');
+            empCreateList.forEach(emp => {
+                $select.append(`<option value="${emp.maNV}">${emp.maNV} - ${emp.hoNV + " " + emp.tenNV}</option>`);
+            });
+        } else {
+            $label.text('Mã độc giả:');
+            dgCreateList.forEach(dg => {
+                $select.append(`<option value="${dg.maDG}">${dg.maDG} - ${dg.hoDG + " " + dg.tenDG}</option>`);
+            });
+        }
+        }
+        else
+        {
+            if (userType === 'librarian') {
             $label.text('Mã thủ thư:');
             empList.forEach(emp => {
-                $select.append(`<option value="${emp.MANV}">${emp.MANV} - ${emp.HONV + " " + emp.TENNV}</option>`);
+                console.log(empId == emp.MANV);
+                const disabledAttr = empId == emp.MANV ? 'disabled' : '';
+                $select.append(`<option ${disabledAttr} value="${emp.MANV}">${emp.MANV} - ${emp.HONV + " " + emp.TENNV}</option>`);
             });
         } else {
             $label.text('Mã độc giả:');
@@ -58,6 +79,9 @@ $(document).ready(function () {
                 $select.append(`<option value="${dg.MADG}">${dg.MADG} - ${dg.HODG + " " + dg.TENDG}</option>`);
             });
         }
+        }
+
+        
     }
 
     // Event handlers cho nút chuyển chế độ

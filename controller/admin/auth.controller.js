@@ -16,6 +16,7 @@ module.exports.logIn = async (req, res) => {
 
     try {
         const role = await NhanVienRepository.getRoleByUsername(defaultPool, username);
+        console.log(role)
 
         if (!role || role.length === 0 || role[0] !== "THUTHU") {
             return res.render('admin/pages/auth/login', {
@@ -108,25 +109,40 @@ module.exports.formLoginView = async (req, res) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
+    
+    const empId = req.session.empId || null;
 
     const empList = await NhanVienRepository.getEmployeeLogins(pool);
     const dgList = await DocGiaRepository.getReaderLogins(pool);
+    const empCreateList = await NhanVienRepository.getAll(pool);
+    const dgCreateList = await DocGiaRepository.getAll(pool);
 
     res.render('admin/pages/auth/deleteLogin', {
         empList: empList,
-        dgList: dgList
+        dgList: dgList,
+        empCreateList: empCreateList,
+        dgCreateList: dgCreateList,
+        empId: empId,
     })
 };
 
 // [DELETE] /auth/deleteLogin
 module.exports.deleteLogin = async (req, res) => {
+
     const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
     try {
+        const empId = req.session.empId || null;
         const { userType, userId } = req.body;
+        if(empId == userId) 
+        {
+            req.flash("error", "Không thể xóa tài khoản đăng nhập của chính mình!");
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/formLogin`);
+        }
+        
         let newUserId = ((userType == 'librarian') ? 'NV' : 'DG') + userId;
 
         const userTypeTest = (userType == 'librarian') ? 'NHANVIEN_LOGIN' : 'DOCGIA_LOGIN';
@@ -140,10 +156,10 @@ module.exports.deleteLogin = async (req, res) => {
         await executeStoredProcedure(pool, 'sp_XoaTaiKhoanMoi', params);
 
         req.flash('success', "Xoá login thành công!");
-        res.redirect(`${systemConfig.prefixAdmin}/auth/deleteLogin`);
+        res.redirect(`${systemConfig.prefixAdmin}/auth/formLogin`);
     } catch (error) {
         req.flash("error", "Xóa login thất bại!");
-        res.redirect(`${systemConfig.prefixAdmin}/auth/deleteLogin`);
+        res.redirect(`${systemConfig.prefixAdmin}/auth/formLogin`);
     }
     
 };
@@ -160,17 +176,28 @@ module.exports.createLogin = async (req, res) => {
         const loginName = ((userType == 'librarian') ? "NV" : "DG") + userId;
         console.log(loginName)
 
-        // const params = [
-        //     { name: 'ID', type: sql.BigInt, value: userId },
-        //     { name: 'USER_TYPE', type: sql.NVarChar, value: userTypeTest }
-        // ];
+        const userTypeTest = (userType == 'librarian') ? 'NHANVIEN_LOGIN' : 'DOCGIA_LOGIN';
 
-        // await executeStoredProcedure(pool, 'sp_XoaTaiKhoanMoi', params);
+
+        if (password !== confirmPassword) {
+            req.flash("error", "Mật khẩu mới và xác nhận mật khẩu không khớp!");
+            return res.redirect(`${systemConfig.prefixAdmin}/auth/formLogin`);
+        }
+
+        const params = [
+            { name: 'ID', type: sql.BigInt, value: userId },
+            { name: 'USER_TYPE', type: sql.NVarChar, value: userTypeTest },
+            { name: 'PASS', type: sql.NVarChar, value: password }
+
+        ];
+
+        await executeStoredProcedure(pool, 'sp_TaoTaiKhoanMoi', params);
 
         req.flash("success", "Tạo login thành công!");
         res.redirect(`${systemConfig.prefixAdmin}/auth/formLogin`);
         
     } catch (error) {
+        console.error(error);
         req.flash("error", "Tạo login thất bại!");
         res.redirect("back");
     }
