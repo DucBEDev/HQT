@@ -88,15 +88,16 @@ block main
                                 input.form-control(type="text" id="maDG" name="maDG" required hidden)
                                 .reader-search-dropdown#readerSearchDropdown(style="display: none;")
                                     each docGia in docGiaList
-                                        .reader-search-item(
-                                            data-ma-dg=`${docGia.maDG}`
-                                            data-ho-dg=`${docGia.hoDG}`
-                                            data-ten-dg=`${docGia.tenDG}`
-                                            data-email=`${docGia.emailDG}`
-                                            data-sdt=`${docGia.dienThoai}`)
-                                                .reader-info
-                                                    .reader-name #{docGia.maDG} - #{docGia.hoDG} #{docGia.tenDG}
-                                                    .reader-contact #{docGia.emailDG} | SĐT #{docGia.dienThoai}
+                                        if (docGia.hoatDong == true)
+                                            .reader-search-item(
+                                                data-ma-dg=`${docGia.maDG}`
+                                                data-ho-dg=`${docGia.hoDG}`
+                                                data-ten-dg=`${docGia.tenDG}`
+                                                data-email=`${docGia.emailDG}`
+                                                data-sdt=`${docGia.dienThoai}`)
+                                                    .reader-info
+                                                        .reader-name #{docGia.maDG} - #{docGia.hoDG} #{docGia.tenDG}
+                                                        .reader-contact #{docGia.emailDG} | SĐT #{docGia.dienThoai}
                             .form-group
                                 label(for="hinhThuc") Hình thức mượn <span class="required-text">*</span>
                                 select.form-control(id="hinhThuc" name="hinhThuc" required)

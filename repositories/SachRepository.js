@@ -75,11 +75,11 @@ class SachRepository {
     }
 
 
-    static async checkExist(pool, sach) {
+    static async checkExist(pool, maSach) {
         try {
             await pool.connect();
             const request = pool.request();
-            request.input('MASACH', sql.NChar(20), sach.MASACH);
+            request.input('MASACH', sql.NChar(20), maSach);
 
             const result = await request.query(`
                 SELECT COUNT(*) AS count
