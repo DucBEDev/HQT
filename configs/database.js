@@ -190,6 +190,7 @@ module.exports = {
     defaultPool,
     defaultPoolConnect,
     getUserPool,
+    closeUserPool,
     createUserConnection,
     executeStoredProcedure,
     executeStoredProcedureAndReturnCode,

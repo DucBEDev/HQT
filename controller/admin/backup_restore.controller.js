@@ -134,14 +134,14 @@ module.exports.restore = async (req, res) => {
             res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
         } else {
             req.flash('error', 'Restore không thành công');
-            res.redirect(`${systemConfig.prefixAdmin}/backup_restore`);
+            res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
         }
     }
     catch (error)
     {
         console.error('Error during backup:', error);
         req.flash('error', 'Lỗi trong khi restore');
-        res.redirect(`${systemConfig.prefixAdmin}/backup_restore`);
+        res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
     }
     
 };
@@ -180,14 +180,14 @@ module.exports.restoreToPointInTime = async (req, res) => {
             res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
         } else {
             req.flash('error', 'Restore không thành công');
-            res.redirect(`${systemConfig.prefixAdmin}/backup_restore`);
+            res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
         }
     }
     catch (error)
     {
         console.error('Error during backup:', error);
         req.flash('error', 'Lỗi trong khi restore');
-        res.redirect(`${systemConfig.prefixAdmin}/backup_restore`);
+        res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
     }
     
 };

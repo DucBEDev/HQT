@@ -64,20 +64,20 @@ module.exports.createPost = async (req, res) => {
 
         const authorList = req.body;
 
-        let duplicateAuthors = [];
-        for (const author of authorList) {
-            if(TacGiaRepository.checkExist(pool, author)) {
-                duplicateAuthors.push(author);
-            }
-        }
+        // let duplicateAuthors = [];
+        // for (const author of authorList) {
+        //     if(TacGiaRepository.checkExist(pool, author)) {
+        //         duplicateAuthors.push(author);
+        //     }
+        // }
 
-        if (duplicateAuthors.length > 0) {
-            return res.status(400).json({
-                success: false, 
-                message: 'Các tác giả sau có sô điện thoại trùng với số điện thoại khác của tác giả đã có trong database: ' + duplicateAuthors.map(a => a.hoTenTG).join(', ')
+        // if (duplicateAuthors.length > 0) {
+        //     return res.status(400).json({
+        //         success: false, 
+        //         message: 'Các tác giả sau có sô điện thoại trùng với số điện thoại khác của tác giả đã có trong database: ' + duplicateAuthors.map(a => a.hoTenTG).join(', ')
                 
-            });
-        }
+        //     });
+        // }
 
         const savedAuthors = [];
         for (const author of authorList) {
@@ -89,7 +89,7 @@ module.exports.createPost = async (req, res) => {
                 { name: 'DIACHITG', type: sql.NVarChar, value: cleanDiaChiTG },
                 { name: 'DIENTHOAITG', type: sql.NVarChar, value: author.dienThoaiTG }
             ];
-            const result = await executeStoredProcedure(pool, 'sp_ThemTacGia', params);
+            const result = await executeStoredProcedure(pool, 'sp_ThemTacGiaMoi', params);
             const maTacGia = result.recordset && result.recordset[0] ? result.recordset[0].MATACGIA : null;
             savedAuthors.push({
                 maTacGia: maTacGia, 
@@ -194,9 +194,11 @@ module.exports.undo = async (req, res) => {
             const params = [
                 { name: 'HOTENTG', type: sql.NVarChar, value: data.hoTenTG },
                 { name: 'DIACHITG', type: sql.NVarChar, value: data.diaChiTG },
-                { name: 'DIENTHOAITG', type: sql.NVarChar, value: data.dienThoaiTG }
+                { name: 'DIENTHOAITG', type: sql.NVarChar, value: data.dienThoaiTG },
+                { name: 'MATACGIACU', type: sql.Int, value: data.maTacGia },
+
             ];
-            const result = await executeStoredProcedure(pool, 'sp_ThemTacGia', params);
+            const result = await executeStoredProcedure(pool, 'sp_ThemTacGiaMoi', params);
             const newMaTacGia = result.recordset && result.recordset[0] ? result.recordset[0].MATACGIA : null;
 
             updateAfterDeleteUndo(oldMaTacGia, newMaTacGia);

@@ -65,20 +65,20 @@ module.exports.createPost = async (req, res) => {
         const staffList = req.body;
         console.log(staffList)
 
-        let duplicateStaffs = [];
-        for (const staff of staffList) {
-            if(NhanVienRepository.checkExist(pool, staff)=== true) {
-                duplicateStaffs.push(staff);
-            }
-        }
+        // let duplicateStaffs = [];
+        // for (const staff of staffList) {
+        //     if(NhanVienRepository.checkExist(pool, staff)=== true) {
+        //         duplicateStaffs.push(staff);
+        //     }
+        // }
 
-        if (duplicateStaffs.length > 0) {
-            return res.status(400).json({
-                success: false, 
-                message: 'Các nhân viên sau có sô điện thoại hoặc email trùng với số điện thoại hoặc email khác của nhân viên đã có trong database: ' + duplicateStaffs.map(a => a.hoNV + " " + a.tenNV).join(', ')
+        // if (duplicateStaffs.length > 0) {
+        //     return res.status(400).json({
+        //         success: false, 
+        //         message: 'Các nhân viên sau có sô điện thoại hoặc email trùng với số điện thoại hoặc email khác của nhân viên đã có trong database: ' + duplicateStaffs.map(a => a.hoNV + " " + a.tenNV).join(', ')
                 
-            });
-        }
+        //     });
+        // }
 
         const savedStaff = [];
         for (const staff of staffList) {
@@ -221,7 +221,9 @@ module.exports.undo = async (req, res) => {
                 { name: 'DIACHI', type: sql.NVarChar, value: data.diaChi },
                 { name: 'DIENTHOAI', type: sql.NVarChar, value: data.dienThoai },
                 { name: 'EMAIL', type: sql.NVarChar, value: data.email },
-                { name: 'PASS', type: sql.NVarChar, value: "1111" } // Mật khẩu mặc định
+                { name: 'PASS', type: sql.NVarChar, value: "1111" }, // Mật khẩu mặc định
+                { name: 'MANVCU', type: sql.BigInt, value: data.maNV } // Mật khẩu mặc định
+
             ];
             const result = await executeStoredProcedure(pool, 'sp_TaoTaiKhoanMoi', params);
             const newMaNV = result.recordset && result.recordset[0] ? result.recordset[0].ID : null;

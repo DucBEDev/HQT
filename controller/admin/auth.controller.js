@@ -1,4 +1,4 @@
-const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, createUserConnection, defaultPool, getUserPool} = require('../../configs/database');
+const { sql, executeStoredProcedure, executeStoredProcedureWithTransaction, createUserConnection, defaultPool, getUserPool, closeUserPool} = require('../../configs/database');
 
 const NhanVienRepository = require('../../repositories/NhanVienRepository');
 const DocGiaRepository = require('../../repositories/DocGiaRepository');
@@ -46,6 +46,7 @@ module.exports.logIn = async (req, res) => {
 
 // [GET] /auth/logout
 module.exports.logout = async (req, res) => {
+    closeUserPool(req.session.id)
     req.session.destroy();
     res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
 };

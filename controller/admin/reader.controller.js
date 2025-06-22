@@ -298,7 +298,9 @@ module.exports.undo = async (req, res) => {
                 { name: 'NGAYLAMTHE', type: sql.DateTime, value: data.ngayLamThe },
                 { name: 'NGAYHETHAN', type: sql.DateTime, value: data.ngayHetHan },
                 { name: 'HOATDONG', type: sql.Bit, value: data.hoatDong },
-                { name: 'PASS', type: sql.NVarChar, value: "1111" }
+                { name: 'PASS', type: sql.NVarChar, value: "1111" },
+                { name: 'MADGCU', type: sql.BigInt, value: data.maDG } // Mật khẩu mặc định
+
             ];
             const result = await executeStoredProcedure(pool, 'sp_TaoTaiKhoanMoi', params);
             const newMaDG = result.recordset && result.recordset[0] ? result.recordset[0].ID : null;
