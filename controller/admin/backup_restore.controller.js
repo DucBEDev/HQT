@@ -114,7 +114,6 @@ module.exports.restore = async (req, res) => {
 
     try
     {
-
         const params = [
         { name: 'BackupPosition', type: sql.Int, value: req.body.backupId },
        
@@ -191,6 +190,284 @@ module.exports.restoreToPointInTime = async (req, res) => {
     }
     
 };
+
+
+
+
+
+
+module.exports.restoreQLTV = async (req, res) => {
+    console.log('Restore request received');
+    const pool = getUserPool(req.session.id);
+    console.log(req.body)
+
+    try {
+        // Get backup position from request (e.g., body or query parameter)
+        const backupPosition = parseInt(req.body.backupId);
+        if (isNaN(backupPosition) || backupPosition < 1) {
+            return res.status(400).json({ success: false, error: 'Vị trí bản backup không hợp lệ.' });
+        }       
+
+        // Step 1: Validate backup position
+        const validateQuery = `
+            SELECT 1
+            FROM msdb.dbo.backupset bs
+            INNER JOIN msdb.dbo.backupmediafamily bmf 
+                ON bs.media_set_id = bmf.media_set_id
+            WHERE bs.database_name = 'QLTV'
+                AND bs.type = 'D' -- Full backup only
+                AND bs.position = @backupPosition
+        `;
+        const validateRequest = pool.request();
+        validateRequest.input('backupPosition', sql.Int, backupPosition);
+        const validateResult = await validateRequest.query(validateQuery);
+
+        if (validateResult.recordset.length === 0) {
+            throw new Error('Vị trí bản backup không hợp lệ hoặc không tồn tại cho cơ sở dữ liệu QLTV.');
+        }
+
+        // Step 2: Set QLTV database to SINGLE_USER mode
+        const singleUserQuery = `
+            USE master;
+            ALTER DATABASE [QLTV] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+        `;
+        await pool.request().query(singleUserQuery);
+
+        // Step 3: Restore database from DEVICE_QLTV
+        const restoreQuery = `
+            USE master;
+            RESTORE DATABASE [QLTV] 
+            FROM DEVICE_QLTV 
+            WITH FILE = @backupPosition, REPLACE, RECOVERY;
+        `;
+        const restoreRequest = pool.request();
+        restoreRequest.input('backupPosition', sql.Int, backupPosition);
+        await restoreRequest.query(restoreQuery);
+
+        // Step 4: Set QLTV database back to MULTI_USER mode
+        const multiUserQuery = `
+            USE master;
+            ALTER DATABASE [QLTV] SET MULTI_USER;
+        `;
+        await pool.request().query(multiUserQuery);
+
+        console.log(pool)
+        await resetUserPool(req.session.id); // Reset the user pool after restore
+
+        // Check the result and send appropriate response
+            req.flash('success', 'Restore thành công');
+            return res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
+
+
+    } catch (err) {
+        // Error handling: Revert to MULTI_USER mode if database is stuck in SINGLE_USER
+        try {
+            if (pool) {
+                const checkModeQuery = `
+                    SELECT 1 
+                    FROM sys.databases 
+                    WHERE name = 'QLTV' AND user_access_desc = 'SINGLE_USER';
+                `;
+                const checkResult = await pool.request().query(checkModeQuery);
+
+                if (checkResult.recordset.length > 0) {
+                    const revertQuery = `
+                        USE master;
+                        ALTER DATABASE [QLTV] SET MULTI_USER;
+                    `;
+                    await pool.request().query(revertQuery);
+                }
+            }
+        } catch (revertErr) {
+            console.error('Error reverting to MULTI_USER:', revertErr);
+        }
+        console.log(pool)
+        await resetUserPool(req.session.id); // Reset the user pool after restore      
+        // Return error response
+        console.error('Error restoring QLTV:', err);
+        req.flash('error', 'Restore thất bại: ' + err.message);
+         return res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
+    } 
+};
+
+
+
+module.exports.restoreQLTVToPointInTime = async (req, res) => {
+    console.log('Restore request received');
+    const pool = getUserPool(req.session.id);
+    console.log(req.body)
+    if (!pool) {
+        req.flash('error', 'Chưa đăng nhập hoặc phiên hết hạn.');
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+    try {
+        // Get restore time from request (e.g., body)
+        const restoreTime = req.body.formattedDatetimeRestore;
+        console.log('Received restore time:', restoreTime);
+
+        if (!restoreTime) {
+            return res.status(400).json({ success: false, error: 'Thời điểm khôi phục không hợp lệ.' });
+        }
+
+        // Step 1: Find the latest full backup before restoreTime
+        const findBackupQuery = `
+            SELECT TOP 1 Position
+            FROM msdb.dbo.backupset
+            WHERE database_name = 'QLTV'
+                AND type = 'D'
+                AND backup_finish_date <= @restoreTime
+            ORDER BY backup_finish_date DESC;
+        `;
+        const findBackupRequest = pool.request();
+        findBackupRequest.input('restoreTime', sql.NVarChar, restoreTime);
+        const findBackupResult = await findBackupRequest.query(findBackupQuery);
+
+        if (!findBackupResult.recordset.length) {
+            throw new Error('Không tìm thấy bản sao lưu đầy đủ trước thời điểm khôi phục.');
+        }
+        const latestFullBackupPosition = findBackupResult.recordset[0].Position;
+
+        // Step 2: Backup transaction log
+        console.log('Backing up transaction log...');
+        const backupLogQuery = `
+            BACKUP LOG QLTV
+            TO DEVICE_QLTV_LOG
+            WITH INIT, NO_TRUNCATE;
+        `;
+        await pool.request().query(backupLogQuery);
+        console.log('Transaction log backed up successfully.');       
+
+        // Step 4: Set database to SINGLE_USER
+        console.log('Setting database SINGLE_USER...');
+        const singleUserQuery = `
+            USE master;
+            ALTER DATABASE QLTV SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+        `;
+        await pool.request().query(singleUserQuery);
+
+        // Step 5: Restore full backup with NORECOVERY
+        console.log('Restoring full backup...');
+        const restoreFullQuery = `
+            USE master;
+            RESTORE DATABASE QLTV
+            FROM DEVICE_QLTV
+            WITH 
+                FILE = @backupPosition,
+                NORECOVERY,
+                REPLACE;
+        `;
+        const restoreFullRequest = pool.request();
+        restoreFullRequest.input('backupPosition', sql.Int, latestFullBackupPosition);
+        await restoreFullRequest.query(restoreFullQuery);
+
+        // Step 6: Restore transaction log to restoreTime with RECOVERY
+        console.log('Restoring transaction log to point in time...');
+        const restoreLogQuery = `
+            USE master;
+            RESTORE LOG QLTV
+            FROM DEVICE_QLTV_LOG
+            WITH 
+                STOPAT = @restoreTime,
+                RECOVERY;
+        `;
+        const restoreLogRequest = pool.request();
+        restoreLogRequest.input('restoreTime', sql.NVarChar, restoreTime);
+        await restoreLogRequest.query(restoreLogQuery);
+
+        // Step 7: Set database to MULTI_USER and ONLINE
+        console.log('Setting database MULTI_USER and ONLINE...');
+        const multiUserQuery = `
+            USE master;
+            ALTER DATABASE QLTV SET MULTI_USER;
+            ALTER DATABASE QLTV SET ONLINE;
+        `;
+        await pool.request().query(multiUserQuery);
+
+        const params = [
+        { name: 'Replace', type: sql.Bit, value: 1 },
+       
+        ];
+        console.log('Executing stored procedure with params:', params)
+        // Execute the stored procedure
+        await executeStoredProcedure(pool, 'QLTV.dbo.sp_BackupFullQLTVMoi', params);
+
+        console.log('Pool after restore:', pool);
+        await resetUserPool(req.session.id); // Reset the user pool after restore
+
+        // Success response
+        req.flash('success', 'Khôi phục đến thời điểm thành công!');
+        return res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
+
+    } catch (err) {
+        // Error handling: Restore stable state
+        try {
+            if (pool) {
+                // Check if database is in RESTORING state
+                const checkRestoringQuery = `
+                    SELECT 1 
+                    FROM sys.databases 
+                    WHERE name = 'QLTV' AND state_desc = 'RESTORING';
+                `;
+                const checkRestoringResult = await pool.request().query(checkRestoringQuery);
+                if (checkRestoringResult.recordset.length > 0) {
+                    console.log('Completing RESTORING state...');
+                    const recoverQuery = `
+                        USE master;
+                        RESTORE DATABASE QLTV WITH RECOVERY;
+                    `;
+                    await pool.request().query(recoverQuery);
+                }
+
+                // Check if database is OFFLINE
+                const checkOfflineQuery = `
+                    SELECT 1 
+                    FROM sys.databases 
+                    WHERE name = 'QLTV' AND state_desc = 'OFFLINE';
+                `;
+                const checkOfflineResult = await pool.request().query(checkOfflineQuery);
+                if (checkOfflineResult.recordset.length > 0) {
+                    console.log('Setting database ONLINE...');
+                    const onlineQuery = `
+                        USE master;
+                        ALTER DATABASE QLTV SET ONLINE;
+                    `;
+                    await pool.request().query(onlineQuery);
+                }
+
+                // Check if database is in SINGLE_USER mode
+                const checkSingleUserQuery = `
+                    SELECT 1 
+                    FROM sys.databases 
+                    WHERE name = 'QLTV' AND user_access_desc = 'SINGLE_USER';
+                `;
+                const checkSingleUserResult = await pool.request().query(checkSingleUserQuery);
+                if (checkSingleUserResult.recordset.length > 0) {
+                    console.log('Setting database MULTI_USER...');
+                    const multiUserQuery = `
+                        USE master;
+                        ALTER DATABASE QLTV SET MULTI_USER;
+                    `;
+                    await pool.request().query(multiUserQuery);
+                }
+            }
+        } catch (revertErr) {
+            console.error('Error reverting database state:', revertErr);
+        }
+
+        console.log('Pool after error:', pool);
+        await resetUserPool(req.session.id); // Reset the user pool after error
+
+        // Error response
+        console.error('Error restoring QLTV to point in time:', err);
+        req.flash('error', 'Khôi phục đến thời điểm thất bại: ' + err.message);
+        return res.redirect(`${systemConfig.prefixAdmin}/backup-restore`);
+    }
+};
+
+
+
+
 
 
 
