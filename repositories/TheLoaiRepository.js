@@ -42,7 +42,7 @@ class TheLoaiRepository {
         try {
             await pool.connect();
             const request = pool.request();
-            request.input('MATL', sql.NChar(10), theLoai.MATL);
+            request.input('MATL', sql.NChar(10), theLoai.maTL);
 
             const result = await request.query(`
                 SELECT COUNT(*) AS count

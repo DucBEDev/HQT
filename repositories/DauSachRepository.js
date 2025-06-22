@@ -59,7 +59,7 @@ class DauSachRepository {
         try {
             await pool.connect();
             const request = pool.request();
-            request.input('ISBN', sql.NChar(15), dauSach.ISBN);
+            request.input('ISBN', sql.NChar(15), dauSach.isbn);
 
             const result = await request.query(`
                 SELECT COUNT(*) AS count
@@ -128,19 +128,19 @@ class DauSachRepository {
                 .query(`SELECT 
                             ds.ISBN AS isbn,
                             ds.TENSACH AS tenSach,
-                            tg.HOTENTG AS hoTenTG,
+                            STRING_AGG(tg.HOTENTG, ', ') AS hoTenTG,  -- Gộp nhiều tác giả
                             tl.TENTL AS tenTL,
-                            COUNT(pm.MAPHIEU) AS soLuongMuon
+                            COUNT(DISTINCT pm.MAPHIEU) AS soLuongMuon  
                         FROM PHIEUMUON pm
-                        LEFT JOIN CT_PHIEUMUON ctpm ON pm.MAPHIEU = ctpm.MAPHIEU
-                        LEFT JOIN SACH s ON s.MASACH = ctpm.MASACH
-                        LEFT JOIN DAUSACH ds ON ds.ISBN = s.ISBN
+                        INNER JOIN CT_PHIEUMUON ctpm ON pm.MAPHIEU = ctpm.MAPHIEU  
+                        INNER JOIN SACH s ON s.MASACH = ctpm.MASACH
+                        INNER JOIN DAUSACH ds ON ds.ISBN = s.ISBN
+                        LEFT JOIN THELOAI tl ON tl.MATL = ds.MATL
                         LEFT JOIN TACGIA_SACH ts ON ts.ISBN = ds.ISBN
                         LEFT JOIN TACGIA tg ON tg.MATACGIA = ts.MATACGIA
-                        LEFT JOIN THELOAI tl ON tl.MATL = ds.MATL
-                        WHERE pm.NGAYMUON BETWEEN @startDate AND @endDate
-                        GROUP BY ds.ISBN, ds.TENSACH, tg.HOTENTG, tl.TENTL
-                        ORDER BY COUNT(pm.MAPHIEU) DESC
+                        WHERE CAST(pm.NGAYMUON AS DATE) BETWEEN @startDate AND @endDate
+                        GROUP BY ds.ISBN, ds.TENSACH, tl.TENTL
+                        ORDER BY COUNT(DISTINCT pm.MAPHIEU) DESC
                         OFFSET 0 ROWS FETCH NEXT @quantity ROWS ONLY;`);
             return result.recordset
         } catch (err) {

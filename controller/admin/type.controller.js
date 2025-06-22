@@ -58,15 +58,18 @@ module.exports.create = async (req, res) => {
 
 // [POST] /type/create
 module.exports.createPost = async (req, res) => {
-    const typeList = req.body;
     const pool = getUserPool(req.session.id);
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
-    let duplicateTypes = [];
+    try {
+        const typeList = req.body;
+
+        let duplicateTypes = [];
         for (const type of typeList) {
-            if(TheLoaiRepository.checkExist(pool, type) ==true) {
+            if (await TheLoaiRepository.checkExist(pool, type)) {
+                console.log(type)
                 duplicateTypes.push(type);
             }
         }
@@ -75,22 +78,27 @@ module.exports.createPost = async (req, res) => {
             return res.status(400).json({
                 success: false, 
                 message: 'Các thể loại sau mã thể loại trùng với mã thể loại khác của thể loại đã có trong database: ' + duplicateTypes.map(a => a.maTL).join(', ')
-                
             });
         }
 
-    for (const type of typeList) {
-        const cleanTenTL = type.tenTL.trim().replace(/\s+/g, ' ');
+        for (const type of typeList) {
+            const cleanTenTL = type.tenTL.trim().replace(/\s+/g, ' ');
 
-        const params = [
-            { name: 'MATL', type: sql.NVarChar, value: type.maTL },
-            { name: 'TENTL', type: sql.NVarChar, value: cleanTenTL }
-        ];
-        await executeStoredProcedureWithTransaction(pool, 'sp_ThemTheLoai', params);
+            const params = [
+                { name: 'MATL', type: sql.NVarChar, value: type.maTL },
+                { name: 'TENTL', type: sql.NVarChar, value: cleanTenTL }
+            ];
+            await executeStoredProcedureWithTransaction(pool, 'sp_ThemTheLoai', params);
+        }
+        pushToUndoStack('create', typeList);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.log(error);
+        res.json({
+            success: false
+        })
     }
-    pushToUndoStack('create', typeList);
-
-    res.json({ success: true });
 }
 
 // [GET] /type/edit/:maTL
@@ -114,23 +122,27 @@ module.exports.editPost = async (req, res) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
-    console.log(req.body)
-    const type = req.body;
-    console.log("Type to edit: ", type);    
-    const oldType = await TheLoaiRepository.getById(pool, type.originalMaTL); // Lấy thể loại cũ để lưu vào undo stack
-    console.log("Old Type: ", oldType);
-    //const typeEdit = new TheLoai(type.maTL, type.tenTL)
-
-    const cleanTenTL = type.tenTL.trim().replace(/\s+/g, ' ');
-
-    const params = [
-        { name: 'MATLCU', type: sql.NVarChar, value: type.originalMaTL },
-        { name: 'MATLMOI', type: sql.NVarChar, value: type.maTL },
-        { name: 'TENTL', type: sql.NVarChar, value: cleanTenTL }
-    ];
 
     try {
-        console.log("Params to edit: ", params);
+        const type = req.body;
+
+        if (type.originalMaTL != type.maTL && await TheLoaiRepository.checkExist(pool, type)) {
+            return res.status(400).json({
+                success: false, 
+                message: 'Các thể loại sau mã thể loại trùng với mã thể loại khác của thể loại đã có trong database: ' + type.maTL
+            });
+        }
+
+        const oldType = await TheLoaiRepository.getById(pool, type.originalMaTL); 
+
+        const cleanTenTL = type.tenTL.trim().replace(/\s+/g, ' ');
+
+        const params = [
+            { name: 'MATLCU', type: sql.NVarChar, value: type.originalMaTL },
+            { name: 'MATLMOI', type: sql.NVarChar, value: type.maTL },
+            { name: 'TENTL', type: sql.NVarChar, value: cleanTenTL }
+        ];
+
         await executeStoredProcedureWithTransaction(pool,'sp_SuaTheLoai', params);
         pushToUndoStack('edit',  {maTLCu: oldType.maTL, maTLMoi: type.maTL, tenTLCu: oldType.tenTL} );
         
@@ -142,7 +154,6 @@ module.exports.editPost = async (req, res) => {
         res.status(500).send('Có lỗi xảy ra khi sửa thể loại!');
     }
 };
-
 
 module.exports.undo = async (req, res) => {
     const pool = getUserPool(req.session.id);
@@ -189,10 +200,8 @@ module.exports.undo = async (req, res) => {
     }
 };
 
-
 // [POST] /type/clear-undo
 module.exports.clearUndo = async (req, res) => {
-    //console.log("Clearing type undo stack ----------------------------------------------------------------------------------------------------------------------------------------------------------");
     try {
         clearUndoStack();
         res.json({ success: true });

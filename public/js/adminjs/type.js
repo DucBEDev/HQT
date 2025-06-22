@@ -76,6 +76,7 @@ document.getElementById('btnGhi').addEventListener('click', function() {
             alert('Ghi dữ liệu thành công!');
             window.location.href = `/Library/admin/type`;
         } else {
+            console.log(data.message)
             alert('Có lỗi xảy ra: ' + data.message);
         }
     })

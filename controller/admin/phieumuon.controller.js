@@ -43,24 +43,29 @@ module.exports.create = async (req, res) => {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
-    const empId = req.session.empId;
-    console.log("Employee ID:", empId);
-    const empData = await NhanVienRepository.getById(pool, empId);
-    
-    const sachList = await DauSachRepository.getAllWithQuantity(pool); 
-    sachList.sort((a, b) => a.TENSACH.localeCompare(b.TENSACH));
-    
-    const docGiaList = await DocGiaRepository.getAll(pool);
-    const maPhieu = await PhieuMuonRepository.getNextId(pool);
+    try {
+        const empId = req.session.empId;
+        const empData = await NhanVienRepository.getById(pool, empId);
+        
+        const sachList = await DauSachRepository.getAllWithQuantity(pool); 
+        sachList.sort((a, b) => a.TENSACH.localeCompare(b.TENSACH));
+        
+        const docGiaList = await DocGiaRepository.getAll(pool);
+        const maPhieu = await PhieuMuonRepository.getNextId(pool);
 
-    res.render('admin/pages/phieumuon/create', {
-        sachList, 
-        docGiaList,
-        pageTitle: 'Tạo Phiếu Mượn',
-        empName: `${empData.hoNV} ${empData.tenNV}`,
-        empId: empId,
-        maPhieu : maPhieu
-    });
+        res.render('admin/pages/phieumuon/create', {
+            sachList, 
+            docGiaList,
+            pageTitle: 'Tạo Phiếu Mượn',
+            empName: `${empData.hoNV} ${empData.tenNV}`,
+            empId: empId,
+            maPhieu : maPhieu
+        });
+    } catch (error) {
+        res.json({
+            success: false
+        })
+    }
 };
 
 // [POST] /phieumuon/create

@@ -63,22 +63,6 @@ module.exports.createPost = async (req, res) => {
         }
         
         const staffList = req.body;
-        console.log(staffList)
-
-        let duplicateStaffs = [];
-        for (const staff of staffList) {
-            if(NhanVienRepository.checkExist(pool, staff)=== true) {
-                duplicateStaffs.push(staff);
-            }
-        }
-
-        if (duplicateStaffs.length > 0) {
-            return res.status(400).json({
-                success: false, 
-                message: 'Các nhân viên sau có sô điện thoại hoặc email trùng với số điện thoại hoặc email khác của nhân viên đã có trong database: ' + duplicateStaffs.map(a => a.hoNV + " " + a.tenNV).join(', ')
-                
-            });
-        }
 
         const savedStaff = [];
         for (const staff of staffList) {
@@ -97,7 +81,6 @@ module.exports.createPost = async (req, res) => {
                 { name: 'PASS', type: sql.NVarChar, value: "1111" }
 
             ];
-            console.log(params)
             const result = await executeStoredProcedure(pool, 'sp_TaoTaiKhoanMoi', params);
             const maNV = result.recordset && result.recordset[0] ? result.recordset[0].ID : null;
             savedStaff.push({
@@ -252,7 +235,6 @@ module.exports.undo = async (req, res) => {
 
 // [POST] /staff/clear-undo
 module.exports.clearUndo = async (req, res) => {
-    console.log("Clearing staff undo stack ----------------------------------------------------------------------------------------------------------------------------------------------------------");
     try {
         clearUndoStack();
         res.json({ success: true });

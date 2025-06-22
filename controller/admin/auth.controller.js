@@ -130,16 +130,14 @@ module.exports.deleteLogin = async (req, res) => {
 
         const userTypeTest = (userType == 'librarian') ? 'NHANVIEN_LOGIN' : 'DOCGIA_LOGIN';
 
-        console.log(`Deleting login for user: ${newUserId}, type: ${userTypeTest}`);
 
         const params = [
             { name: 'ID', type: sql.BigInt, value: userId },
             { name: 'USER_TYPE', type: sql.NVarChar, value: userTypeTest }
 
         ];
-        console.log(params);
 
-        await executeStoredProcedure(pool, 'sp_XoaTaiKhoan', params);
+        await executeStoredProcedure(pool, 'sp_XoaTaiKhoanMoi', params);
 
         req.flash('success', "Xoá login thành công!");
         res.redirect(`${systemConfig.prefixAdmin}/auth/deleteLogin`);

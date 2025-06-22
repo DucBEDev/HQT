@@ -352,6 +352,14 @@ $(document).ready(function () {
                         
                         alert('Cập nhật sách thành công!');
                         updateSachTable();
+
+                        const undoBtn = $('#btnUndoTitleBook');
+                        if (data.isEmptyStack) {
+                            undoBtn.addClass("disabled-overlay");
+                        }
+                        else {
+                            undoBtn.removeClass("disabled-overlay");
+                        }
                     } else {
                         alert('Lỗi khi cập nhật sách: ' + data.message);
                         // Restore original state
@@ -420,6 +428,14 @@ $(document).ready(function () {
                         sachList = sachList.filter(s => s.maSach !== maSach);
                         alert('Xóa sách thành công!');
                         updateSachTable();
+
+                        const undoBtn = $('#btnUndoTitleBook');
+                        if (data.isEmptyStack) {
+                            undoBtn.addClass("disabled-overlay");
+                        }
+                        else {
+                            undoBtn.removeClass("disabled-overlay");
+                        }
                     } else {
                         alert('Lỗi khi xóa sách: ' + data.message);
                     }
@@ -469,6 +485,15 @@ $(document).ready(function () {
                 });
                 
                 updateSachTable();
+
+                const undoBtn = $('#btnUndoTitleBook');
+                console.log(undoBtn)
+                if (data.isEmptyStack) {
+                    undoBtn.addClass("disabled-overlay");
+                }
+                else {
+                    undoBtn.removeClass("disabled-overlay");
+                }
             } else {
                 alert('Có lỗi xảy ra: ' + data.message);
             }
@@ -775,7 +800,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const soTrangInput = document.getElementById('soTrang');
 
     window.restrictEmailInput(isbnInput, 15);
-    window.restrictNameInput(tenSachInput);
+    window.restrictSpecialCharInput(tenSachInput);
     window.restrictNameInput(nhaXBInput);
     restrictKhoSachInput(khoSachInput);
     window.restrictNumberInput(lanXuatBanInput);
