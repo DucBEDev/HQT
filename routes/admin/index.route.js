@@ -21,5 +21,5 @@ module.exports = (app) => {
     app.use(PATH_ADMIN + '/isbn_book', authMiddleware.auth, isbn_bookRoute);
     app.use(PATH_ADMIN + '/phieumuon', authMiddleware.auth, phieumuonRoute);
     app.use(PATH_ADMIN + '/auth', authRoute);
-    app.use(PATH_ADMIN + '/backup-restore', backupRestoreRoute);
+    app.use(PATH_ADMIN + '/backup-restore', authMiddleware.auth, backupRestoreRoute);
 }

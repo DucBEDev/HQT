@@ -193,7 +193,7 @@ module.exports.editPost = async (req, res) => {
         { name: 'TENNV', type: sql.NVarChar, value: cleanTenNV },
         { name: 'DIACHI', type: sql.NVarChar, value: cleanDiaChi },
         { name: 'DIENTHOAI', type: sql.NVarChar, value: dienThoai },
-        { name: 'GIOITINH', type: sql.Bit, value: gioiTinh === '1' },
+        { name: 'GIOITINH', type: sql.Bit, value: gioiTinh == '1' },
         { name: 'EMAIL', type: sql.NVarChar, value: email.trim() }
     ];
 

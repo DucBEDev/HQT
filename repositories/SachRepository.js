@@ -60,7 +60,7 @@ class SachRepository {
             await pool.connect();
             const result = await pool.request()
                 .input('isbn', sql.NVarChar, isbn)
-                .query('SELECT * FROM SACH WHERE ISBN = @isbn');    
+                .query('SELECT * FROM SACH WHERE ISBN = @isbn AND ISDELETED = 0');    
             return result.recordset.map(row => new Sach(
                 row.MASACH,
                 row.ISBN,

@@ -7,5 +7,14 @@ module.exports.auth = async (req, res, next) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
+    try {
+        console.log('Connecting to database...');
+        console.log(pool)
+        await pool.connect();
+        await pool.request().query('SELECT 1 AS Test');
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
     next();
 }

@@ -254,8 +254,8 @@ module.exports.write = async (req, res) => {
             const params = [
                 { name: 'MASACH', type: sql.NChar, value: cleanMaSach },
                 { name: 'ISBN', type: sql.NChar, value: cleanISBN },
-                { name: 'TINHTRANG', type: sql.Bit, value: sach.tinhTrang === 'true' || sach.tinhTrang === true },
-                { name: 'CHOMUON', type: sql.Bit, value: sach.choMuon === 'true' || sach.choMuon === false },
+                { name: 'TINHTRANG', type: sql.Bit, value: sach.tinhTrang },
+                { name: 'CHOMUON', type: sql.Bit, value: sach.choMuon },
                 { name: 'MANGANTU', type: sql.Int, value: sach.maNganTu || null }
             ];
 

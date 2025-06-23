@@ -126,7 +126,7 @@ function updateSachTable() {
 
         tr.innerHTML = `
             <td class="align-middle" name="maSach">${sach.maSach}</td>
-            <td class="align-middle" name="tinhTrang">${sach.tinhTrang ? 'Tốt' : 'Hỏng'}</td>
+            <td class="align-middle" name="tinhTrang">${sach.tinhTrang ? 'Còn cho mượn' : 'Đã thanh lý'}</td>
             <td class="align-middle" name="choMuon">${sach.choMuon ? 'Có' : 'Không'}</td>
             <td class="align-middle" name="maNganTu">${keDisplay}</td>
             <td class="align-middle">
@@ -280,13 +280,16 @@ $(document).ready(function () {
         row.html(`
             <td><input type="text" class="form-control" name="maSach" value="${maSach}"></td>
             <td><select class="form-control" name="tinhTrang">
-                <option value="true" ${tinhTrang ? 'selected' : ''}>Tốt</option>
-                <option value="false" ${!tinhTrang ? 'selected' : ''}>Hỏng</option>
+                <option value="true" ${tinhTrang ? 'selected' : ''}>Còn cho mượn</option>
+                <option value="false" ${!tinhTrang ? 'selected' : ''}>Đã thanh lý</option>
             </select></td>
-            <td><select class="form-control" name="choMuon">
+            <td><select disabled class="form-control" name="choMuon">
                 <option value="true" ${choMuon ? 'selected' : ''}>Có</option>
                 <option value="false" ${!choMuon ? 'selected' : ''}>Không</option>
-            </select></td>
+            </select>
+            <input type="hidden" name="choMuon" value="${choMuon}">
+            </td>
+            
             <td><select class="form-control" name="maNganTu">
                 ${nganTuList.map(nt => `<option value="${nt.maNganTu}" ${maNganTuVal === nt.maNganTu ? 'selected' : ''}>${nt.ke}</option>`).join('')}
             </select></td>
@@ -710,13 +713,12 @@ function addSach() {
         <tr class="new-sach-row">
             <td><input type="text" class="form-control" name="maSach" placeholder="Nhập mã sách"></td>
             <td><select class="form-control" name="tinhTrang">
-                <option value="true">Tốt</option>
-                <option value="false">Hỏng</option>
+                <option value="true">Còn cho mượn</option>
+                <option value="false">Đã thanh lý</option>
             </select></td>
-            <td><select class="form-control" name="choMuon">
-                <option value="true">Có</option>
-                <option value="false">Không</option>
-            </select></td>
+            <td><span>Không</span>
+            <input class="form-control" name="choMuon" value="false" hidden>
+            </td>
             <td><select class="form-control" name="maNganTu">
                 ${nganTuList.map(nt => `<option value="${nt.maNganTu}">${nt.ke}</option>`).join('')}
             </select></td>

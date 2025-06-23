@@ -5,7 +5,7 @@ class DauSachRepository {
     static async getAll(pool) {
         try {
             await pool.connect();
-            const result = await pool.request().query('SELECT * FROM DAUSACH');
+            const result = await pool.request().query('SELECT * FROM DAUSACH WHERE ISDELETED = 0');
             return result.recordset.map(row => new DauSach(
                 row.ISBN,
                 row.TENSACH,
