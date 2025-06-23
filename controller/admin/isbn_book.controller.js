@@ -32,7 +32,12 @@ module.exports.index = async (req, res) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
-
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
     const dauSachList = await DauSachRepository.getAll(pool); 
     const ngonNguList = await NgonNguRepository.getAll(pool);
     const theLoaiList = await TheLoaiRepository.getAll(pool);
@@ -54,7 +59,12 @@ module.exports.getData = async (req, res) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
-
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
     const ngonNguList = await NgonNguRepository.getAll(pool);
     const theLoaiList = await TheLoaiRepository.getAll(pool);
     const tacGiaList = await TacGiaRepository.getAll(pool);
@@ -68,7 +78,12 @@ module.exports.getDauSach = async (req, res) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
-
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
     let dauSach = await DauSachRepository.getDauSach(pool, req.query.isbn);
     dauSach.MATACGIA = dauSach.MATACGIA ? dauSach.MATACGIA.split(',') : []; // Chuyển đổi chuỗi MATACGIA thành mảng
 
@@ -79,6 +94,12 @@ module.exports.getDauSach = async (req, res) => {
 module.exports.getBooks = async (req, res) => {
     const pool = getUserPool(req.session.id);
     if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
@@ -112,7 +133,13 @@ module.exports.deleteBook = async (req, res) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
-    
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
     try {
         const { maSach } = req.body;
         const params = [
@@ -138,6 +165,13 @@ module.exports.deleteBook = async (req, res) => {
 module.exports.update = async (req, res) => {
     const pool = getUserPool(req.session.id);
     if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
@@ -184,6 +218,12 @@ module.exports.update = async (req, res) => {
 module.exports.write = async (req, res) => {
     const pool = getUserPool(req.session.id);
     if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
@@ -245,6 +285,12 @@ module.exports.write = async (req, res) => {
 module.exports.createDauSach = async (req, res) => {
     const pool = getUserPool(req.session.id);
     if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
     
@@ -339,6 +385,12 @@ module.exports.updateDauSach = async (req, res) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
 
     try {
         const dauSach = req.body;
@@ -410,6 +462,12 @@ module.exports.deleteTitle = async (req, res) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
 
     const { isbn } = req.body;
     const params = [
@@ -439,6 +497,12 @@ module.exports.getNextISBN = async (req, res) => {
         if (!pool) {
             return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
         }
+        try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
 
     const nextId = 'ISBN000001'; // Giả định logic tạo ISBN
     res.json({ success: true, nextId });
@@ -448,6 +512,12 @@ module.exports.getNextISBN = async (req, res) => {
 module.exports.undo = async (req, res) => {
     const pool = getUserPool(req.session.id);
     if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
@@ -566,6 +636,12 @@ module.exports.clearUndo = async (req, res) => {
 module.exports.getReport = async (req, res) => {
     const pool = getUserPool(req.session.id);
     if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 

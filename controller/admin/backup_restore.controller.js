@@ -7,6 +7,12 @@ module.exports.index = async (req, res) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
 
     try {
         const request = defaultPool.request();
@@ -200,6 +206,16 @@ module.exports.restoreQLTV = async (req, res) => {
     console.log('Restore request received');
     const pool = getUserPool(req.session.id);
     console.log(req.body)
+    if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
 
     try {
         // Get backup position from request (e.g., body or query parameter)
@@ -313,6 +329,13 @@ module.exports.restoreQLTVToPointInTime = async (req, res) => {
     console.log(req.body)
     if (!pool) {
         req.flash('error', 'Chưa đăng nhập hoặc phiên hết hạn.');
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 

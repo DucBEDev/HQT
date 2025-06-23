@@ -58,6 +58,12 @@ module.exports.changePassword = async (req, res) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
 
     const empList = await NhanVienRepository.getAll(pool);
     const dgList = await DocGiaRepository.getAll(pool);
@@ -72,6 +78,12 @@ module.exports.changePassword = async (req, res) => {
 module.exports.changePasswordPost = async (req, res) => {
     const pool = getUserPool(req.session.id);
     if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
@@ -109,6 +121,12 @@ module.exports.formLoginView = async (req, res) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
     
     const empId = req.session.empId || null;
 
@@ -131,6 +149,12 @@ module.exports.deleteLogin = async (req, res) => {
 
     const pool = getUserPool(req.session.id);
     if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
@@ -168,6 +192,12 @@ module.exports.deleteLogin = async (req, res) => {
 module.exports.createLogin = async (req, res) => {
     const pool = getUserPool(req.session.id);
     if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 

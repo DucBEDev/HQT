@@ -11,6 +11,12 @@ module.exports.index = async (req, res) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
 
     const list = await TacGiaRepository.getAll(pool);
 
@@ -25,6 +31,12 @@ module.exports.index = async (req, res) => {
 module.exports.delete = async (req, res) => {
     const pool = getUserPool(req.session.id);
     if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
@@ -56,11 +68,19 @@ module.exports.create = async (req, res) => {
 
 // [POST] /author/create
 module.exports.createPost = async (req, res) => {
-    try {
         const pool = getUserPool(req.session.id);
         if (!pool) {
             return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
         }
+        try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+        
+    try {
+
 
         const authorList = req.body;
 
@@ -99,6 +119,12 @@ module.exports.edit = async (req, res) => {
     if (!pool) {
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
 
     const { maTacGia } = req.params;
 
@@ -114,6 +140,12 @@ module.exports.edit = async (req, res) => {
 module.exports.editPost = async (req, res) => {
     const pool = getUserPool(req.session.id);
     if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
@@ -150,6 +182,12 @@ module.exports.editPost = async (req, res) => {
 module.exports.undo = async (req, res) => {
     const pool = getUserPool(req.session.id);
     if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
 
@@ -217,6 +255,12 @@ module.exports.clearUndo = async (req, res) => {
 module.exports.getNextId = async (req, res) => {
     const pool = getUserPool(req.session.id);
     if (!pool) {
+        return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
+    }
+    try {
+        await pool.connect(); // Có thể ném lỗi nếu thông tin login sai
+    } catch (err) {
+        console.error('Database connection failed:', err.message);
         return res.redirect(`${systemConfig.prefixAdmin}/auth/login`);
     }
     

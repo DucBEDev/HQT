@@ -13,6 +13,7 @@ block main
                     form.restore-point-in-time-form(action="/Library/admin/backup-restore/restore-point-in-time" method="POST").d-flex.align-items-center.mr-3
                         .input-group
                             input.form-control(type="datetime-local" id="datetimeRestore" name="datetimeRestore" required)
+                            input.form-control(type="number" id="secondRestore" name="secondRestore" min="0" max="59" placeholder="Giây" required)
                             input(type="hidden" id="formattedDatetimeRestore" name="formattedDatetimeRestore")
                             button.btn.btn-primary(type="submit") Khôi phục đến thời điểm
                     form.create-backup-form(action="/Library/admin/backup-restore/backup" method="POST")
@@ -124,10 +125,13 @@ block main
             e.preventDefault();
             // Get the datetime-local input value
             const datetimeInput = document.getElementById('datetimeRestore').value;
+            const secondsInput = document.getElementById('secondRestore').value || "00";
+
             // Format to YYYY-MM-DD hh:mm:ss
-            if (datetimeInput) {
+             if (datetimeInput) {
                 const date = new Date(datetimeInput);
-                const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${String(date.getSeconds()).padStart(2, '0')}`;
+                const seconds = String(secondsInput).padStart(2, '0');
+                const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}:${seconds}`;
                 document.getElementById('formattedDatetimeRestore').value = formattedDate;
             }
             $('#RestorePointInTimeModal').modal('show');
