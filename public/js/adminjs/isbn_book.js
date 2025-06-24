@@ -712,10 +712,8 @@ function addSach() {
     const newRow = `
         <tr class="new-sach-row">
             <td><input type="text" class="form-control" name="maSach" placeholder="Nhập mã sách"></td>
-            <td><select class="form-control" name="tinhTrang">
-                <option value="true">Còn cho mượn</option>
-                <option value="false">Đã thanh lý</option>
-            </select></td>
+            <td><span>Còn cho mượn</span>
+            <input class="form-control" name="tinhTrang" value="true" hidden></td>
             <td><span>Không</span>
             <input class="form-control" name="choMuon" value="false" hidden>
             </td>
@@ -750,8 +748,8 @@ function addSach() {
             return;
         }
         
-        const tinhTrang = row.find('td:eq(1) select[name="tinhTrang"]').val() === 'true';
-        const choMuon = row.find('td:eq(2) select[name="choMuon"]').val() === 'true';
+        const tinhTrang = row.find('td:eq(1) input[name="tinhTrang"]').val() === 'true';
+        const choMuon = row.find('td:eq(2) input[name="choMuon"]').val() === 'true';
         const maNganTu = row.find('td:eq(3) select[name="maNganTu"]').val();
         
         // Add new book to list

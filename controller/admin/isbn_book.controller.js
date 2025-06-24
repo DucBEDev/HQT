@@ -269,8 +269,8 @@ module.exports.write = async (req, res) => {
                 maNganTu: sach.maNganTu
             });
             
-            pushToUndoStack('create_sach', savedSach);
         }
+        pushToUndoStack('create_sach', savedSach);
 
         res.status(200).json({ 
             success: true,

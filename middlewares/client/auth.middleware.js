@@ -9,7 +9,7 @@ module.exports.auth = async (req, res, next) => {
     }
     try {
         console.log('Connecting to database...');
-        console.log(pool)
+        //console.log(pool)
         await pool.connect();
         await pool.request().query('SELECT 1 AS Test');
     } catch (err) {

@@ -162,7 +162,7 @@ class DocGiaRepository {
             await pool.connect();
             const result = await pool.request()
                     .query(`SELECT 
-                            dg.SOCMND AS soCMND,
+                    dg.SOCMND AS soCMND,
                             CONCAT(dg.HODG, ' ', dg.TENDG) AS hoTen,
                             dg.DIENTHOAI AS soDT,
                             dg.EMAILDG AS email,
@@ -172,20 +172,20 @@ class DocGiaRepository {
                             DATEDIFF(day, DATEADD(day, 15, pm.NGAYMUON), GETDATE()) AS soNgayQuaHan,
                             (SELECT COUNT(DISTINCT dg2.MADG) 
                             FROM DOCGIA dg2
-                            LEFT JOIN PHIEUMUON pm2 ON dg2.MADG = pm2.MADG
-                            LEFT JOIN CT_PHIEUMUON ctpm2 ON ctpm2.MAPHIEU = pm2.MAPHIEU 
+                            INNER JOIN PHIEUMUON pm2 ON dg2.MADG = pm2.MADG
+                            INNER JOIN CT_PHIEUMUON ctpm2 ON ctpm2.MAPHIEU = pm2.MAPHIEU 
                                 AND pm2.NGAYMUON < GETDATE()
                                 AND ctpm2.TRA IS NULL
-                            WHERE dg2.HOATDONG = 1 AND DATEDIFF(day, pm2.NGAYMUON, GETDATE()) > 0
+                            WHERE DATEDIFF(day, pm2.NGAYMUON, GETDATE()) > 0
                             ) AS soLuongDocGia
                         FROM DOCGIA dg
-                        LEFT JOIN PHIEUMUON pm ON dg.MADG = pm.MADG
-                        LEFT JOIN CT_PHIEUMUON ctpm ON ctpm.MAPHIEU = pm.MAPHIEU 
+                        INNER JOIN PHIEUMUON pm ON dg.MADG = pm.MADG
+                        INNER JOIN CT_PHIEUMUON ctpm ON ctpm.MAPHIEU = pm.MAPHIEU 
                             AND pm.NGAYMUON < GETDATE()
                             AND ctpm.TRA IS NULL
-                        LEFT JOIN SACH s ON s.MASACH = ctpm.MASACH
-                        LEFT JOIN DAUSACH ds ON ds.ISBN = s.ISBN
-                        WHERE dg.HOATDONG = 1 AND DATEDIFF(day, pm.NGAYMUON, GETDATE()) > 0;`);
+                        INNER JOIN SACH s ON s.MASACH = ctpm.MASACH
+                        INNER JOIN DAUSACH ds ON ds.ISBN = s.ISBN
+                        WHERE DATEDIFF(day, pm.NGAYMUON, GETDATE()) > 0;`);
 
             return result.recordset
         } catch (err) {
@@ -208,18 +208,6 @@ class DocGiaRepository {
                 JOIN sys.server_principals r ON rm.role_principal_id = r.principal_id
                 JOIN sys.server_principals m ON rm.member_principal_id = m.principal_id
                 WHERE m.name = @LoginName
-                UNION
-                SELECT name AS ServerRole
-                FROM sys.server_principals
-                WHERE principal_id IN (
-                    SELECT role_principal_id 
-                    FROM sys.server_role_members 
-                    WHERE member_principal_id = (
-                        SELECT principal_id 
-                        FROM sys.server_principals 
-                        WHERE name = @LoginName
-                    )
-                );
             `);
             return result.recordset.map(row => row.ServerRole);
         } catch (err) {
